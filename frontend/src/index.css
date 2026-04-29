@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-clay: #8B6F5C;
+  --color-clay-light: #A68A7A;
+  --color-clay-dark: #6B5243;
+  --color-sand: #D4A574;
+  --color-sand-light: #E8C9A8;
+  --color-parchment: #F5F0EB;
+  --color-warm-white: #FAF8F5;
+  --color-espresso: #2C2416;
+  --color-warm-gray: #6B5E53;
+  --color-warm-gray-light: #9B8E83;
+  --color-risk-high: #C44E3D;
+  --color-risk-high-bg: #FDF0ED;
+  --color-risk-medium: #D4A574;
+  --color-risk-medium-bg: #FDF6EF;
+  --color-risk-low: #7B8B6F;
+  --color-risk-low-bg: #F2F5EF;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-warm-white);
+  color: var(--color-espresso);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bg-texture {
+  background-image: radial-gradient(circle, rgba(139,111,92,0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 3px; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes countUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-count { animation: countUp 0.5s ease-out forwards; }
+
+@media print {
+  body * { visibility: hidden; }
+  article, article * { visibility: visible; }
+  article {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  @page { margin: 2cm; size: A4; }
+}

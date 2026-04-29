@@ -1,0 +1,145 @@
+# BN-Contract-Risk-Analysis 优化工作清单
+
+> 上一阶段（v1→v2 架构重构）已完成：LLM₁ 自由审查 + BN 一致性校验 + LLM₂ 综合报告的管线已上线。
+> 本清单聚焦两件事：① 用数据集驱动 BN 节点扩展与 CPT 校准 ② 修复反事实分析真实性 ③ LLM₂ 诚实度优化。
+
+---
+
+## 总目标
+
+将 BN 从「8 个 expert_estimated 节点 + 大部分合同覆盖不到」升级为「~35 个数据驱动节点 + 多数 CPT 来自真实合同统计」，让反事实分析真正有 BN 依据，让 LLM₂ 不编造概率数字。
+
+---
+
+## P0：BN 节点扩展与 CPT 数据驱动（让反事实分析真正工作）
+
+当前 BN 的 8 个证据节点全部是手工设计的，且大部分 CPT 标注为 `expert_estimated`。LLM₁ 能识别到付款结构、运输风险等维度，但因为 BN 没有对应节点，映射层产生大量 gap_detected，导致敏感度分析无法计算反事实。
+
+CUAD 有 41 个标注类别（除去 meta 剩余 35 个），ContractNLI 有 9,788 条 NLI 标注对。两个数据集各管 BN 的一层。
+
+### P0.1：从 CUAD 展开 contract_fact 层节点
+
+**现状：** `cuad_preprocess.py` 将 CUAD 的 41 个类别压缩为 4 个 clause_type（27 个类别 → 全叫 "termination"），信息几乎全部丢失。
+
+**目标：** 将 CUAD 的 35 个有效类别直接作为 BN 的 contract_fact 层证据节点，每个保留独立语义。
+
+**具体操作：**
+1. 修改 `cuad_preprocess.py` 的 `CATEGORY_TO_CLAUSE` 映射——不再压缩为 4 类，改为保留原始细粒度类别名称
+2. 在 `bayesian_network_v2.json` 中新增 ~35 个 contract_fact 节点（每个 CUAD 类别一个）
+3. 用 CUAD 数据计算每个节点的先验 CPT：`P(node=present) = 出现频次 / 合同总数`
+4. 更新 `evidence_mapping.json` 的 clause_type_rules，支持 LLM₁ 的新 clause_type 映射到对应节点
+5. 更新 `config_validator.py` 确保新配置结构一致
+
+**产出：** BN 从 8 个 contract_fact 节点扩展到 ~35 个，大部分 CPT 从 `expert_estimated` 变为 `cuad_empirical`。
+
+### P0.2：CUAD 数据直接校准 contract_fact 层 CPT
+
+**目标：** 将 P0.1 中新增的 ~35 个节点的 CPT 全部从 CUAD 训练集统计得来，而非手工编写。
+
+**具体操作：**
+1. 扩展 `evaluation/cpt_calibrator.py`，新增 `calibrate_from_cuad()` 函数——遍历 CUAD 合同中每个类别，统计 P(present) 和 P(missing)
+2. 写入 `bayesian_network_v2.json` 对应节点的 CPT，标注 `cpt_source: "cuad_empirical"`
+3. 保留 5-7 个 CUAD 不覆盖的销售合同专属节点（付款结构、交货方式、验收流程、风险转移点、争议管辖地、不可抗力），这些仍需 `expert_estimated`
+
+**产出：** 90% 的 contract_fact 节点 CPT 有数据来源标注，不再是纯手工拍数。
+
+### P0.3：用 ContractNLI 扩展 legal_semantics 层校准
+
+**目标：** 让 ContractNLI 校准更多的 legal_semantics 层节点（不仅限于 confidentiality 相关），并建立 LLM₁ 语义判断的外部基准。
+
+**具体操作：**
+1. 扩展 `cpt_calibrator.py` 的 `compute_contractnli_priors()` 和 `compute_contractnli_transition()`——覆盖更多 legal_semantics 节点类型
+2. 利用 ContractNLI 的 premise/hypothesis 对建立 LLM₁ 语义准确率基准测试——对比 LLM₁ 对 NDA 条款的解读与 ContractNLI ground truth 标签
+3. 将基准测试结果用于校准 `BnValidator._check_confidence_calibration()` 中的置信度调整参数
+
+**产出：** ContractNLI 不仅校准 CPT，还校准 LLM₁ 置信度的外部有效性。
+
+### P0.4：补充 CUAD 不覆盖的销售合同专属节点
+
+**目标：** CUAD 是为商业合同（软件许可、NDA）设计的，以下销售合同关键维度缺失：
+- 付款结构（预付款比例、支付节奏、付款与履约挂钩）
+- 交货方式（交货地点、分批约定、运输责任）
+- 验收流程（验收标准、验收时限、异议机制）
+- 风险转移节点（货交承运人 vs 货到工地）
+- 争议管辖地（甲方/乙方/第三方所在地法院）
+- 不可抗力条款
+- 质保期限与范围
+
+**具体操作：**
+1. 在 `bayesian_network_v2.json` 手动添加这 7 个销售合同专属节点
+2. 更新 `BnMappingService.CLAUSE_TYPE_HINTS` 映射规则
+3. 更新 LLM₁ prompt 中的 `suggested_bn_nodes` 可选节点列表
+
+**产出：** 对购销合同的 BN 覆盖率从 ~40%（当前 8 节点中约 3 个覆盖）提升到 ~85%（35 CUAD + 7 专属 ≈ 42 节点，其中约 35 个与购销合同相关）。
+
+### P0.5：验证反事实分析可用性
+
+**目标：** 确认 P0.1-P0.4 完成后，BN 敏感度分析能产出真实的 counterfactuals。
+
+**具体操作：**
+1. 用同一份瓷砖购销合同跑 v2 管线
+2. 检查 `consistency.counterfactuals` 数量是否从当前的 0 条增加到 ≥3 条
+3. 对比 LLM₂ 报告中的反事实数字与 BN 实际输出的 counterfactuals 是否一致
+4. 如不一致，修复 LLM₂ prompt 中的约束
+
+**完成标准：** LLM₂ 报告中的反事实数据全部来自 BN 真实输出，无编造。
+
+---
+
+## P1：LLM₂ 报告诚实度优化
+
+当前 LLM₂ 在 BN 未提供反事实数据时会"善意补全"数字。P0 完成后大部分反事实数据将来自 BN，但仍需防御 BN 也无法覆盖的边缘情况。
+
+### P1.1：prompt 增加数据来源诚实性约束
+
+在 `_build_combined_prompt()` 和 `_combined_system_prompt()` 中增加：
+- "反事实分析中的概率数字必须来自BN校验数据。如果BN未提供某维度的模拟数据，请明确标注'BN无法对此维度进行模拟'，不得自行编造概率数字。"
+- "报告中请区分三类信息源：① LLM初审分析 ② BN校验输出 ③ 你的独立法务判断。每类信息源需在报告中有明确标识。"
+
+### P1.2：在 PolishedReport 中增加来源标注字段
+
+在 `_parse_narrative_to_polished()` 或 `generate_combined_report()` 返回的报告中增加 metadata：
+- `bn_derived_claims: list[str]` — 报告中哪些数字来自 BN 真实输出
+- `llm_judgment_claims: list[str]` — 哪些是 LLM₂ 的独立判断
+
+---
+
+## P2：BN 图结构持续优化
+
+### P2.1：基于 CUAD 共现统计的跨维度边验证
+
+CUAD 的 500+ 合同提供了条款之间的自然共现/互斥关系。可以用于验证和调整 BN 中的跨维度边。
+
+**具体操作：**
+1. 统计 CUAD 中任意两条款的共现条件概率 P(A=present | B=present)
+2. 与 BN 的 Noisy-OR 权重进行对比——如果数据中 A 和 B 高度共现但 BN 中设为独立，则调整边或权重
+
+### P2.2：ContractNLI 驱动的 NDA 专项 BN 子图
+
+对 NDA 类合同，可构建一个更细粒度的子图，利用 ContractNLI 的语义标注优势。销售合同继续走 P0 扩展后的通用图。
+
+---
+
+## 执行顺序
+
+```
+P0.1（CUAD 展开节点）
+  → P0.2（CUAD 校准 CPT）
+    → P0.3（ContractNLI 扩展校准）
+      → P0.4（销售合同专属节点）
+        → P0.5（验证反事实）
+          → P1.1 + P1.2（LLM₂ 诚实度）
+            → P2.1 + P2.2（持续优化）
+```
+
+P0.1-P0.4 可以有部分并行——P0.1 和 P0.3 互不依赖。
+
+---
+
+## 关键决策点
+
+P0.5 完成后需要回答：
+
+1. BN 节点从 8 扩展到 ~35 后，LLM₁ 的 gap_detected 是否从 11 个降到 ≤3 个？
+2. 反事实分析是否产出 ≥3 条真实 BN 数据？
+3. LLM₂ 报告中的反事实数字是否 100% 可追溯到 BN consistency_report 中的 counterfactuals？

@@ -1,0 +1,31 @@
+{
+  "benchmark_timestamp": null,
+  "results": [
+    {
+      "name": "contractnli_test",
+      "samples_processed": 500,
+      "error_count": 0,
+      "nli": {
+        "total": 500,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "neutral": {
+            "neutral": 251
+          },
+          "entailment": {
+            "entailment": 209
+          },
+          "contradiction": {
+            "contradiction": 40
+          }
+        }
+      },
+      "risk_prediction": {
+        "total": 500,
+        "exact_accuracy": 0.418,
+        "adjacent_accuracy": 1.0
+      },
+      "extraction": {}
+    }
+  ]
+}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合同风险评估报告</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus@2.9.1/dist/index.css">
+<script src="https://unpkg.com/echarts@5.6.0/dist/echarts.min.js"></script>
+<style>
+:root{--risk-high:#e53e3e;--risk-medium:#dd6b20;--risk-low:#38a169;--brand:#409eff;--bg:#f0f2f5;--card:#fff;--text:#303133;--text-sec:#606266;--text-hint:#909399;--border:#ebeef5;--shadow:0 2px 12px rgba(0,0,0,.06);--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.page-header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:28px 48px;color:#fff;display:flex;align-items:center;justify-content:space-between;position:relative}
+.page-header h1{font-size:24px;font-weight:600;letter-spacing:1px}
+.page-header .header-right{display:flex;align-items:center;gap:16px}
+.page-header .contract-badge{background:rgba(255,255,255,.15);border-radius:8px;padding:6px 18px;font-size:13px}
+.page-header .print-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer;transition:background .2s}
+.page-header .print-btn:hover{background:rgba(255,255,255,.25)}
+
+.main-wrap{max-width:1140px;margin:0 auto;padding:28px 24px 64px}
+
+.overview-row{display:grid;grid-template-columns:1fr 280px;gap:24px;margin-bottom:28px}
+.overview-left{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.overview-card{background:var(--card);border-radius:var(--radius);padding:22px 20px;text-align:center;box-shadow:var(--shadow);transition:transform .2s}
+.overview-card:hover{transform:translateY(-2px)}
+.overview-card .label{font-size:12px;color:var(--text-hint);margin-bottom:6px}
+.overview-card .value{font-size:24px;font-weight:700}
+.overview-card .sub{font-size:11px;color:var(--text-hint);margin-top:4px}
+.gauge-wrap{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.gauge-wrap .gauge-label{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;color:var(--text-hint)}
+
+.risk-high{color:var(--risk-high)}
+.risk-medium{color:var(--risk-medium)}
+.risk-low{color:var(--risk-low)}
+.bg-high{background:linear-gradient(135deg,#fff5f5,#fed7d7)}
+.bg-medium{background:linear-gradient(135deg,#fffaf0,#feebc8)}
+.bg-low{background:linear-gradient(135deg,#f0fff4,#c6f6d5)}
+
+.section-title{font-size:18px;font-weight:600;margin:28px 0 14px;padding-left:12px;border-left:4px solid var(--brand);display:flex;align-items:center;gap:8px}
+.section-title.warn{border-left-color:#e6a23c}
+.section-title.danger{border-left-color:var(--risk-high)}
+.section-title .sec-icon{font-size:20px}
+
+.card-box{background:var(--card);border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow);line-height:1.8;font-size:14px;margin-bottom:24px}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+.chart-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.chart-card .chart-title{font-size:14px;font-weight:600;padding:14px 20px 0;color:var(--text)}
+.chart-card .chart-body{height:300px}
+
+.dim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px}
+.dim-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-top:3px solid transparent}
+.dim-card.high{border-top-color:var(--risk-high)}
+.dim-card.medium{border-top-color:var(--risk-medium)}
+.dim-card.low{border-top-color:var(--risk-low)}
+.dim-card .dim-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dim-card .dim-name{font-size:15px;font-weight:600}
+.dim-card .dim-level{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px}
+.dim-level-high{background:#fed7d7;color:#c53030}
+.dim-level-medium{background:#feebc8;color:#c05621}
+.dim-level-low{background:#c6f6d5;color:#276749}
+.dim-card .dim-score{font-size:12px;color:var(--text-hint);margin-top:2px}
+.dim-card .dim-desc{font-size:13px;color:var(--text-sec);line-height:1.7;margin-top:8px}
+.dim-card .dim-insight{font-size:13px;color:var(--text);line-height:1.7;margin-top:6px;padding-top:8px;border-top:1px dashed var(--border)}
+
+.risk-item{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);margin-bottom:14px;border-left:4px solid transparent}
+.risk-item.high{border-left-color:var(--risk-high)}
+.risk-item.medium{border-left-color:var(--risk-medium)}
+.risk-item.low{border-left-color:var(--risk-low)}
+.risk-item .risk-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.risk-item .risk-title{font-size:15px;font-weight:600}
+.risk-item .risk-meta{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--text-hint)}
+.risk-item .risk-reason{font-size:13px;color:var(--text-sec);margin-bottom:6px;line-height:1.6}
+.risk-item .risk-evidence{background:#f7fafc;border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px;color:#718096;line-height:1.6}
+.risk-item .risk-evidence .ev-title{font-weight:600;color:#4a5568;margin-bottom:2px}
+.risk-item .risk-rec{font-size:12px;color:var(--brand);line-height:1.6}
+
+.cross-note{background:#fffbf0;border:1px solid #faecd8;border-radius:8px;padding:14px 18px;margin-bottom:10px;font-size:13px;line-height:1.7;color:#c05621}
+.cross-note .cn-icon{margin-right:6px;font-weight:700}
+
+.action-list{counter-reset:action-counter;list-style:none;padding:0}
+.action-list li{counter-increment:action-counter;position:relative;padding:12px 16px 12px 44px;margin-bottom:8px;background:var(--card);border-radius:8px;box-shadow:var(--shadow);font-size:14px;line-height:1.6;color:var(--text-sec)}
+.action-list li::before{content:counter(action-counter);position:absolute;left:14px;top:12px;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
+
+.manual-list{margin-bottom:24px}
+.manual-list .el-alert{margin-bottom:8px}
+
+.input-section{background:var(--card);border-radius:16px;padding:36px 40px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:800px;margin:60px auto}
+.input-section h2{text-align:center;margin-bottom:24px;font-size:22px;color:var(--text)}
+
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.88);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999}
+.loading-overlay .loading-icon{width:56px;height:56px;border:4px solid #e0e0e0;border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+.loading-overlay .text{margin-top:18px;font-size:15px;color:var(--text-sec)}
+.loading-overlay .sub-text{margin-top:6px;font-size:12px;color:var(--text-hint)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.signing-advice-card{background:linear-gradient(135deg,#ebf4ff,#dbeafe);border:1px solid #bfdbfe;border-radius:var(--radius);padding:20px 24px;margin-bottom:24px}
+.signing-advice-card .sa-label{font-size:12px;color:var(--brand);font-weight:600;margin-bottom:6px}
+.signing-advice-card .sa-text{font-size:15px;color:#1e3a5f;line-height:1.7}
+
+@media print{
+  .page-header{background:#1a1a2e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .overview-card,.dim-card,.risk-item,.card-box,.chart-card,.signing-advice-card,.cross-note,.action-list li{box-shadow:none;border:1px solid var(--border)}
+  body{background:#fff}
+  .print-btn,.no-print{display:none!important}
+  .charts-row{break-inside:avoid}
+  .main-wrap{padding:16px 0}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<div v-if="loading" class="loading-overlay">
+  <div class="loading-icon"></div>
+  <div class="text">正在进行 AI 合同审查与风险评估…</div>
+  <div class="sub-text">第一步：AI 结构化审查 → 第二步：贝叶斯网络量化 → 第三步：报告润色</div>
+</div>
+
+<div v-if="!report" class="input-section">
+  <h2>合同风险评估</h2>
+  <el-form label-position="top" @submit.prevent>
+    <el-form-item label="合同编号">
+      <el-input v-model="form.contractId" placeholder="例如 nda-001" clearable />
+    </el-form-item>
+    <el-form-item label="合同文本">
+      <el-input v-model="form.contractText" type="textarea" :rows="12" placeholder="请粘贴合同全文，或点击下方按钮上传文件" />
+    </el-form-item>
+    <el-form-item>
+      <el-upload :auto-upload="false" :show-file-list="false" accept=".txt,.md" :on-change="handleFileUpload">
+        <el-button type="primary" plain>上传 TXT / MD 文件</el-button>
+      </el-upload>
+      <span v-if="form.fileName" style="margin-left:12px;color:#67c23a;font-size:13px">已加载: {{ form.fileName }}</span>
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" size="large" :loading="submitting" @click="submitReview" style="width:100%">
+        开始审查
+      </el-button>
+    </el-form-item>
+  </el-form>
+  <el-alert v-if="errorMsg" :title="errorMsg" type="error" show-icon :closable="false" style="margin-top:16px" />
+</div>
+
+<div v-if="report">
+
+<div class="page-header">
+  <h1>合同风险评估报告</h1>
+  <div class="header-right">
+    <div class="contract-badge">合同编号：{{ report.contract_id }}</div>
+    <button class="print-btn no-print" onclick="window.print()">打 印</button>
+  </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="overview-row">
+  <div class="overview-left">
+    <div class="overview-card" :class="'bg-'+report.overall_risk">
+      <div class="label">总体风险</div>
+      <div class="value" :class="'risk-'+report.overall_risk">{{ report.overall_risk_label }}</div>
+    </div>
+    <div class="overview-card">
+      <div class="label">签署建议</div>
+      <div class="value" style="font-size:20px">{{ report.signing_recommendation_label }}</div>
+    </div>
+    <div class="overview-card">
+      <div class="label">人工复核</div>
+      <div class="value" :class="report.requires_manual_review?'risk-high':'risk-low'">{{ report.requires_manual_review_label }}</div>
+      <div class="sub">重点问题 {{ topRisks.length }} 项</div>
+    </div>
+  </div>
+  <div class="gauge-wrap">
+    <div id="gauge-chart" style="width:100%;height:100%"></div>
+    <div class="gauge-label">综合风险指数</div>
+  </div>
+</div>
+
+<div class="section-title"><span class="sec-icon">&#x1F4CB;</span> 风险摘要</div>
+<div class="card-box" v-if="polished">
+  {{ polished.executive_summary }}
+</div>
+<div class="card-box" v-else>
+  该合同整体为<strong :class="'risk-'+report.overall_risk">{{ report.overall_risk_label }}</strong>，
+  当前签署建议为<strong>{{ report.signing_recommendation_label }}</strong>，
+  最需要关注的是：{{ (report.summary_reasons && report.summary_reasons[0]) || '当前未识别到高优先级风险原因。' }}
+</div>
+
+<div class="signing-advice-card" v-if="polished && polished.signing_advice">
+  <div class="sa-label">签署建议详情</div>
+  <div class="sa-text">{{ polished.signing_advice }}</div>
+</div>
+
+<div class="section-title"><span class="sec-icon">&#x1F4CA;</span> 维度风险评估</div>
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-title">风险雷达图</div>
+    <div class="chart-body" id="radar-chart"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">维度风险对比</div>
+    <div class="chart-body" id="bar-chart"></div>
+  </div>
+</div>
+
+<div class="dim-grid">
+  <div class="dim-card" v-for="dim in dimensionList" :key="dim.key" :class="dim.level">
+    <div class="dim-header">
+      <span class="dim-name">{{ dim.label }}</span>
+      <span class="dim-level" :class="'dim-level-'+dim.level">{{ dim.levelLabel }}</span>
+    </div>
+    <el-progress :percentage="dim.percentage" :color="dim.color" :stroke-width="8" :show-text="false" />
+    <div class="dim-score">风险分值 {{ dim.score.toFixed(2) }} / 1.00</div>
+    <div class="dim-desc">{{ dim.summary }}</div>
+    <div class="dim-insight" v-if="dim.insight">{{ dim.insight }}</div>
+  </div>
+</div>
+
+<div v-if="polished && polished.cross_dimension_notes && polished.cross_dimension_notes.length">
+  <div class="section-title warn"><span class="sec-icon">&#x1F517;</span> 维度关联风险</div>
+  <div class="cross-note" v-for="(note, idx) in polished.cross_dimension_notes" :key="idx">
+    <span class="cn-icon">&#x26A0;</span>{{ note }}
+  </div>
+</div>
+
+<div class="section-title danger"><span class="sec-icon">&#x26A0;</span> 关键风险项</div>
+<div v-if="topRisks.length">
+  <div class="risk-item" v-for="(risk, idx) in topRisks" :key="idx" :class="risk.risk_level">
+    <div class="risk-head">
+      <el-tag :type="riskLevelTag(risk.risk_level)" size="small" effect="dark">{{ risk.risk_level_label }}</el-tag>
+      <span class="risk-title">{{ risk.title }}</span>
+    </div>
+    <div class="risk-meta">
+      <span><strong>所属维度：</strong>{{ risk.dimension_label }}</span>
+    </div>
+    <div class="risk-reason"><strong>原因说明：</strong>{{ risk.reason }}</div>
+    <div class="risk-evidence" v-if="risk.evidence && risk.evidence.length">
+      <div class="ev-title">证据摘录</div>
+      <div v-for="(ev, i) in risk.evidence" :key="i">{{ i+1 }}. {{ ev }}</div>
+    </div>
+    <div class="risk-rec"><strong>建议动作：</strong>{{ risk.recommendation }}</div>
+  </div>
+</div>
+<div v-else class="card-box" style="text-align:center;color:var(--text-hint)">当前未识别到需要优先处理的关键风险项。</div>
+
+<div class="section-title warn"><span class="sec-icon">&#x2705;</span> 整改建议</div>
+<div v-if="polished && polished.action_plan && polished.action_plan.length">
+  <ol class="action-list">
+    <li v-for="(rec, idx) in polished.action_plan" :key="idx">{{ rec }}</li>
+  </ol>
+</div>
+<div v-else>
+  <ol class="action-list">
+    <li v-for="(rec, idx) in fallbackRecommendations" :key="idx">{{ rec }}</li>
+  </ol>
+</div>
+
+<div class="section-title danger" v-if="report.manual_review_items && report.manual_review_items.length">
+  <span class="sec-icon">&#x1F50D;</span> 人工复核项
+</div>
+<div class="manual-list" v-if="report.manual_review_items && report.manual_review_items.length">
+  <el-alert v-for="(item, idx) in report.manual_review_items" :key="idx" :title="item" type="warning" show-icon :closable="false" />
+</div>
+
+<el-divider>
+  <el-button type="primary" plain @click="resetForm">重新审查另一份合同</el-button>
+</el-divider>
+
+</div>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus@2.9.1/dist/index.full.js"></script>
+<script>
+const DIMENSION_ORDER = [
+  'legal_enforceability_risk','financial_exposure_risk',
+  'performance_delivery_risk','dispute_resolution_risk','clause_balance_risk'
+];
+const DIMENSION_LABELS = {
+  legal_enforceability_risk:'法律可执行性',financial_exposure_risk:'财务暴露',
+  performance_delivery_risk:'履约交付',dispute_resolution_risk:'争议处置',
+  clause_balance_risk:'条款失衡'
+};
+const RISK_COLORS = {high:'#e53e3e',medium:'#dd6b20',low:'#38a169'};
+const RISK_LEVEL_MAP = {high:'高风险',medium:'中风险',low:'低风险'};
+
+function scoreToLevel(s){ return s>=0.7?'high':s>=0.35?'medium':'low'; }
+
+const {createApp,ref,computed,nextTick,onMounted,watch} = Vue;
+
+const app = createApp({
+  setup(){
+    const form = ref({contractId:'',contractText:'',fileName:''});
+    const report = ref(null);
+    const loading = ref(false);
+    const submitting = ref(false);
+    const errorMsg = ref('');
+
+    const polished = computed(()=> report.value && report.value.polished || null);
+    const topRisks = computed(()=> (report.value && report.value.top_risks)||[]);
+
+    const dimensionList = computed(()=>{
+      if(!report.value) return [];
+      const scores = report.value.dimension_scores||{};
+      const summaries = report.value.dimension_summaries||{};
+      const labels = report.value.dimension_labels||DIMENSION_LABELS;
+      const insights = (polished.value && polished.value.dimension_insights)||{};
+      return DIMENSION_ORDER.filter(k=>scores[k]!==undefined).map(k=>{
+        const level = scoreToLevel(scores[k]);
+        return {
+          key:k, label:labels[k]||k, score:scores[k],
+          percentage:Math.round(scores[k]*100), level,
+          levelLabel:RISK_LEVEL_MAP[level]||'',
+          color:RISK_COLORS[level],
+          summary:summaries[k]||'',
+          insight:insights[k]||''
+        };
+      });
+    });
+
+    const fallbackRecommendations = computed(()=>{
+      if(!report.value||!report.value.top_risks) return ['维持当前条款结构，签署前做一次人工抽样复核即可。'];
+      const seen=new Set(); const list=[];
+      for(const r of report.value.top_risks){
+        if(r.recommendation&&!seen.has(r.recommendation)){seen.add(r.recommendation);list.push(r.recommendation);}
+      }
+      return list.length?list:['维持当前条款结构，签署前做一次人工抽样复核即可。'];
+    });
+
+    function handleFileUpload(file){
+      const reader=new FileReader();
+      reader.onload=(e)=>{form.value.contractText=e.target.result;form.value.fileName=file.name;};
+      reader.readAsText(file.raw,'utf-8');
+    }
+
+    async function submitReview(){
+      errorMsg.value='';
+      if(!form.value.contractText.trim()){errorMsg.value='请输入合同文本';return;}
+      submitting.value=true;loading.value=true;
+      try{
+        const resp=await fetch('/api/review',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            contract_text:form.value.contractText,
+            contract_id:form.value.contractId||'unnamed-contract',
+            source_document:form.value.fileName||null,
+          }),
+        });
+        const data=await resp.json();
+        if(data.error){errorMsg.value=data.error;loading.value=false;submitting.value=false;return;}
+        report.value=data.report;
+        report.value.contract_id=data.contract_id;
+        await nextTick();
+        renderCharts();
+      }catch(e){errorMsg.value='请求失败：'+e.message;}
+      finally{loading.value=false;submitting.value=false;}
+    }
+
+    function renderCharts(){
+      if(!report.value) return;
+      const scores = report.value.dimension_scores||{};
+      const dims = DIMENSION_ORDER.filter(k=>scores[k]!==undefined);
+      const labels = dims.map(k=>DIMENSION_LABELS[k]||k);
+      const values = dims.map(k=>Math.round(scores[k]*100));
+      const maxVal = 100;
+
+      // Radar
+      try{
+        const radarEl = document.getElementById('radar-chart');
+        if(radarEl){
+          const radarChart = echarts.init(radarEl);
+          radarChart.setOption({
+            tooltip:{trigger:'item'},
+            radar:{indicator:labels.map(n=>({name:n,max:maxVal})),shape:'polygon',radius:'70%',axisName:{color:'#606266',fontSize:12}},
+            series:[{type:'radar',data:[{value:values,name:'风险分值',areaStyle:{color:'rgba(64,158,255,0.15)'},lineStyle:{color:'#409eff',width:2},itemStyle:{color:'#409eff'}}]}]
+          });
+          window.addEventListener('resize',()=>radarChart.resize());
+        }
+      }catch(e){}
+
+      // Bar
+      try{
+        const barEl = document.getElementById('bar-chart');
+        if(barEl){
+          const barChart = echarts.init(barEl);
+          const barColors = dims.map(k=>RISK_COLORS[scoreToLevel(scores[k])]);
+          barChart.setOption({
+            tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+            grid:{left:80,right:20,top:20,bottom:30},
+            xAxis:{type:'value',max:maxVal,axisLabel:{formatter:v=>v+'%'}},
+            yAxis:{type:'category',data:labels.reverse(),axisLabel:{fontSize:12,color:'#606266'}},
+            series:[{type:'bar',data:values.reverse().map((v,i)=>({value:v,itemStyle:{color:barColors[barColors.length-1-i]}})),barWidth:18,label:{show:true,position:'right',formatter:p=>p.value+'%',fontSize:11}}]
+          });
+          window.addEventListener('resize',()=>barChart.resize());
+        }
+      }catch(e){}
+
+      // Gauge
+      try{
+        const gaugeEl = document.getElementById('gauge-chart');
+        if(gaugeEl){
+          const overall = report.value.category_scores?.overall_contract_risk
+            || report.value.category_scores?.overall_legal_risk
+            || (values.length? values.reduce((a,b)=>a+b,0)/values.length/100 : 0);
+          const gaugeChart = echarts.init(gaugeEl);
+          const gaugeColor = RISK_COLORS[scoreToLevel(overall)]||'#409eff';
+          gaugeChart.setOption({
+            series:[{
+              type:'gauge',startAngle:200,endAngle:-20,min:0,max:100,
+              pointer:{show:true,length:'60%',width:4,itemStyle:{color:gaugeColor}},
+              axisLine:{lineStyle:{width:10,color:[[0.35,'#38a169'],[0.7,'#dd6b20'],[1,'#e53e3e']]}},
+              axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},
+              detail:{valueAnimation:true,formatter:v=>v.toFixed(0),fontSize:28,fontWeight:700,offsetCenter:[0,'20%'],color:gaugeColor},
+              data:[{value:Math.round(overall*100)}],
+              radius:'90%',center:['50%','50%']
+            }]
+          });
+          window.addEventListener('resize',()=>gaugeChart.resize());
+        }
+      }catch(e){}
+    }
+
+    function riskLevelTag(level){return level==='high'?'danger':level==='medium'?'warning':'success';}
+
+    function resetForm(){
+      report.value=null;
+      form.value={contractId:'',contractText:'',fileName:''};
+      errorMsg.value='';
+    }
+
+    return{form,report,loading,submitting,errorMsg,polished,topRisks,dimensionList,fallbackRecommendations,handleFileUpload,submitReview,riskLevelTag,resetForm};
+  }
+});
+
+app.use(ElementPlus);
+app.mount('#app');
+</script>
+</body>
+</html>
