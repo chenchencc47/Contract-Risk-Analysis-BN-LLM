@@ -9,7 +9,7 @@ export function useReview() {
   });
 
   const submitReview = useCallback(
-    async (contractText: string, contractId: string) => {
+    async (contractText: string, contractId: string, reviewParty: "buyer" | "seller" = "buyer") => {
       if (!contractText.trim()) return;
       setState({ status: "loading", data: null, error: null });
       try {
@@ -19,6 +19,7 @@ export function useReview() {
           body: JSON.stringify({
             contract_text: contractText,
             contract_id: contractId,
+            review_party: reviewParty,
             generation_mode: "v2_combined",
           }),
         });

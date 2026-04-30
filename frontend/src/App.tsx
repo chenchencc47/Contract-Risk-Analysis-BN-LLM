@@ -1,10 +1,31 @@
+import { useState } from "react";
 import { Header } from "./components/Header";
 import { ContractInput } from "./components/ContractInput";
 import { RiskReport } from "./components/RiskReport";
+import { SandboxPanel } from "./components/SandboxPanel";
 import { useReview } from "./hooks/useReview";
 
 function App() {
   const { status, data, error, submitReview, reset } = useReview();
+  const [showSandbox, setShowSandbox] = useState(false);
+
+  if (showSandbox) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5]">
+        <Header />
+        <div className="max-w-7xl mx-auto px-6 pt-4">
+          <button
+            onClick={() => setShowSandbox(false)}
+            className="text-sm text-[#8B6F5C] hover:text-[#6B5243] font-medium
+                       transition-colors duration-200 flex items-center gap-1.5"
+          >
+            <span className="text-lg leading-none">←</span> 返回审查
+          </button>
+        </div>
+        <SandboxPanel />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5]">
@@ -13,13 +34,21 @@ function App() {
       {status === "success" && data ? (
         /* ── Report view ── */
         <div>
-          <div className="max-w-6xl mx-auto px-6 pt-6">
+          <div className="max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between">
             <button
               onClick={reset}
               className="text-sm text-[#8B6F5C] hover:text-[#6B5243] font-medium
                          transition-colors duration-200 flex items-center gap-1.5"
             >
               <span className="text-lg leading-none">←</span> 审查新合同
+            </button>
+            <button
+              onClick={() => setShowSandbox(true)}
+              className="text-sm text-[#7B8B6F] hover:text-[#5A6B4F] font-medium
+                         transition-colors duration-200 border border-[#C4D4B8]
+                         rounded-lg px-3 py-1.5 hover:bg-[#F0F5EA]"
+            >
+              ⚙ 条款优化沙盒
             </button>
           </div>
           <RiskReport data={data} />
@@ -44,7 +73,10 @@ function App() {
         </div>
       ) : (
         /* ── Input view ── */
-        <ContractInput onSubmit={submitReview} isLoading={status === "loading"} />
+        <ContractInput
+          onSubmit={(text, id, party) => submitReview(text, id, party)}
+          isLoading={status === "loading"}
+        />
       )}
 
       {status === "loading" && (

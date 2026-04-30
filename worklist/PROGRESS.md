@@ -1,8 +1,47 @@
 # 实施进度记录
 
-> 最后更新：2026-04-29
+> 最后更新：2026-04-30
 
 ---
+
+## 2026-04-30：report-8 vs AI网页检测 系统性对比分析
+
+完成了report-8（本项目卖方视角）与AI网页检测报告（买方视角）的逐维度对比，并参照Ironclad/LawGeex/Kira等商业产品进行了量化评分。
+
+**关键发现：**
+- report-8在所有可对比维度上均优于AI网页检测，核心优势在BN量化增强（反事实模拟、交叉验证、乘数效应）
+- 个人产品维度评分：**7.8/10**（方法论创新9.0、分析深度8.5、数据严谨性8.5）
+- 商业产品维度评分：**4.5/10**（核心AI能力7.5、产品完整度3.0、差异化壁垒7.0）
+- 最大gap：BN覆盖不全（责任上限等关键条款无反事实数据）、产品化工程化不足
+
+**产出：** WORKLIST.md 新增 v2.4+ 5项优化工作（P0反事实全覆盖→P1联合概率量化→P2呈现优化→P3多视角切换→P4工程化基础）
+
+---
+
+## 当前阶段：v2.3 立场锚定 + 安全护栏
+
+基于煤炭购销合同审查报告的DeepSeek评价（不及格）和自评分析，完成两项关键修复：
+
+| 序号 | 任务 | 状态 | 备注 |
+|------|------|------|------|
+| P0-1 | LLM₁/LLM₂立场锚定 | ✅ | 2026-04-29 | 系统prompt改为"代理律师"角色，前端加身份选择器 |
+| P0-2 | LLM₂输出安全护栏 | ✅ | 2026-04-29 | 禁止"逾期视为接受"等危害客户权利的建议 |
+| Bug | 沙盒全白 | ✅ | 2026-04-29 | NDA子图校准边连接confidentiality_nli导致pgmpy CPD校验失败 |
+
+**核心改动文件：**
+- `review/report_writer.py` — `_combined_system_prompt(review_party)` 锚定为"代理律师"；新增"立场规则"和"安全性规则"；`generate_combined_report()` 接受review_party
+- `review/ai_review.py` — `_free_review_prompt(review_party)` + `free_review_contract_text(review_party)` 立场注入
+- `web/server.py` — 新增 `POST /api/v2/review`（完整LLM₁→BN→LLM₂管线+review_party）；原有 `/api/review` 也加入review_party
+- `evaluation/cpt_calibrator.py` — 修复DataCalibrationFn签名兼容性；NDA子图不再添加edges（节点保留为独立contract_fact节点）
+- `frontend/src/components/ContractInput.tsx` — 新增审查立场选择器（甲方/乙方toggle）
+- `frontend/src/hooks/useReview.ts` — 调用 `/api/v2/review` 传递review_party
+- `frontend/src/App.tsx` — 传递review_party给ContractInput
+
+**效果：**
+- LLM不再扮演"中立合同设计者"，而是客户代理律师
+- 前端用户可选择甲方/乙方身份
+- 安全性规则防止"15个工作日煤炭异议期"类法律错误
+- v2 API端点完整可用
 
 ## 当前阶段：报告质量优化（v2.1）
 
@@ -78,8 +117,9 @@
 
 | 序号 | 任务 | 状态 | 备注 |
 |------|------|------|------|
-| P2.1 | CUAD 共现统计验证跨维度边 | ⬜ pending | |
-| P2.2 | ContractNLI NDA 专项子图 | ⬜ pending | |
+| P2.1 | CUAD 共现统计验证跨维度边 | ✅ | 2026-04-29 | 30%混合权重+0.4上限，4条边全部校准 |
+| P2.2 | ContractNLI NDA 专项子图 | ✅ | 2026-04-29 | 新增4个NDA节点（披露/使用/返还/存续），BN 63→67节点 |
+| P0 (新增) | LLM₂ prompt微调 | ✅ | 2026-04-29 | 必须用完所有BN反事实+优先维度级数据+淡化整体概率 |
 
 ---
 

@@ -10,24 +10,13 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from contract_risk_analysis.bn.inference import assess_risk
 from contract_risk_analysis.domain.review_schema import RiskEvidence
 from contract_risk_analysis.pipeline.build_evidence import build_evidence
-from contract_risk_analysis.review.ai_review import review_contract_text
-from contract_risk_analysis.review.report_writer import polish_report
+from contract_risk_analysis.review.ai_review import review_contract_text, free_review_contract_text
+from contract_risk_analysis.review.report_writer import polish_report, generate_combined_report
+from contract_risk_analysis.bn.consistency_validator import build_consistency_report
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
-DIMENSION_LABELS = {
-    "legal_enforceability_risk": "法律可执行性风险",
-    "financial_exposure_risk": "财务暴露风险",
-    "performance_delivery_risk": "履约交付风险",
-    "dispute_resolution_risk": "争议处置风险",
-    "clause_balance_risk": "条款失衡风险",
-}
-
-RISK_LABELS = {
-    "high": "高风险",
-    "medium": "中风险",
-    "low": "低风险",
-}
+from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
 SIGNING_LABELS = {
     "暂不建议直接签署": "暂不建议直接签署",
@@ -55,6 +44,7 @@ async def api_review(request: Request):
     contract_text = body.get("contract_text", "").strip()
     contract_id = body.get("contract_id", "").strip()
     source_document = body.get("source_document")
+    review_party = body.get("review_party", "buyer")  # "buyer" | "seller"
     allowed_priorities = set(body.get("allowed_priorities") or []) or None
     include_debug = bool(body.get("include_debug"))
 
@@ -157,3 +147,138 @@ def _score_to_level(score: float) -> str:
     if score >= 0.35:
         return "medium"
     return "low"
+
+
+# ── V2 Pipeline API (LLM₁ → BN → LLM₂) ──────────────────────────
+
+
+@app.post("/api/v2/review")
+async def api_v2_review(request: Request):
+    """Full v2 pipeline: LLM₁ free review → BN consistency → LLM₂ report."""
+    body = await request.json()
+    contract_text = body.get("contract_text", "").strip()
+    contract_id = body.get("contract_id", "").strip()
+    source_document = body.get("source_document")
+    review_party = body.get("review_party", "buyer")
+
+    if not contract_text:
+        return JSONResponse({"error": "合同文本不能为空"}, status_code=400)
+    if not contract_id:
+        contract_id = "unnamed-contract"
+
+    try:
+        free_output = free_review_contract_text(
+            contract_text, contract_id, source_document, review_party
+        )
+        consistency = build_consistency_report(free_output)
+        polished = generate_combined_report(free_output, consistency, review_party)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
+    except Exception as exc:
+        return JSONResponse({"error": f"审查失败：{exc}"}, status_code=502)
+
+    return JSONResponse({
+        "generation_mode": "combined",
+        "contract_id": contract_id,
+        "review_party": review_party,
+        "narrative_report": polished.narrative_report,
+        "executive_summary": polished.executive_summary,
+        "signing_advice": polished.signing_advice,
+        "action_plan": polished.action_plan,
+        "cross_dimension_notes": polished.cross_dimension_notes,
+        "free_review": {
+            "segments_count": len(free_output.risk_segments),
+            "missing_clauses": free_output.missing_clauses,
+            "strengths": free_output.strengths,
+            "overall_assessment": free_output.overall_assessment,
+        },
+        "consistency": {
+            "annotations_count": len(consistency.annotations) if consistency else 0,
+            "counterfactuals_count": len(consistency.counterfactuals) if consistency else 0,
+            "bn_summary": consistency.bn_summary if consistency else "",
+        },
+        "bn_derived_claims": polished.bn_derived_claims,
+        "llm_judgment_claims": polished.llm_judgment_claims,
+    })
+
+
+# ── BN Interactive Sandbox API ────────────────────────────────────
+
+
+@app.get("/api/bn/nodes")
+async def api_bn_nodes():
+    """Return adjustable evidence nodes for the interactive sandbox."""
+    from contract_risk_analysis.bn.pgmpy_adapter import load_v2_config
+
+    config = load_v2_config()
+    nodes: list[dict] = []
+    for node_name, node_cfg in config["nodes"].items():
+        layer = node_cfg.get("layer", "")
+        if layer not in ("contract_fact", "legal_semantics"):
+            continue
+        if node_name.startswith("cuad_agg_"):
+            continue
+        # Determine which dimension this node affects
+        from contract_risk_analysis.bn.pgmpy_adapter import _build_node_to_dimension_map
+        node_map = _build_node_to_dimension_map(config)
+        dims = node_map.get(node_name, [])
+        nodes.append({
+            "node_name": node_name,
+            "label": node_cfg.get("label", node_name),
+            "layer": layer,
+            "states": node_cfg.get("states", []),
+            "affects_dimensions": dims,
+            "affects_dimension_labels": [DIMENSION_LABELS.get(d, d) for d in dims],
+        })
+    return JSONResponse({"nodes": nodes, "dimension_labels": DIMENSION_LABELS})
+
+
+@app.post("/api/bn/simulate")
+async def api_bn_simulate(request: Request):
+    """Run BN inference with custom evidence and return posteriors.
+
+    Body: { "evidence": { "payment_structure": "favorable", ... } }
+    Returns full posterior distributions for all dimension nodes + overall.
+    """
+    body = await request.json()
+    evidence = body.get("evidence", {})
+    if not isinstance(evidence, dict):
+        return JSONResponse({"error": "evidence must be a dict"}, status_code=400)
+
+    from contract_risk_analysis.bn.pgmpy_adapter import (
+        DIMENSION_NODES,
+        build_model,
+        load_v2_config,
+    )
+
+    config = load_v2_config()
+    model = build_model(config)
+    from pgmpy.inference import VariableElimination
+
+    try:
+        inference = VariableElimination(model)
+    except Exception:
+        return JSONResponse({"error": "BN model build failed"}, status_code=500)
+
+    posteriors: dict[str, dict[str, float]] = {}
+    target_nodes = DIMENSION_NODES + ["overall_contract_risk"]
+
+    for target in target_nodes:
+        try:
+            result = inference.query(
+                variables=[target],
+                evidence=evidence if evidence else None,
+            )
+            dist: dict[str, float] = {}
+            for state, prob in zip(result.state_names[target], result.values):
+                dist[str(state)] = round(float(prob), 4)
+            posteriors[target] = dist
+        except Exception:
+            posteriors[target] = {"error": "computation failed"}
+
+    from contract_risk_analysis.constants import DIMENSION_LABELS as DL
+    return JSONResponse({
+        "evidence": evidence,
+        "posteriors": posteriors,
+        "dimension_labels": DL,
+    })

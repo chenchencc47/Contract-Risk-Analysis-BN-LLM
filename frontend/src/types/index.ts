@@ -141,3 +141,20 @@ export interface ReviewState {
   data: ReviewResponse | null;
   error: string | null;
 }
+
+// ── BN Sandbox types ──
+
+export interface BnNode {
+  node_name: string;
+  label: string;
+  layer: string;
+  states: string[];
+  affects_dimensions: string[];
+  affects_dimension_labels: string[];
+}
+
+export interface BnSimulation {
+  evidence: Record<string, string>;
+  posteriors: Record<string, Record<string, number>>;
+  dimension_labels: Record<string, string>;
+}

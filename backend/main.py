@@ -35,6 +35,7 @@ from contract_risk_analysis.review.report_writer import (
     polish_report,
 )
 from contract_risk_analysis.bn.config_validator import validate_v2_config
+from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
 app = FastAPI(title="合同风险审查系统", docs_url="/docs")
 
@@ -45,16 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-DIMENSION_LABELS = {
-    "legal_enforceability_risk": "法律可执行性风险",
-    "financial_exposure_risk": "财务暴露风险",
-    "performance_delivery_risk": "履约交付风险",
-    "dispute_resolution_risk": "争议处置风险",
-    "clause_balance_risk": "条款失衡风险",
-}
-
-RISK_LABELS = {"high": "高风险", "medium": "中风险", "low": "低风险"}
 
 
 def _score_to_level(score: float) -> str:
@@ -185,6 +176,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     """v2 pipeline: free LLM review → BN validator → combined report."""
     contract_text = str(body.get("contract_text", "")).strip()
     contract_id = str(body.get("contract_id", "")).strip() or "unnamed"
+    review_party = str(body.get("review_party", "buyer"))
     include_debug = bool(body.get("include_debug"))
 
     if not contract_text:
@@ -195,6 +187,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         free_output = free_review_contract_text(
             contract_text, contract_id=contract_id,
             source_document=body.get("source_document"),
+            review_party=review_party,
         )
     except ValueError as exc:
         return JSONResponse({"error": str(exc)}, status_code=422)
@@ -222,13 +215,14 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     # ── Layer 3: Combined report generation ──
     polished = None
     try:
-        polished = generate_combined_report(free_output, consistency)
+        polished = generate_combined_report(free_output, consistency, review_party)
     except Exception:
         pass
 
     response: dict[str, Any] = {
         "generation_mode": "v2_combined",
         "contract_id": free_output.contract_id,
+        "review_party": review_party,
         "free_review": {
             "segments_count": len(free_output.risk_segments),
             "missing_clauses": free_output.missing_clauses,

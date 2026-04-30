@@ -282,23 +282,29 @@ def _free_review_schema() -> dict:
 
 
 def _free_review_prompt(
-    contract_text: str, contract_id: str, source_document: str | None
+    contract_text: str, contract_id: str, source_document: str | None,
+    review_party: str = "buyer",
 ) -> str:
     checklist = _build_bn_checklist()
     all_bn_node_names = _get_all_evidence_node_names()
+    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
+    counterparty_label = "乙方（卖方）" if review_party == "buyer" else "甲方（买方）"
 
     return (
-        "你是一位资深法务风控顾问，需要对以下合同进行全面、深入的风险审查。"
+        f"你是{party_label}的代理律师，需要对以下合同进行全面、深入的风险审查。"
         "请输出严格JSON格式的审查结果。\n\n"
         "## 审查要求\n"
-        "1. **全面覆盖**：必须系统性检查下方审查清单中的每一项。"
+        f"1. **立场**：审查必须始终站在{party_label}立场。"
+        f"对{party_label}有利的条款要去识别并标注为 strengths；"
+        f"对{party_label}不利或可能损害{party_label}利益的条款才是风险项。\n"
+        "2. **全面覆盖**：必须系统性检查下方审查清单中的每一项。"
         "对每一项都要给出明确判断（已覆盖/缺失/不适用），不得遗漏。\n"
-        "2. **深入分析**：对每项风险，不仅指出问题，更要解释为什么构成风险、"
-        "对哪一方不利、可能引发什么商业后果。\n"
-        "3. **证据导向**：每个发现必须附上合同原文摘录作为证据。\n"
-        "4. **区分缺失与不公**：条款完全不存在标注为 missing_clauses；"
+        "3. **深入分析**：对每项风险，不仅指出问题，更要解释为什么构成风险、"
+        f"对{party_label}可能引发什么商业后果。\n"
+        "4. **证据导向**：每个发现必须附上合同原文摘录作为证据。\n"
+        "5. **区分缺失与不公**：条款完全不存在标注为 missing_clauses；"
         "条款存在但内容不公平的标注在 risk_segments 中。\n"
-        "5. **正面评价**：如果合同中有对客户有利的条款，也请记录在 strengths 中。\n\n"
+        f"6. **正面评价**：如果合同中有对{party_label}有利的条款，也请记录在 strengths 中。\n\n"
         "## 输出字段说明\n"
         "- overall_assessment: 2-4段执行摘要，概括合同整体风险态势\n"
         "- risk_segments: 识别到的所有风险项，每项包含:\n"
@@ -319,7 +325,7 @@ def _free_review_prompt(
         "## 重要提醒\n"
         "- 不要输出总体风险结论（由后续环节处理）\n"
         "- 如果文本无法支持某项，不要臆造\n"
-        "- 请站在甲方（买方）立场进行审查\n"
+        f"- 审查立场：{party_label}。你不为中立方或{counterparty_label}的利益考虑\n"
         "- 清单中标注为\"不适用\"的项在risk_segments中可以省略\n"
         f"- contract_id 固定填 {contract_id}\n"
         f"- source_document 固定填 {json.dumps(source_document, ensure_ascii=False)}\n"
@@ -348,12 +354,16 @@ def free_review_contract_text(
     contract_text: str,
     contract_id: str,
     source_document: str | None = None,
+    review_party: str = "buyer",
 ) -> FreeReviewOutput:
     """Perform a free-form contract risk review without BN node constraints.
 
     Unlike review_contract_text(), this does not limit the LLM to a predefined
     set of finding_key values. The LLM acts as a senior legal counsel and
     identifies any risk it finds, in any category.
+
+    Args:
+        review_party: "buyer" or "seller" — anchors LLM₁'s review stance.
 
     Returns FreeReviewOutput which feeds into the BN consistency validator
     (v2 pipeline) rather than the legacy evidence-mapping pipeline.
@@ -372,11 +382,11 @@ def free_review_contract_text(
             {
                 "role": "user",
                 "content": _free_review_prompt(
-                    contract_text, contract_id, source_document
+                    contract_text, contract_id, source_document, review_party
                 ),
             },
         ],
-        max_tokens=8192,
+        max_tokens=16384,
         response_format={"type": "json_object"},
     )
     payload = _completion_to_payload(completion)

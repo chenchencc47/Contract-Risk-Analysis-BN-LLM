@@ -560,21 +560,13 @@ def run_sensitivity_analysis(
     return results
 
 
-DIMENSION_NODES = [
-    "legal_enforceability_risk",
-    "financial_exposure_risk",
-    "performance_delivery_risk",
-    "dispute_resolution_risk",
-    "clause_balance_risk",
-]
-
-DIMENSION_LABELS: dict[str, str] = {
-    "legal_enforceability_risk": "法律可执行性风险",
-    "financial_exposure_risk": "财务暴露风险",
-    "performance_delivery_risk": "履约交付风险",
-    "dispute_resolution_risk": "争议处置风险",
-    "clause_balance_risk": "条款失衡风险",
-}
+# Re-exported from constants for backward compatibility
+from contract_risk_analysis.constants import (
+    DIMENSION_LABELS,
+    DIMENSION_NODES,
+    NODE_LABELS,
+    RISK_LABELS,
+)
 
 
 def _build_node_to_dimension_map(config: dict) -> dict[str, list[str]]:

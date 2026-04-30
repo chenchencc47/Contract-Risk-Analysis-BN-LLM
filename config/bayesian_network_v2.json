@@ -577,9 +577,19 @@
       "noisy_or_weights": {
         "termination_clause_completeness": 0.4,
         "governing_law_clarity": 0.35,
-        "dispute_resolution_risk": 0.25,
+        "dispute_resolution_risk": 0.4,
         "cuad_agg_legal": 0.15,
         "force_majeure_completeness": 0.12
+      },
+      "cross_dim_calibration": {
+        "dispute_resolution_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.7738,
+          "blended_weight": 0.4,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 130,
+          "cond_total": 168
+        }
       }
     },
     "financial_exposure_risk": {
@@ -606,7 +616,7 @@
       "noisy_or_weights": {
         "liability_cap_strength": 0.4,
         "damages_exposure": 0.35,
-        "clause_balance_risk": 0.25,
+        "clause_balance_risk": 0.4,
         "cuad_agg_financial_a": 0.1,
         "cuad_agg_financial_b": 0.08,
         "payment_structure": 0.3,
@@ -619,6 +629,16 @@
         "cuad_revenue_profit_sharing": 0.03,
         "cuad_minimum_commitment": 0.03,
         "cuad_volume_restriction": 0.03
+      },
+      "cross_dim_calibration": {
+        "clause_balance_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.7634,
+          "blended_weight": 0.4,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 313,
+          "cond_total": 410
+        }
       }
     },
     "performance_delivery_risk": {
@@ -644,12 +664,22 @@
       "noisy_or_weights": {
         "acceptance_process_clarity": 0.4,
         "termination_clause_completeness": 0.35,
-        "legal_enforceability_risk": 0.25,
+        "legal_enforceability_risk": 0.317,
         "cuad_agg_performance": 0.15,
         "delivery_terms": 0.12,
         "risk_transfer_point": 0.15,
         "cuad_post_termination_services": 0.03,
         "cuad_source_code_escrow": 0.03
+      },
+      "cross_dim_calibration": {
+        "legal_enforceability_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.4735,
+          "blended_weight": 0.317,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 161,
+          "cond_total": 340
+        }
       }
     },
     "dispute_resolution_risk": {
@@ -676,13 +706,23 @@
         "dispute_resolution_clarity": 0.35,
         "jurisdiction_fairness": 0.25,
         "governing_law_clarity": 0.2,
-        "financial_exposure_risk": 0.2,
+        "financial_exposure_risk": 0.367,
         "cuad_agg_dispute": 0.15,
         "dispute_venue_fairness": 0.25,
         "cuad_covenant_not_to_sue": 0.05,
         "cuad_no_solicit_of_customers": 0.03,
         "cuad_no_solicit_of_employees": 0.03,
         "cuad_non_disparagement": 0.03
+      },
+      "cross_dim_calibration": {
+        "financial_exposure_risk": {
+          "original_weight": 0.2,
+          "cuad_cooccurrence": 0.756,
+          "blended_weight": 0.367,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 127,
+          "cond_total": 168
+        }
       }
     },
     "clause_balance_risk": {

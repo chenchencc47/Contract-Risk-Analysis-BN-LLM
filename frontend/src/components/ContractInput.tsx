@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 interface Props {
-  onSubmit: (text: string, id: string) => void;
+  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller") => void;
   isLoading: boolean;
 }
 
@@ -36,6 +36,7 @@ interface FileInfo {
 export function ContractInput({ onSubmit, isLoading }: Props) {
   const [text, setText] = useState("");
   const [id, setId] = useState("contract-001");
+  const [reviewParty, setReviewParty] = useState<"buyer" | "seller">("buyer");
   const [file, setFile] = useState<FileInfo | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,10 +74,10 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
 
   const handleSubmit = () => {
     if (file) {
-      onSubmit(file.content, id.trim() || "contract-001");
+      onSubmit(file.content, id.trim() || "contract-001", reviewParty);
     } else {
       const finalText = text.trim() || SAMPLE;
-      onSubmit(finalText, id.trim() || "contract-001");
+      onSubmit(finalText, id.trim() || "contract-001", reviewParty);
     }
   };
 
@@ -192,6 +193,33 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
           )}
         </div>
       )}
+
+      {/* ── Review Party Selector ── */}
+      <div className="flex items-center gap-3 mt-5">
+        <span className="text-xs font-medium text-[#6B5E53] tracking-wide">审查立场</span>
+        <div className="flex bg-[#F0EBE4] rounded-lg p-0.5">
+          <button
+            onClick={() => setReviewParty("buyer")}
+            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+              reviewParty === "buyer"
+                ? "bg-white text-[#8B6F5C] shadow-sm"
+                : "text-[#9B8E83] hover:text-[#6B5E53]"
+            }`}
+          >
+            甲方（买方）
+          </button>
+          <button
+            onClick={() => setReviewParty("seller")}
+            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+              reviewParty === "seller"
+                ? "bg-white text-[#8B6F5C] shadow-sm"
+                : "text-[#9B8E83] hover:text-[#6B5E53]"
+            }`}
+          >
+            乙方（卖方）
+          </button>
+        </div>
+      </div>
 
       <button
         onClick={handleSubmit}

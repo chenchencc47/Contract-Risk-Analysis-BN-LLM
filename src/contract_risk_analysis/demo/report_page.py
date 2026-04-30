@@ -14,19 +14,8 @@ from contract_risk_analysis.review.ai_review import review_contract_text
 from contract_risk_analysis.review.report_writer import polish_report
 
 
-RISK_LABELS = {
-    "high": "高风险",
-    "medium": "中风险",
-    "low": "低风险",
-}
+from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
-DIMENSION_LABELS = {
-    "legal_enforceability_risk": "法律可执行性风险",
-    "financial_exposure_risk": "财务暴露风险",
-    "performance_delivery_risk": "履约交付风险",
-    "dispute_resolution_risk": "争议处置风险",
-    "clause_balance_risk": "条款失衡风险",
-}
 
 RISK_ITEM_LEVEL_LABELS = {
     "high": "高",

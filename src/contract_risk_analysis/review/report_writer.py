@@ -31,15 +31,7 @@ ENV_PATH = PROJECT_ROOT / ".env"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 DEEPSEEK_MODEL = "deepseek-chat"
 
-DIMENSION_LABELS = {
-    "legal_enforceability_risk": "法律可执行性风险",
-    "financial_exposure_risk": "财务暴露风险",
-    "performance_delivery_risk": "履约交付风险",
-    "dispute_resolution_risk": "争议处置风险",
-    "clause_balance_risk": "条款失衡风险",
-}
-
-RISK_LABELS = {"high": "高风险", "medium": "中风险", "low": "低风险"}
+from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
 # Standard report sections the LLM must produce
 REPORT_SECTIONS = [
@@ -359,7 +351,7 @@ def polish_report(report: RiskReport) -> PolishedReport:
             },
             {"role": "user", "content": prompt},
         ],
-        max_tokens=8192,  # Increased for full report
+        max_tokens=16384,  # Increased for full report
         temperature=0.5,  # Slightly warmer for natural prose variety
     )
 
@@ -383,13 +375,25 @@ def polish_report(report: RiskReport) -> PolishedReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _combined_system_prompt() -> str:
+def _combined_system_prompt(review_party: str = "buyer") -> str:
+    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
     return (
-        "你是一位资深法务风控顾问，同时也是一位专业法律报告撰写人。"
-        "你收到两份信息来源：AI初审的自由审查分析和贝叶斯网络的一致性校验结果。"
-        "你的任务是综合两份信息，撰写出最终的、权威的合同风险审查报告。"
-        "你拥有最终判断权——如果AI初审和BN校验存在分歧，你应根据合同文本"
-        "和相关法律知识做出独立判断，并在报告中注明分歧。"
+        f"你是{party_label}的代理律师。"
+        f"你的唯一使命是在合法前提下，最大化{party_label}的合同利益。"
+        f"你不是中立的合同设计者，也不是学术评论员——你是客户的代言人。"
+        f"\n\n"
+        f"核心行为准则：\n"
+        f"1. 对客户有利的条款 → 明确标注为优势，建议保留并强化\n"
+        f"2. 对客户不利的条款 → 坚决要求修改，给出具体修改方案\n"
+        f"3. 对手方的不利境地 → 不是你要解决的问题。不要为对手设计保护条款\n"
+        f"4. 当你识别到某个条款'对双方都不公平'时 → 只从客户角度论述为什么不利，"
+        f"不要提供'让双方都公平'的折中方案，除非该折中方案对客户有明显净收益\n"
+        f"5. 你的修改建议必须首先通过安全性检验：这个建议是否可能被对手方利用"
+        f"来损害{party_label}的利益？如果答案不确定，标注'建议人工复核'而非直接给出方案\n"
+        f"\n"
+        f"你收到两份信息来源：AI初审的自由审查分析和贝叶斯网络的一致性校验结果。"
+        f"BN数据是用于交叉验证的辅助工具，不是需要'中立综合'的第二信息源。"
+        f"当你的法律判断与BN数据存在分歧时，以你的法律判断为准并说明理由。"
     )
 
 
@@ -495,6 +499,7 @@ def _fmt_bn_validation(consistency: ConsistencyReport) -> str:
 def _build_combined_prompt(
     free_output: FreeReviewOutput,
     consistency: ConsistencyReport | None,
+    review_party: str = "buyer",
 ) -> str:
     """Build the combined prompt for LLM₂ report generation.
 
@@ -503,6 +508,7 @@ def _build_combined_prompt(
     2. BN's consistency report is SUPPLEMENTARY — validation notes, not constraints
     3. LLM₂ has final authority — synthesize both, resolve conflicts, write the report
     """
+    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
     llm_section = _fmt_llm_analysis(free_output)
 
     if consistency:
@@ -510,7 +516,9 @@ def _build_combined_prompt(
     else:
         bn_section = "（贝叶斯网络验证未执行，报告完全基于AI审查判断。）"
 
-    prompt = f"""你是一位资深法务风控顾问，负责出具合同风险审查报告的最终版本。
+    prompt = f"""你是{party_label}的代理律师，负责出具合同风险审查报告的最终版本。
+
+你的唯一使命是在合法前提下最大化{party_label}的利益。
 
 ## 信息来源一：AI初审分析（主要依据）
 
@@ -539,30 +547,42 @@ def _build_combined_prompt(
    因果模型识别出的高风险组合，其风险远超单一维度之和，必须在报告中重点提示。
 4. **你拥有最终判断权**：你是资深法务顾问，不是格式化工具。请根据合同文本和
    法律知识做出独立判断。如果BN的数据与你对合同的理解冲突，以你的判断为准。
-5. **反事实数据必须来自BN**：第四章反事实分析中的概率数字必须严格来自
-   BN校验数据中的"反事实模拟"部分。BN提供了几条就用几条，不要自行补充。
+5. **反事实数据必须来自BN，且必须用完所有BN提供的数据**：第四章反事实分析中的
+   概率数字必须严格来自BN校验数据中的"反事实模拟"部分。
+   **BN提供了几条就必须全部使用，不得挑选、不得遗漏。**
    如果BN没有提供某维度的模拟数据，请明确标注"BN未对此维度进行反事实模拟"，
    不得自行编造概率数字。
-   **重要：BN现在提供两层数据**：
-   - **整体风险概率**（base_high_risk → counterfactual_high_risk）：反映对合同总体风险的影响
-   - **维度级风险概率**（dimension_deltas）：反映对具体维度（如财务暴露、履约交付）的影响
-   维度级数据通常数值更大、更有区分度。例如：修改付款条款可能只降低整体风险5%，
-   但能将「财务暴露风险」从95%降至45%。**请优先在报告中使用维度级数据**，
-   因为它能更直观地展示改善效果。整体风险概率作为辅助参考。
-6. **交叉校验反事实排序与风险评级**：BN反事实模拟的排序基于因果图权重，可能
-   与你前文基于合同语义的风险评级不完全一致。在撰写第四章时，请执行以下步骤：
-   - 先列出BN提供的所有反事实数据（按整体delta降序，同时展示维度级delta）
-   - 然后对照前文的风险评级：如果BN整体delta认为降幅最大的条款，你前文评为较低风险，请
-    主动标注差异，并给出你的独立判断——可以坚持前文评级（附带理由）、也可以
-    采纳BN建议（说明为什么BN的视角有道理）、或两者兼顾
-   - 注意：维度级delta往往与你的手动评级更一致。如果某条款的维度级delta很大
-    但整体delta很小，说明该条款对该维度的影响是真实显著的，可以据此调整优先级
-   - 最终给读者的建议优先顺序，必须是你综合判断后的结果，标签清楚哪些来自BN数据、
-    哪些是你的法务判断
-   示例表述："BN整体模拟显示终止条款修改降幅最大（13.5%），但维度级数据显示
-   付款结构改善可将「财务暴露风险」从95%降至45%（降幅50%），与手动评级一致。
-   考虑到本合同付款结构已构成致命风险，本报告认为付款条款的谈判优先级最高。
-   BN的整体排序偏向终止条款是因为其因果权重模型，但维度级数据支持了付款优先的判断。"
+
+   **BN提供两层数据，请按以下规则使用**：
+
+   - **维度级风险概率**（dimension_deltas）→ **第四章的主要数据源**。
+     维度级数据直观展示修改某条款对具体风险维度的影响（如：修改付款条款→财务暴露风险
+     从35.8%降至18.4%，降幅17.3%）。这些数字区分度大、与手动风险评级高度一致，
+     是报告中最有说服力的量化证据。**每个反事实项必须展示其维度级delta。**
+
+   - **整体风险概率**（base_high_risk → counterfactual_high_risk）→ **仅作辅助参考**。
+     整体概率是BN通过Noisy-OR聚合五个维度后的压缩值，数学上必然低于各维度的实际
+     风险概率（例如维度级P(high)=35-78%时，整体通常只有20-35%）。
+     **不要在报告中过度强调整体概率的绝对值，也不要将其与维度级概率并列对比**
+     ——它们是不同层级的数据，直接对比会造成混淆。
+     整体概率的用处仅在于展示"改善前后有变化"，delta的方向和相对大小有意义，
+     绝对值意义不大。
+
+   示例格式（每个反事实项都采用此结构）：
+   ```
+   ### N. 改善XXX条款
+   - BN模拟效果：
+     - [维度级，主要数据] XX风险的高概率从A%降至B%，降幅C%
+     - [整体级，辅助参考] 合同整体高风险概率从D%降至E%
+   - 交叉校验判断：[你的独立分析]
+   ```
+
+6. **交叉校验每个反事实项**：对BN提供的每一个反事实模拟结果：
+   - 先展示BN数据（维度级在前，整体级在后）
+   - 然后给出你独立的"交叉校验判断"：BN数据与前文手动评级是否一致？
+     一致→说明相互印证、增强可信度。不一致→解释原因并给出你的最终判断
+   - 所有反事实项分析完毕后，给出一张整合的"优先级排序表"，明确列出
+     每个条款的谈判优先级（最高/高/中）、建议措施和依据（BN数据 + 法务判断）
 
 ### 输出格式
 
@@ -577,6 +597,29 @@ def _build_combined_prompt(
   ## 六、整改行动计划
   ## 七、附录：方法论说明
 
+### 立场规则
+
+- 你是{party_label}的代理律师。你的每一句话、每一个建议、每一个风险判断都必须
+  回答同一个问题：这对{party_label}意味着什么？
+- 不要为对手方设计保护条款。如果你发现某个条款对双方都不利，只论述它对{party_label}
+  的不利之处。不要主动建议"为对方设定责任上限"或"给对方增加解除权"。
+- 如果你识别到某个条款对{party_label}有利（如对方违约责任上限缺失、我方拥有单方
+  解除权等），明确标注为优势并建议保留。不要在谈判建议中主动让渡这些优势。
+
+### 安全性规则（强制执行）
+
+在给出任何修改建议前，你必须逐条检验：
+1. **建议是否会实质性损害{party_label}的权利？**
+   - "逾期未提异议视为接受"类的条款 → 对需要检测/试用的货物（煤炭、建材、设备等）
+     可能意味着隐蔽缺陷无法追责。设定异议期时必须考虑标的物的检验特性。
+   - 质量异议期的设定必须长于标的物合理检测所需时间（如煤炭需试烧→至少30天）。
+2. **建议中的期限和数字是否与标的物属性匹配？**
+   - 不要对需要破坏性检验或长周期试用的货物设定短于15个工作日的异议期。
+   - 如果不确定，标注"异议期长度需根据{party_label}的检测能力确认"。
+3. **这个建议在谈判中是否会被对手方用来要价？**
+   - 如果会，在签署建议中提醒{party_label}准备应对策略。
+4. 任何安全性检验未通过的建议，必须标注"⚠️ 建议人工复核"。
+
 ### 严禁行为
 
 - 不得编造不存在的法律条文
@@ -584,6 +627,7 @@ def _build_combined_prompt(
 - 不得在证据不足时做出确定的结论
 - 不得编造或补充反事实分析中的概率数字
 - 不得输出JSON——这是给人类阅读的报告
+- 不得以"公平"或"合同稳定性"为由主动削弱{party_label}的既有优势
 
 ---
 
@@ -595,6 +639,7 @@ def _build_combined_prompt(
 def generate_combined_report(
     free_output: FreeReviewOutput,
     consistency: ConsistencyReport | None = None,
+    review_party: str = "buyer",
 ) -> PolishedReport:
     """Generate a combined report using LLM₂ as the authoritative writer.
 
@@ -606,6 +651,7 @@ def generate_combined_report(
     Args:
         free_output: LLM₁'s free-form contract review (primary source).
         consistency: BN consistency validation report (supplementary).
+        review_party: "buyer" or "seller" — anchors LLM₂'s stance.
 
     Returns:
         PolishedReport with generation_mode="combined".
@@ -613,15 +659,15 @@ def generate_combined_report(
     api_key, base_url, model = _load_polish_settings()
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    prompt = _build_combined_prompt(free_output, consistency)
+    prompt = _build_combined_prompt(free_output, consistency, review_party)
 
     completion = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": _combined_system_prompt()},
+            {"role": "system", "content": _combined_system_prompt(review_party)},
             {"role": "user", "content": prompt},
         ],
-        max_tokens=8192,
+        max_tokens=24576,
         temperature=0.5,
     )
 
