@@ -140,6 +140,10 @@ class CounterfactualResult:
     dimension_deltas: list["DimensionDelta"] = field(default_factory=list)
     """Per-dimension probability changes, e.g. financial_exposure -50%."""
 
+    # ── Derivation chain (P1) ──
+    derivation_chain: str = ""
+    """Traceable derivation: evidence → CPT prior → inference → posterior delta."""
+
 
 @dataclass(frozen=True)
 class DimensionDelta:
@@ -176,5 +180,9 @@ class ConsistencyReport:
     bn_summary: str
     """2-3 paragraph BN perspective in Chinese.
     Explains what the BN validated, what it flagged, and its confidence."""
+
+    joint_risks: list[dict] = field(default_factory=list)
+    """P6.1: Joint probability analysis results.
+    Each entry: {dim_a, dim_b, p_a_high, p_b_high, p_joint_high, multiplier, description}"""
 
     bn_config_version: str = "2.0"

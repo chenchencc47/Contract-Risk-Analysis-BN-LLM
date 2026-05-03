@@ -1,6 +1,175 @@
 # 实施进度记录
 
-> 最后更新：2026-04-30
+> 最后更新：2026-05-03
+
+---
+
+## 2026-04-30：v2.5 阶段一执行（P0 → P1 → P2 → P4.3）
+
+### P0：BN反事实产出稳定性 ✅
+**根因分析：**
+1. `favorable_states` 硬编码仅覆盖 ~15 节点，其余靠猜测——猜不到就跳过
+2. BnMappingService 只映射到 legal_semantics 子节点，不传播证据到 contract_fact 父节点→反事实 delta 因缺少父节点证据而过小
+3. 双层 delta 阈值（0.001 + 0.01）过滤过度
+
+**修复 (3 files)：**
+- `pgmpy_adapter.py`：扩展 favorable_states 硬编码（+7 个销售合同节点），auto-discovery 候选从 6 个扩展到 14 个，加 fallback `states[-1]`
+- `bn_validator.py`：delta 阈值 0.01→0.003，top_n 5→8，新增 fallback pool（维度级 delta≥5% 的低整体 delta 项也被保留）
+- `bn_mapping.py`：新增 `_propagate_to_parents()` — legal_semantics 节点有证据时自动推断父 contract_fact 节点证据
+
+### P1：反事实推导链可视化 ✅
+- `free_review_schema.py`：CounterfactualResult 新增 `derivation_chain` 字段
+- `bn_validator.py`：`_build_derivation_chain()` 生成 `条款状态X→Y | CPT来源 | pgmpy VE推理 → δ=-43.3%`
+- `report_writer.py`：LLM₂ prompt 中注入推导链，格式示例更新含 📐 推导链
+
+### P2：报告质量门禁 ✅
+- `web/server.py`：`/api/v2/review` 中加入反事实产出检查
+- 反事实 <3 项 → 日志 WARNING + 响应中 `quality_gate.warnings`
+- 5 核心维度覆盖检查（financial/performance/legal/dispute/clause）
+- 响应新增 `quality_gate` 字段
+
+### P4.3：清理 Streamlit demo ✅
+- 删除 `demo/streamlit_app.py`、`demo/report_page.py`、`tests/demo/`
+- `pyproject.toml` 移除 `streamlit` 依赖
+- 保留 `demo/app.py`（CLI 依赖 `render_report_payload`）
+
+### P4.1 + P4.2：PDF 导出 + 多格式导出架构 ✅
+- weasyprint → fpdf2（Windows 无 GTK3 依赖，纯 Python）
+- 新增 `export/pdf_exporter.py`：`export_pdf()` + `export_md()` + `export_report(fmt)`
+- API：`POST /api/export/pdf` + `POST /api/export/md`
+- `EXPORTERS` 字典架构预留 html/docx 扩展
+- 原有 MD 导出完全保留（独立函数 + API 端点）
+
+### P3：报告历史管理与版本对比 ✅
+- `db/connection.py`：pymysql 连接管理，读取 .env 配置
+- `db/repository.py`：CRUD — contracts(upsert/get/list) + reports(save/get/list/diff) + risks + counterfactuals
+- `web/server.py`：`/api/v2/review` 审查完成后自动写入 MySQL
+- API：`GET /api/reports`（列表筛选）、`GET /api/reports/{id}`（详情+全文）、`GET /api/reports/diff?id1=&id2=`（差异对比）
+- 数据库写入失败不阻断管线（logger.warning）
+
+### P6.1：跨维度联合概率量化 ✅
+- `pgmpy_adapter.py`：新增 `query_joint_probability()` + `JointRiskResult` dataclass
+- 计算 P(A=high ∩ B=high) 联合概率 + 乘数因子（>1.3=乘数效应，<0.9=负相关）
+- `consistency_validator.py`：6对关键维度组合自动分析（财务×争议、履约×法律等）
+- `report_writer.py`：LLM₂ prompt 中注入联合概率数据 + 乘数因子表格
+- `free_review_schema.py`：ConsistencyReport 新增 `joint_risks` 字段
+
+### P6.2：BN知识图谱学习闭环 ✅
+- 新增 `bn/feedback.py`：`save_feedback()` + `get_feedback_summary()` + `get_feedback_for_report()`
+- 新增 MySQL 表：`bn_feedback`（report_id, node_name, verdict, reviewer_note）
+- API：`POST /api/feedback`（记录复核）+ `GET /api/feedback/summary`（准确率汇总）
+- CLI：`--feedback-summary`（节点准确率柱状图）
+- 闭环：人工复核 → bn_feedback 表 → 汇总统计 → 驱动 CPT 校准
+
+### P6.3：多视角切换产品化 ✅
+- 新增 `POST /api/v2/review/dual`：同一合同同时生成买方+卖方两份报告
+- 返回对比分析：shared_strengths / buyer_unique_strengths / seller_unique_strengths / buyer_unique_concerns / seller_unique_concerns
+- 前端可基于 comparison 字段并排展示双视角关键差异
+
+### 测试：58/58 全通过（BN 75节点，API 15路由）（BN 75节点 83边，推理时间 ~277s）
+
+---
+
+## 2026-04-30：v2.5 阶段二（P5 合同类型扩展）
+
+### P5.1 + P5.2：采购合同 + 煤炭合同 BN 节点扩展 ✅
+- BN 从 63→75 节点，83 条边
+- 新增 7 个采购合同专属节点（原料验收标准、批次结算、能源计价、供货保障、质量检测权、价格调整机制、库存仓储责任）
+- 新增 5 个煤炭合同专属节点（热值计价、试烧验收、计量争议解决、单方检验权、运输损耗承担）
+- 全部 12 个新节点连接至 4 个风险维度（financial/performance/dispute/clause）
+- CPT 标注为 expert_estimated（后续可用采购/煤炭合同数据集校准）
+- `bn_mapping.py`：新增 50+ CLAUSE_TYPE_HINTS 中文映射（原料验收→raw_material_acceptance_std 等）
+- LLM₁ 检查清单自动生效（`_build_bn_checklist()` 动态读取 BN 配置）
+
+### P6.2（前置）：BN 节点自动发现系统 ✅
+- 新增 `bn/node_discovery.py`：`record_gap()` + `discover_pending_nodes()` + `approve_node()` + `reject_node()`
+- `bn_mapping.py`：管线中未映射 clause_type 自动记录到 `config/pending_nodes.json`
+- CLI：`--discover-nodes`（查看）、`--approve-node X`（审核加入BN）、`--reject-node X`（丢弃）
+- 半自动流程：管线自动检测 → 持久化 gap → 开发者审核 → 一键写入 BN 配置
+- 自动推断：node_name（蛇形命名）、states（二分/三分）、dimension（关键词匹配）
+- CPT 默认均匀分布 + expert_estimated 标注
+
+### P6.1：跨维度联合概率量化 ✅
+- `pgmpy_adapter.py`：新增 `query_joint_probability()` + `JointRiskResult` dataclass
+- 计算 P(A=high ∩ B=high) 联合概率 + 乘数因子（>1.3=乘数效应，<0.9=负相关）
+- `consistency_validator.py`：6对关键维度组合自动分析（财务×争议、履约×法律等）
+- `report_writer.py`：LLM₂ prompt 中注入联合概率数据 + 乘数因子表格
+- `free_review_schema.py`：ConsistencyReport 新增 `joint_risks` 字段
+
+### P6.2：BN知识图谱学习闭环 ✅
+- 新增 `bn/feedback.py`：`save_feedback()` + `get_feedback_summary()` + `get_feedback_for_report()`
+- 新增 MySQL 表：`bn_feedback`（report_id, node_name, verdict, reviewer_note）
+- API：`POST /api/feedback`（记录复核）+ `GET /api/feedback/summary`（准确率汇总）
+- CLI：`--feedback-summary`（节点准确率柱状图）
+- 闭环：人工复核 → bn_feedback 表 → 汇总统计 → 驱动 CPT 校准
+
+### P6.3：多视角切换产品化 ✅
+- 新增 `POST /api/v2/review/dual`：同一合同同时生成买方+卖方两份报告
+- 返回对比分析：shared_strengths / buyer_unique_strengths / seller_unique_strengths / buyer_unique_concerns / seller_unique_concerns
+- 前端可基于 comparison 字段并排展示双视角关键差异
+
+### 测试：58/58 全通过（BN 75节点，API 15路由）
+
+---
+
+## 2026-04-30：LLM₂ Prompt 精简 + 卖方安全护栏
+
+### 问题
+Report-9（卖方）法律分析质量退步（DeepSeek 78→46）。
+根因：system prompt 从 ~60 行膨胀到 ~120 行，LLM₂ 注意力被格式要求占据。
+
+### 修复
+- **Prompt 精简**：120行→40行（-67%），格式要求从 system prompt 移到 BN 数据注入区
+- **卖方专项安全规则**（仅 seller 注入）：责任上限铁律（先排除间接损失再设上限）、
+  不标客观风险为"有利"（民法典622条）、违约金对等性陷阱警告
+- BN 数据内联格式提示：推导链、联合概率、数据优先级
+
+### 测试：58/58 全通过（BN 75节点，API 15路由）
+
+---
+
+## v2.6 规划（2026-04-30 讨论确定，待执行）
+
+基于 report-10 独立评估（89/100）+ DeepSeek 反馈，识别到的新优化方向：
+- P0: 数字规则→推理规则（去掉无法律依据的具体数字）
+- P1: 让步梯度规则（修改建议必须含开盘立场+可接受底线）
+- P2: 战略层推理框架（可选开关，筹码识别+交换方案）
+- P3: BN反事实诊断+门禁升级（致命风险覆盖检查）
+- P4: 企业红线推理框架（损失×不可逆×触发概率）
+- P5: 民法典合同编精选集（30-50条，config/civil_code_reference.md）
+- P6: 联合概率场景化解读强制
+
+### 执行记录（2026-04-30）
+
+**P0/P1/P6/P5 已完成 ✅**
+
+- P0：`report_writer.py` 中"合同总价100%"改为"具体比例由你结合合同金额、行业惯例和标的物属性判断"；新增"法律引用规范"章节
+- P1：新增"让步梯度规则"——削弱对方权利时必须给开盘立场+可接受底线两个版本
+- P6：联合概率要求改为"不只是展示数字，用一句话描述商业场景"
+- P5：新建 `config/civil_code_reference.md`（30条精选，覆盖合同订立/效力/履行/违约/买卖/解除/争议解决）
+
+### 执行记录（2026-04-30 第二批）
+
+**P3/P4/P2 已完成 ✅**
+
+- P3：门禁升级（致命风险BN覆盖率检查）+ 卖方自动说明（反事实天然较少）
+- P4：新增"企业红线"三维推理框架（损失×不可逆×触发概率）
+- P2：战略层可选开关（`strategy_mode=true`），新增第八章"谈判筹码与策略建议"
+
+### 测试：58/58 全通过
+
+---
+
+## 2026-04-30：全版本纵向对比 + WORKLIST重构
+
+完成了全部10份报告版本（初版→report-8）的纵向对比分析，识别出核心问题：**BN反事实产出稳定性是项目最大技术债务**（同一合同G报告8项→H报告0项）。
+
+WORKLIST.md 全面重构：
+- 旧 v2.4/v2.3+ 工作项经评估后吸收或降级
+- 新优先级链：P0(BN稳定性) → P1(推导链可视化) → P2(质量门禁) → P3(历史管理) → P4(产品化) → P5(合同类型扩展) → P6(高级特性)
+- v2.3（立场锚定+安全护栏）确认必要且已完成
+
+**产出：** 新版 WORKLIST.md（6大优先级，从引擎稳定到产品化）
 
 ---
 
@@ -84,6 +253,33 @@
 | Phase 6 | API 集成 `/api/review` 默认 v2，前后端对齐 | ✅ |
 
 67/71 测试通过（4 个 Streamlit demo 测试为预存问题）。
+
+---
+
+## 2026-05-03：合同类型分层路由方案确定（待实施）
+
+### 背景
+基于对当前项目代码、工作清单、销售合同原件、report-9/10/11 以及既有“合同类型智能路由与公司红线方案”的综合评估，确认：
+- “按合同类型提取 BN 节点子集”方向值得做；
+- 但不能做成“关键词命中后仅保留固定 20 节点”的硬裁剪；
+- 当前项目更需要的是“降噪但不漏检”的分层路由，以及“企业红线配置化”的规则层。
+
+### 结论
+确定采用以下路线：
+1. **通用核心节点始终保留**：付款、交付、验收、解除/终止、责任上限、争议解决、适用法律、不可抗力等不参与裁剪。
+2. **合同类型节点包叠加**：销售/采购/煤炭等各自追加高相关节点，提升 LLM₁ 聚焦度。
+3. **正文触发补集**：若正文出现“热值/收到基/保密信息/调价公式”等强信号，则补回对应节点，避免混合型合同漏检。
+4. **低置信度回退**：类型识别不稳时回退到扩展清单或全量清单，保证“宁可多看，不可漏看”。
+5. **公司红线配置化**：从 prompt 内联规则升级为 `hard_rules + reasoning_hints` 两层结构，避免把大量商业数字写死成规则。
+
+### 产出
+- 新增方案文档：`方向/合同类型分层路由与BN节点子集提取方案.md`
+- `WORKLIST.md` 新增 **v2.8：合同类型分层路由 + 公司红线配置化** 路线说明和执行顺序
+
+### 为什么这样定
+- 当前 `ai_review.py` 的 `_build_bn_checklist()` 直接展开全部 evidence-layer 节点，确实存在噪音偏高问题；
+- 但 report-11 暴露的更大问题不是“节点不够少”，而是“建议过满、主次不够聚焦、企业底线未独立建模”；
+- 因此 v2.8 的定位应是：**在不牺牲覆盖率的前提下，提高 LLM₁ 审查聚焦度，并为企业级规则化输出铺路。**
 
 ---
 

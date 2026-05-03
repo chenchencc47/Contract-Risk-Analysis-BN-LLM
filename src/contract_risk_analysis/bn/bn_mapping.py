@@ -121,6 +121,49 @@ CLAUSE_TYPE_HINTS: dict[str, list[str]] = {
     "颜色": ["cuad_warranty_duration"],
     "通知": [],
     "送达": [],
+    # ── P5.1: 采购合同专属节点 ──
+    "原料验收": ["raw_material_acceptance_std"],
+    "原料验收标准": ["raw_material_acceptance_std"],
+    "验收标准": ["raw_material_acceptance_std", "acceptance_process_clarity"],
+    "批次结算": ["batch_settlement_terms"],
+    "结算条款": ["batch_settlement_terms"],
+    "能源计价": ["energy_pricing_terms"],
+    "能源价格": ["energy_pricing_terms"],
+    "气价": ["energy_pricing_terms"],
+    "电价": ["energy_pricing_terms"],
+    "供货保障": ["supply_guarantee_terms"],
+    "供货保证": ["supply_guarantee_terms"],
+    "断供": ["supply_guarantee_terms"],
+    "质量检测": ["quality_inspection_rights"],
+    "检验权": ["quality_inspection_rights"],
+    "质检权": ["quality_inspection_rights"],
+    "第三方检测": ["quality_inspection_rights"],
+    "价格调整": ["price_adjustment_mechanism"],
+    "调价机制": ["price_adjustment_mechanism"],
+    "价格公式": ["price_adjustment_mechanism"],
+    "库存责任": ["inventory_storage_responsibility"],
+    "仓储": ["inventory_storage_responsibility"],
+    "仓储费用": ["inventory_storage_responsibility"],
+    "库存": ["inventory_storage_responsibility"],
+    # ── P5.2: 煤炭/大宗商品合同专属节点 ──
+    "热值计价": ["calorific_value_pricing"],
+    "热值": ["calorific_value_pricing"],
+    "发热量": ["calorific_value_pricing"],
+    "kcal": ["calorific_value_pricing"],
+    "试烧": ["trial_burn_acceptance"],
+    "试烧验收": ["trial_burn_acceptance"],
+    "试烧条款": ["trial_burn_acceptance"],
+    "计量争议": ["measurement_dispute_resolution"],
+    "计量差异": ["measurement_dispute_resolution"],
+    "矿发量": ["measurement_dispute_resolution"],
+    "到厂量": ["measurement_dispute_resolution"],
+    "途耗": ["transportation_loss_allocation"],
+    "运输损耗": ["transportation_loss_allocation"],
+    "水分蒸发": ["transportation_loss_allocation"],
+    "单方检验": ["unilateral_inspection_rights"],
+    "装车检验": ["unilateral_inspection_rights"],
+    "卖方检验": ["unilateral_inspection_rights"],
+    "检验权不对等": ["unilateral_inspection_rights"],
 }
 
 # Severity to state mapping for heuristic node state inference
@@ -194,6 +237,10 @@ class BnMappingService:
 
         Returns (node_states: dict[node_name → state],
                  gap_annotations: unmappable segments as ValidationAnnotations).
+
+        P0: When a legal_semantics node receives evidence, its parent
+        contract_fact nodes also get inferred evidence so counterfactual
+        sensitivity analysis can trace the full causal chain.
         """
         node_states: dict[str, str] = {}
         gap_annotations: list[ValidationAnnotation] = []
@@ -202,7 +249,6 @@ class BnMappingService:
             node_name, mapped_state = self._resolve_node_state(segment)
 
             if node_name is None:
-                # This risk type has no corresponding BN node — record as gap
                 gap_annotations.append(
                     ValidationAnnotation(
                         annotation_type="gap_detected",
@@ -221,6 +267,17 @@ class BnMappingService:
                         },
                     )
                 )
+                # P6: Auto-record unmapped clause_types for node discovery
+                try:
+                    from contract_risk_analysis.bn.node_discovery import record_gap
+                    record_gap(
+                        clause_type=segment.clause_type,
+                        risk_title=segment.risk_title,
+                        severity=segment.severity,
+                        confidence=segment.confidence,
+                    )
+                except Exception:
+                    pass  # non-critical, don't block the pipeline
                 continue
 
             # Take the highest-severity state per node
@@ -228,7 +285,63 @@ class BnMappingService:
             if current is None or self._state_is_worse(mapped_state, current):
                 node_states[node_name] = mapped_state
 
+            # P0: Propagate evidence to parent contract_fact nodes
+            # This ensures counterfactual sensitivity analysis has the full
+            # causal chain (e.g., liability_cap → liability_cap_strength)
+            self._propagate_to_parents(node_name, mapped_state, node_states)
+
         return node_states, gap_annotations
+
+    def _propagate_to_parents(
+        self, node_name: str, state: str, node_states: dict[str, str]
+    ) -> None:
+        """Infer and set evidence on parent contract_fact nodes.
+
+        When a legal_semantics node has evidence, its parent contract_fact
+        nodes should also reflect the same underlying contract reality.
+        For example, if liability_cap_strength=severe, then liability_cap
+        should be set to missing (the contract lacks a liability cap).
+        """
+        node_cfg = self.v2_config.get("nodes", {}).get(node_name, {})
+        parents = node_cfg.get("parents", [])
+        for parent_name in parents:
+            parent_cfg = self.v2_config.get("nodes", {}).get(parent_name, {})
+            parent_layer = parent_cfg.get("layer", "")
+            if parent_layer != "contract_fact":
+                continue
+            # Don't overwrite existing evidence
+            if parent_name in node_states:
+                continue
+            # Infer parent state from child state
+            parent_states = parent_cfg.get("states", [])
+            inferred = self._infer_parent_state(state, parent_states)
+            if inferred:
+                node_states[parent_name] = inferred
+
+    @staticmethod
+    def _infer_parent_state(
+        child_state: str, parent_states: list[str]
+    ) -> str | None:
+        """Infer a contract_fact parent state from its legal_semantics child.
+
+        Mapping logic:
+          child "severe"/"missing"/"unfavorable" → parent "missing"
+          child "acceptable"/"present"/"balanced" → parent "present"
+          child "moderate"/"neutral" → parent "present" (conservative)
+        """
+        bad_child = {"severe", "missing", "unfavorable", "counterparty_favorable", "high"}
+        good_child = {"acceptable", "present", "balanced", "favorable", "entailment", "broad", "low"}
+        if child_state in bad_child:
+            for s in ("missing", "unfavorable", "absent"):
+                if s in parent_states:
+                    return s
+            return parent_states[0] if parent_states else None
+        if child_state in good_child:
+            for s in ("present", "favorable", "balanced"):
+                if s in parent_states:
+                    return s
+            return parent_states[-1] if parent_states else None
+        return None
 
     def _resolve_node_state(
         self, segment: RiskSegment

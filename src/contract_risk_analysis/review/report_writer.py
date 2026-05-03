@@ -33,6 +33,17 @@ DEEPSEEK_MODEL = "deepseek-chat"
 
 from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
+# ── P2: Strategy mode section (pre-built constant to avoid f-string backslash issue) ──
+_STRATEGY_SECTION = """## 八、谈判筹码与策略建议（战略层）
+
+基于以下框架，给出具体的战略建议：
+1. **筹码识别**：审查所有"优势保留"条款，逐个评估其"边际价值"是否递减——多占的部分对我方保护有限，但对对方的压迫感巨大。将这样的条款标注为"可策略性调整的筹码"。
+2. **不对称风险判定**：哪些风险是"不对称致命"的——一次触发即可毁灭客户（如无限责任让24万订单毁掉公司），必须清零。
+3. **交换方案**：用1换2。给出具体建议："主动将X从A%降至B%，要求对方接受Y条款"。说明我方净收益是什么。
+
+这不是道德说教，是最冷静的商业理性——极端失衡的合同在执行中必然引发对抗，用可控的让步换取核心安全才是真正的"赢"。
+"""
+
 # Standard report sections the LLM must produce
 REPORT_SECTIONS = [
     "## 一、执行摘要",
@@ -480,18 +491,37 @@ def _fmt_bn_validation(consistency: ConsistencyReport) -> str:
     if consistency.counterfactuals:
         lines.append("\n### 反事实模拟（BN预测的改善效果）")
         lines.append(
-            "以下数据分为两层：（1）整体风险概率变化和（2）关联维度的风险概率变化。"
-            "维度级数据展示了修改某条款对具体风险维度的影响，数值更有区分度，"
-            "请在报告第四章中使用。"
+            "**用法**：维度级delta作主要数据，整体delta作辅助参考。"
+            "整体概率是Noisy-OR聚合压缩值，绝对值偏低属正常现象，仅看delta方向。"
+            "每个反事实项都附有📐推导链（条款状态→CPT来源→推理引擎→delta），请在报告中保留。"
+            "所有反事实项必须全部使用，BN与手动判断不一致时需解释原因。"
         )
         for cf in consistency.counterfactuals:
             lines.append(f"\n- **{cf.node_label}**：{cf.description}")
+            if cf.derivation_chain:
+                lines.append(f"  📐 推导链：{cf.derivation_chain}")
             if cf.dimension_deltas:
                 lines.append(f"  关联维度变化：")
                 for dd in cf.dimension_deltas:
                     lines.append(
                         f"    - {dd.dimension_label}：P(high) {dd.base_high:.1%} → {dd.counterfactual_high:.1%}（降幅 {dd.delta:.1%}）"
                     )
+
+    # P6.1: Joint probability analysis
+    if consistency.joint_risks:
+        lines.append("\n### 跨维度联合概率分析")
+        lines.append(
+            "**用法**：在报告2.2节使用P(A∩B=high)=X%+乘数因子Yx格式替代纯定性描述。"
+            "乘数因子>1.3=乘数效应（需同步处理），>1.5=高危（必须重点警告）。"
+        )
+        for jr in consistency.joint_risks:
+            if jr.get("multiplier", 1.0) > 1.1:
+                lines.append(
+                    f"- ⚠️ {jr['dim_a_label']} × {jr['dim_b_label']}："
+                    f"P(A)={jr['p_a_high']:.1%}, P(B)={jr['p_b_high']:.1%}, "
+                    f"联合P(A∩B)={jr['p_joint_high']:.1%}, "
+                    f"乘数因子 {jr['multiplier']}x"
+                )
 
     return "\n".join(lines)
 
@@ -500,6 +530,7 @@ def _build_combined_prompt(
     free_output: FreeReviewOutput,
     consistency: ConsistencyReport | None,
     review_party: str = "buyer",
+    strategy_mode: bool = False,
 ) -> str:
     """Build the combined prompt for LLM₂ report generation.
 
@@ -507,6 +538,9 @@ def _build_combined_prompt(
     1. LLM₁'s free review is the PRIMARY source — rich risk analysis
     2. BN's consistency report is SUPPLEMENTARY — validation notes, not constraints
     3. LLM₂ has final authority — synthesize both, resolve conflicts, write the report
+
+    If strategy_mode=True, adds a strategic negotiation framework
+    (筹码识别→不对称风险→交换方案).
     """
     party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
     llm_section = _fmt_llm_analysis(free_output)
@@ -516,122 +550,96 @@ def _build_combined_prompt(
     else:
         bn_section = "（贝叶斯网络验证未执行，报告完全基于AI审查判断。）"
 
-    prompt = f"""你是{party_label}的代理律师，负责出具合同风险审查报告的最终版本。
+    # ── Seller-specific safety rules ──
+    seller_safety = ""
+    if review_party == "seller":
+        seller_safety = """
+### ⚠️ 卖方视角专项安全规则
 
-你的唯一使命是在合法前提下最大化{party_label}的利益。
+1. **责任上限修改的铁律**：如果你建议增加责任上限条款，**必须同时做到两件事**：
+   - ① 先排除间接损失（利润损失、商誉损失、工期延误、第三方索赔等）
+   - ② 再设定赔偿上限（具体比例由你结合合同金额、行业惯例和标的物属性判断，援引《民法典》第584条可预见规则论证）
+   **只设上限不排除间接损失 = 承认无限赔偿义务 = 给客户挖坑。这是一个致命的法律错误。**
+
+2. **不要将客观风险标注为"有利"**：过短的异议期（如48小时外观验收）虽然表面加速争议关闭，
+   但根据《民法典》第622条，过短检验期仅视为对外观瑕疵的异议期，不能对抗内在质量索赔。
+   不要将此条款标注为"对卖方有利"——它只是中性的程序条款，不是保护伞。
+
+3. **违约金修改的对等性陷阱**：如果建议降低乙方的违约金比例，注意这可能在谈判中触发甲方
+   要求同样的降低。在建议中注明"仅争取降低本方违约金，不主动给对方同等优惠"。
+"""
+
+    prompt = f"""你是{party_label}的代理律师，出具合同风险审查报告。唯一使命：合法前提下最大化{party_label}利益。
 
 ## 信息来源一：AI初审分析（主要依据）
 
-以下内容由AI审查助手对合同进行自由审查后得出，覆盖了合同中识别到的所有风险维度：
 {llm_section}
 
-## 信息来源二：贝叶斯网络一致性验证（辅助参考）
+## 信息来源二：贝叶斯网络校验（辅助参考）
 
-贝叶斯网络对上述分析进行了结构一致性校验和反事实模拟，结果如下：
 {bn_section}
-
+{seller_safety}
 ---
 
-## 报告撰写要求
+## 立场差异说明
 
-请根据以上两份信息，撰写一份**完整、专业、可读**的合同风险审查报告。
+{"**你是卖方代理律师。** 卖方在合同中通常处于优势地位（付款、管辖、风险转移条款偏向卖方），因此BN反事实模拟的改善项天然少于买方视角——这不代表分析深度不足，而是因为需要修改的条款本身就少。在报告中无需为此解释或道歉，专注分析实际存在的风险即可。" if review_party == "seller" else ""}
 
-### 审核与判断原则
+## 核心要求
 
-1. **AI初审分析是主要依据**：其风险识别和语义判断应作为报告的核心内容。
-2. **贝叶斯网络验证仅供参考**：BN执行的是结构一致性校验而非风险判断。若BN标注的
-   "gap_detected"提示了AI初审未覆盖的风险维度，请考虑补充。
-   若BN标注的"contradiction"提示了LLM与BN的分歧，请以AI初审判断为主，
-   并在报告中注明分歧。
-3. **乘数效应风险必须重视**：若BN标注了"cross_dimension_risk"，这是系统通过
-   因果模型识别出的高风险组合，其风险远超单一维度之和，必须在报告中重点提示。
-4. **你拥有最终判断权**：你是资深法务顾问，不是格式化工具。请根据合同文本和
-   法律知识做出独立判断。如果BN的数据与你对合同的理解冲突，以你的判断为准。
-5. **反事实数据必须来自BN，且必须用完所有BN提供的数据**：第四章反事实分析中的
-   概率数字必须严格来自BN校验数据中的"反事实模拟"部分。
-   **BN提供了几条就必须全部使用，不得挑选、不得遗漏。**
-   如果BN没有提供某维度的模拟数据，请明确标注"BN未对此维度进行反事实模拟"，
-   不得自行编造概率数字。
+1. **AI初审为主，BN为辅**。BN是结构校验工具，不是风险评分器。BN与你的判断冲突时，以你为准并说明理由。
+2. **每个风险必须回答"对我方意味着什么"**——不只是描述条款，要讲清楚商业后果。
+3. **企业红线判定**：对每个高风险项，从三个维度评估是否构成"企业红线"（不可妥协的底线条款）：
+   - **可量化损失**：最坏情况下触发该条款，损失是否超过合同金额的倍数？是否威胁企业生存？
+   - **不可逆性**：损失能否通过后续补救挽回？（赔钱可以赚回来 vs 知识产权永久丧失）
+   - **触发概率**：是在正常履约中就有较大概率触发（如验收期过短），还是仅在极小概率事件下触发？
+   同时满足"损失巨大 + 不可逆 + 高触发"的，标注为 **"🔴 企业红线，不可妥协"**。
+4. **建议必须可操作**：具体措辞（diff格式优先）、法律依据（民法典条款）、安全性自检。
+5. **BN提供的每条反事实数据都要用**。格式：维度级delta（主要）+ 整体delta（辅助）+ 📐推导链 + 交叉校验判断。不一致时解释原因。
+6. **联合概率乘数因子>1.3的组合必须重点警告**。不只是展示数字——用一句话描述它意味着什么商业场景。
+   例如不要说"乘数因子 1.53x"，要说"这意味着甲方可以轻易以轻微违约为由解除合同，同时利用无限责任条款追索远超合同金额的赔偿"。
+7. **不得编造任何数字**。BN未提供的数据标注"BN未对此维度进行反事实模拟"。
+8. **你是律师，不是格式工具**。法律分析深度优先于格式完美。
 
-   **BN提供两层数据，请按以下规则使用**：
+## 让步梯度规则（P1）
 
-   - **维度级风险概率**（dimension_deltas）→ **第四章的主要数据源**。
-     维度级数据直观展示修改某条款对具体风险维度的影响（如：修改付款条款→财务暴露风险
-     从35.8%降至18.4%，降幅17.3%）。这些数字区分度大、与手动风险评级高度一致，
-     是报告中最有说服力的量化证据。**每个反事实项必须展示其维度级delta。**
+当你建议削弱或消除对方的某项合同权利时（如降低违约金比例、延长对方义务期限），
+**必须给出两个版本**：
+- **开盘立场**：我方最理想的目标（如违约金从 10%→0%）
+- **可接受底线**：仍能保护我方核心利益、对方大概率能接受的最低标准（如违约金从 10%→5%）
 
-   - **整体风险概率**（base_high_risk → counterfactual_high_risk）→ **仅作辅助参考**。
-     整体概率是BN通过Noisy-OR聚合五个维度后的压缩值，数学上必然低于各维度的实际
-     风险概率（例如维度级P(high)=35-78%时，整体通常只有20-35%）。
-     **不要在报告中过度强调整体概率的绝对值，也不要将其与维度级概率并列对比**
-     ——它们是不同层级的数据，直接对比会造成混淆。
-     整体概率的用处仅在于展示"改善前后有变化"，delta的方向和相对大小有意义，
-     绝对值意义不大。
+标注格式："若对方坚决不接受开盘立场，可退让至 [可接受底线]，但 [底线条款编号] 不可再退。"
+**禁止只给一个极端数字而不给退让空间。** 一个看起来"完美"的极端建议如果让对方完全无法接受，
+反而会导致整份修改方案被拒绝，连核心保护条款一起落空。
 
-   示例格式（每个反事实项都采用此结构）：
-   ```
-   ### N. 改善XXX条款
-   - BN模拟效果：
-     - [维度级，主要数据] XX风险的高概率从A%降至B%，降幅C%
-     - [整体级，辅助参考] 合同整体高风险概率从D%降至E%
-   - 交叉校验判断：[你的独立分析]
-   ```
+## 输出结构
 
-6. **交叉校验每个反事实项**：对BN提供的每一个反事实模拟结果：
-   - 先展示BN数据（维度级在前，整体级在后）
-   - 然后给出你独立的"交叉校验判断"：BN数据与前文手动评级是否一致？
-     一致→说明相互印证、增强可信度。不一致→解释原因并给出你的最终判断
-   - 所有反事实项分析完毕后，给出一张整合的"优先级排序表"，明确列出
-     每个条款的谈判优先级（最高/高/中）、建议措施和依据（BN数据 + 法务判断）
+## 一、执行摘要（核心结论+风险表+BN交叉验证要点）
+## 二、风险总览（维度矩阵+联合概率乘数效应预警）
+## 三、逐条款风险分析（原文+风险分析+对我方影响+修改建议+法律依据+安全性检验）
+## 四、反事实分析与优化建议（BN数据+推导链+交叉校验+优先级排序表）
+## 五、签署建议（底线条款+力争条款+优势保留+退出策略）
+## 六、整改行动计划
+## 七、附录：方法论说明
+{_STRATEGY_SECTION if strategy_mode else ""}
 
-### 输出格式
+## 法律引用规范
 
-- 使用 Markdown 格式，包含标题、表格、列表、引用块
-- 语言风格：专业法律中文 + 业务可读性
-- 推荐以下章节结构（可按需调整）：
-  ## 一、执行摘要
-  ## 二、风险总览（包含BN乘数效应预警）
-  ## 三、逐条款风险分析
-  ## 四、反事实分析与优化建议（引用BN模拟数据）
-  ## 五、签署建议
-  ## 六、整改行动计划
-  ## 七、附录：方法论说明
-
-### 立场规则
-
-- 你是{party_label}的代理律师。你的每一句话、每一个建议、每一个风险判断都必须
-  回答同一个问题：这对{party_label}意味着什么？
-- 不要为对手方设计保护条款。如果你发现某个条款对双方都不利，只论述它对{party_label}
-  的不利之处。不要主动建议"为对方设定责任上限"或"给对方增加解除权"。
-- 如果你识别到某个条款对{party_label}有利（如对方违约责任上限缺失、我方拥有单方
-  解除权等），明确标注为优势并建议保留。不要在谈判建议中主动让渡这些优势。
-
-### 安全性规则（强制执行）
-
-在给出任何修改建议前，你必须逐条检验：
-1. **建议是否会实质性损害{party_label}的权利？**
-   - "逾期未提异议视为接受"类的条款 → 对需要检测/试用的货物（煤炭、建材、设备等）
-     可能意味着隐蔽缺陷无法追责。设定异议期时必须考虑标的物的检验特性。
-   - 质量异议期的设定必须长于标的物合理检测所需时间（如煤炭需试烧→至少30天）。
-2. **建议中的期限和数字是否与标的物属性匹配？**
-   - 不要对需要破坏性检验或长周期试用的货物设定短于15个工作日的异议期。
-   - 如果不确定，标注"异议期长度需根据{party_label}的检测能力确认"。
-3. **这个建议在谈判中是否会被对手方用来要价？**
-   - 如果会，在签署建议中提醒{party_label}准备应对策略。
-4. 任何安全性检验未通过的建议，必须标注"⚠️ 建议人工复核"。
-
-### 严禁行为
-
+- 引用民法典条文时，确认条文号与内容准确（参考 `config/civil_code_reference.md` 精选集）
+- 法律有明文规定的（如第 622 条检验期限过短、第 585 条违约金调整）→ 直接引用
+- 法律无明文规定的具体数字（如"异议期 N 天""违约金 X%"）→ 结合标的物属性、行业惯例、合同金额自行推理，并说明推理依据
 - 不得编造不存在的法律条文
-- 不得在没有证据的情况下断言某条款"完善"或"合理"
-- 不得在证据不足时做出确定的结论
-- 不得编造或补充反事实分析中的概率数字
-- 不得输出JSON——这是给人类阅读的报告
-- 不得以"公平"或"合同稳定性"为由主动削弱{party_label}的既有优势
+
+## 格式注意
+
+- 表格单元格内**不要使用 `|` 字符**（会被解析为列分隔符导致表格破裂）。用 `/` 或 `、` 代替。
+
+## 严禁
+
+编造法律条文、编造BN数字、为对手设计保护条款、以"公平"为由削弱我方优势、输出JSON。
 
 ---
-
-现在请开始撰写最终报告。直接输出 Markdown，不要有任何前言或后记。"""
+直接输出 Markdown 报告："""
 
     return prompt
 
@@ -640,26 +648,21 @@ def generate_combined_report(
     free_output: FreeReviewOutput,
     consistency: ConsistencyReport | None = None,
     review_party: str = "buyer",
+    strategy_mode: bool = False,
 ) -> PolishedReport:
     """Generate a combined report using LLM₂ as the authoritative writer.
-
-    Unlike polish_report() which treats BN output as unchangeable facts,
-    this function treats LLM₁'s analysis as primary evidence and BN
-    validation as supplementary checks. LLM₂ has final authority to
-    reconcile conflicts and produce the definitive report.
 
     Args:
         free_output: LLM₁'s free-form contract review (primary source).
         consistency: BN consistency validation report (supplementary).
         review_party: "buyer" or "seller" — anchors LLM₂'s stance.
-
-    Returns:
-        PolishedReport with generation_mode="combined".
+        strategy_mode: If True, adds strategic negotiation framework
+                       (筹码识别 → 不对称风险 → 交换方案).
     """
     api_key, base_url, model = _load_polish_settings()
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    prompt = _build_combined_prompt(free_output, consistency, review_party)
+    prompt = _build_combined_prompt(free_output, consistency, review_party, strategy_mode)
 
     completion = client.chat.completions.create(
         model=model,

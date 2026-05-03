@@ -31,6 +31,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dump-review-json", action="store_true")
     parser.add_argument("--allowed-priority", action="append")
     parser.add_argument("--debug-output", action="store_true")
+    # Node discovery commands (P6)
+    parser.add_argument("--discover-nodes", action="store_true",
+                        help="Show pending BN nodes discovered from contract reviews")
+    parser.add_argument("--approve-node", type=str, default=None, metavar="CLAUSE_TYPE",
+                        help="Approve a pending node and add to BN config")
+    parser.add_argument("--reject-node", type=str, default=None, metavar="CLAUSE_TYPE",
+                        help="Remove a pending node entry")
+    parser.add_argument("--feedback-summary", action="store_true",
+                        help="Show aggregated BN feedback accuracy per node")
     return parser.parse_args(argv)
 
 
@@ -58,6 +67,63 @@ def _print_debug_payload(
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+
+    # ── Node discovery: --discover-nodes ──
+    if args.discover_nodes:
+        from contract_risk_analysis.bn.node_discovery import discover_pending_nodes
+        nodes = discover_pending_nodes()
+        if not nodes:
+            print("No pending nodes found. Run some contract reviews first.")
+            return
+        print(f"\n{'='*70}")
+        print(f"  Pending BN Nodes ({len(nodes)} unique clause_types)")
+        print(f"{'='*70}\n")
+        for i, n in enumerate(nodes, 1):
+            print(f"  [{i}] {n['clause_type']}")
+            print(f"      Risk: {n.get('risk_title', 'N/A')}")
+            print(f"      Seen: {n['occurrence_count']}x | Severity: {n.get('severity','?')}")
+            print(f"      → Node name: {n['suggested_node_name']}")
+            print(f"      → States:    {n['suggested_states']}")
+            print(f"      → Dimension: {n['suggested_dimension']}")
+            print(f"      → Approve:   python -m contract_risk_analysis.cli --approve-node \"{n['clause_type']}\"")
+            print(f"      → Reject:    python -m contract_risk_analysis.cli --reject-node \"{n['clause_type']}\"")
+            print()
+        return
+
+    # ── Node discovery: --approve-node ──
+    if args.approve_node:
+        from contract_risk_analysis.bn.node_discovery import approve_node
+        success = approve_node(args.approve_node)
+        if success:
+            print("Run tests to verify BN model integrity.")
+        return
+
+    # ── Node discovery: --reject-node ──
+    if args.reject_node:
+        from contract_risk_analysis.bn.node_discovery import reject_node
+        reject_node(args.reject_node)
+        return
+
+    # ── Feedback: --feedback-summary ──
+    if args.feedback_summary:
+        from contract_risk_analysis.bn.feedback import get_feedback_summary
+        rows = get_feedback_summary()
+        if not rows:
+            print("No feedback records yet.")
+            return
+        print(f"\n{'='*60}")
+        print(f"  BN Feedback Summary ({len(rows)} nodes with feedback)")
+        print(f"{'='*60}\n")
+        for r in rows:
+            bar = "█" * int(r["accuracy"] * 10) + "░" * (10 - int(r["accuracy"] * 10))
+            print(f"  {r['node_name']}")
+            print(f"     Accuracy: {bar} {r['accuracy']:.0%} ({r['correct']}/{r['total']})")
+            if r["incorrect"]:
+                print(f"     ⚠ {r['incorrect']} incorrect — review suggested")
+            print()
+        return
+
+    # ── Default: contract review ──
     allowed_priorities = set(args.allowed_priority or []) or None
     if args.contract_text_path:
         contract_text_path = Path(args.contract_text_path)

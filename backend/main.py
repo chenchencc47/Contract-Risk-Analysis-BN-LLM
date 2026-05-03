@@ -6,7 +6,10 @@ Start: uvicorn backend.main:app --port 9527 --reload
 
 from __future__ import annotations
 
+import logging
 import sys
+import tempfile
+import time as _time
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -18,7 +21,9 @@ if str(SRC) not in sys.path:
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
+
+logger = logging.getLogger(__name__)
 
 from contract_risk_analysis.bn.consistency_validator import build_consistency_report
 from contract_risk_analysis.bn.inference import assess_risk
@@ -174,9 +179,11 @@ async def _run_v1_pipeline(body: dict[str, Any]) -> JSONResponse:
 
 async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     """v2 pipeline: free LLM review → BN validator → combined report."""
+    _v2_t0 = _time.time()
     contract_text = str(body.get("contract_text", "")).strip()
     contract_id = str(body.get("contract_id", "")).strip() or "unnamed"
     review_party = str(body.get("review_party", "buyer"))
+    strategy_mode = bool(body.get("strategy_mode", False))
     include_debug = bool(body.get("include_debug"))
 
     if not contract_text:
@@ -212,12 +219,65 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         k: RISK_LABELS.get(_score_to_level(v), "") for k, v in dim_scores.items()
     }
 
+    # ── Quality gate (P2+P3) ──
+    cf_count = len(consistency.counterfactuals) if consistency else 0
+    if cf_count < 3:
+        logger.warning("QUALITY_GATE: only %s counterfactuals (target ≥5)", cf_count)
+
+    # P3: Check if top-ranked manual risks have BN counterfactual coverage
+    top_risks = sorted(free_output.risk_segments, key=lambda s: {"critical":0,"high":1,"medium":2,"low":3,"positive":4}.get(s.severity, 5))[:3]
+    cf_node_names = {cf.node_name for cf in (consistency.counterfactuals or [])}
+    # Collect BN-mapped node names for top risks
+    from contract_risk_analysis.bn.bn_mapping import BnMappingService
+    mapper = BnMappingService()
+    top_risk_nodes: set[str] = set()
+    for seg in top_risks:
+        node_name, _ = mapper._resolve_node_state(seg)
+        if node_name:
+            top_risk_nodes.add(node_name)
+    covered_top = top_risk_nodes & cf_node_names
+    if len(top_risk_nodes) > 0 and len(covered_top) < max(1, len(top_risk_nodes) * 2 // 3):
+        logger.warning("QUALITY_GATE: top risks BN coverage %s/%s (target ≥66%%)", len(covered_top), len(top_risk_nodes))
+
     # ── Layer 3: Combined report generation ──
     polished = None
     try:
-        polished = generate_combined_report(free_output, consistency, review_party)
+        polished = generate_combined_report(free_output, consistency, review_party, strategy_mode)
     except Exception:
         pass
+
+    # ── DB auto-save (P3) ──
+    report_id: int | None = None
+    try:
+        from contract_risk_analysis.db.repository import (
+            save_report, save_report_risks, save_report_counterfactuals, upsert_contract)
+        cid = upsert_contract(contract_name=contract_id, contract_text=contract_text,
+                              file_name=body.get("source_document"))
+        overall_ph = None
+        if consistency and consistency.bn_posteriors:
+            ov = consistency.bn_posteriors.get("overall_contract_risk")
+            if ov:
+                overall_ph = round(ov.get("high", 0.0) * 100, 1)
+        report_id = save_report(
+            contract_id=cid, report_content_md=polished.narrative_report if polished else "",
+            review_party=review_party, overall_p_high=overall_ph,
+            summary_text=polished.executive_summary if polished else None,
+            bn_counterfactual_count=cf_count,
+            review_duration_ms=int((_time.time() - _v2_t0) * 1000))
+        risk_records = [{"name": s.risk_title, "level": {"critical":"致命","high":"高","medium":"中","low":"低"}.get(s.severity,"中"),
+                         "category": s.clause_type, "confidence": int(s.confidence*100)}
+                        for s in free_output.risk_segments]
+        save_report_risks(report_id, risk_records)
+        if consistency and consistency.counterfactuals:
+            cf_records = [{"node_label": cf.node_label, "base_high_risk": cf.base_high_risk,
+                           "counterfactual_high_risk": cf.counterfactual_high_risk,
+                           "delta_high_risk": cf.delta_high_risk,
+                           "dimension_deltas": [{"base_high": dd.base_high, "counterfactual_high": dd.counterfactual_high,
+                                                 "delta": dd.delta} for dd in cf.dimension_deltas]}
+                          for cf in consistency.counterfactuals]
+            save_report_counterfactuals(report_id, cf_records)
+    except Exception as db_exc:
+        logger.warning("DB_SAVE_FAILED: %s", db_exc)
 
     response: dict[str, Any] = {
         "generation_mode": "v2_combined",
@@ -265,5 +325,177 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     return JSONResponse(response)
 
 
-# Remove the old monolithic review endpoint body (replaced by _run_v1_pipeline)
-# _run_v1_pipeline contains the same logic as the original /api/review
+# ── Direct v2 endpoint (same pipeline, explicit route) ──
+
+
+@app.post("/api/v2/review")
+async def api_v2_review(request: Request) -> JSONResponse:
+    """Direct v2 pipeline endpoint — mirrors /api/review with v2_combined mode."""
+    body: dict[str, Any] = await request.json()
+    return await _run_v2_pipeline(body)
+
+
+# ── Export endpoints ──
+
+
+@app.post("/api/export/pdf")
+async def api_export_pdf(request: Request):
+    body = await request.json()
+    md_text = str(body.get("markdown", "")).strip()
+    filename = str(body.get("filename", "contract-review-report"))
+    if not md_text:
+        return JSONResponse({"error": "markdown 内容不能为空"}, status_code=400)
+    from contract_risk_analysis.export.pdf_exporter import export_pdf
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        output_path = export_pdf(md_text, tmp.name)
+        return FileResponse(str(output_path), media_type="application/pdf",
+                            filename=f"{filename}.pdf")
+
+
+@app.post("/api/export/md")
+async def api_export_md(request: Request):
+    body = await request.json()
+    md_text = str(body.get("markdown", "")).strip()
+    filename = str(body.get("filename", "contract-review-report"))
+    if not md_text:
+        return JSONResponse({"error": "markdown 内容不能为空"}, status_code=400)
+    from contract_risk_analysis.export.pdf_exporter import export_md
+    with tempfile.NamedTemporaryFile(suffix=".md", mode="w", encoding="utf-8", delete=False) as tmp:
+        output_path = export_md(md_text, tmp.name)
+        return FileResponse(str(output_path), media_type="text/markdown; charset=utf-8",
+                            filename=f"{filename}.md")
+
+
+# ── History & Report Management ──
+
+
+@app.get("/api/reports")
+async def api_list_reports(request: Request):
+    review_party = request.query_params.get("review_party")
+    contract_type = request.query_params.get("contract_type")
+    limit = min(int(request.query_params.get("limit", "50")), 200)
+    from contract_risk_analysis.db.repository import list_reports
+    try:
+        reports = list_reports(review_party=review_party, contract_type=contract_type, limit=limit)
+        for r in reports:
+            if r.get("created_at"):
+                r["created_at"] = r["created_at"].isoformat()
+        return JSONResponse({"reports": reports, "count": len(reports)})
+    except Exception as exc:
+        return JSONResponse({"error": f"查询失败：{exc}"}, status_code=500)
+
+
+@app.get("/api/reports/{report_id}")
+async def api_get_report(report_id: int):
+    from contract_risk_analysis.db.repository import get_report
+    try:
+        report = get_report(report_id)
+        if not report:
+            return JSONResponse({"error": "报告不存在"}, status_code=404)
+        return JSONResponse({
+            "id": report.id, "contract_id": report.contract_id,
+            "report_version": report.report_version, "review_party": report.review_party,
+            "overall_risk_level": report.overall_risk_level, "overall_p_high": report.overall_p_high,
+            "summary_text": report.summary_text, "report_content_md": report.report_content_md,
+            "bn_counterfactual_count": report.bn_counterfactual_count,
+            "created_at": report.created_at.isoformat(),
+        })
+    except Exception as exc:
+        return JSONResponse({"error": f"查询失败：{exc}"}, status_code=500)
+
+
+@app.get("/api/reports/diff")
+async def api_diff_reports(request: Request):
+    id1 = request.query_params.get("id1")
+    id2 = request.query_params.get("id2")
+    if not id1 or not id2:
+        return JSONResponse({"error": "需要 id1 和 id2 参数"}, status_code=400)
+    from contract_risk_analysis.db.repository import get_report_diff
+    try:
+        return JSONResponse(get_report_diff(int(id1), int(id2)))
+    except Exception as exc:
+        return JSONResponse({"error": f"对比失败：{exc}"}, status_code=500)
+
+
+# ── BN Feedback ──
+
+
+@app.post("/api/feedback")
+async def api_save_feedback(request: Request):
+    body = await request.json()
+    report_id = body.get("report_id")
+    node_name = str(body.get("node_name", "")).strip()
+    verdict = str(body.get("verdict", "")).strip()
+    reviewer_note = body.get("reviewer_note")
+    if not report_id or not node_name or not verdict:
+        return JSONResponse({"error": "report_id, node_name, verdict 必填"}, status_code=400)
+    from contract_risk_analysis.bn.feedback import save_feedback
+    try:
+        fid = save_feedback(report_id=int(report_id), node_name=node_name,
+                            verdict=verdict, reviewer_note=reviewer_note)
+        return JSONResponse({"id": fid, "status": "ok"})
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
+    except Exception as exc:
+        return JSONResponse({"error": f"保存失败：{exc}"}, status_code=500)
+
+
+@app.get("/api/feedback/summary")
+async def api_feedback_summary():
+    from contract_risk_analysis.bn.feedback import get_feedback_summary
+    try:
+        rows = get_feedback_summary()
+        return JSONResponse({"nodes": rows, "count": len(rows)})
+    except Exception as exc:
+        return JSONResponse({"error": f"查询失败：{exc}"}, status_code=500)
+
+
+# ── Dual-Perspective Review ──
+
+
+@app.post("/api/v2/review/dual")
+async def api_v2_dual_review(request: Request):
+    body = await request.json()
+    contract_text = str(body.get("contract_text", "")).strip()
+    contract_id = str(body.get("contract_id", "")).strip() or "unnamed"
+    source_document = body.get("source_document")
+    if not contract_text:
+        return JSONResponse({"error": "合同文本不能为空"}, status_code=400)
+
+    results: dict[str, dict] = {}
+    for party in ("buyer", "seller"):
+        t0 = _time.time()
+        try:
+            free_output = free_review_contract_text(
+                contract_text, contract_id, source_document, party)
+            consistency = build_consistency_report(free_output)
+            polished = generate_combined_report(free_output, consistency, party)
+            results[party] = {
+                "executive_summary": polished.executive_summary,
+                "signing_advice": polished.signing_advice,
+                "overall_assessment": free_output.overall_assessment,
+                "risk_segments_count": len(free_output.risk_segments),
+                "counterfactuals_count": len(consistency.counterfactuals) if consistency else 0,
+                "strengths": free_output.strengths,
+                "missing_clauses": free_output.missing_clauses,
+                "duration_ms": int((_time.time() - t0) * 1000),
+            }
+        except Exception as exc:
+            results[party] = {"error": str(exc)}
+
+    comparison: dict = {}
+    if "buyer" in results and "seller" in results:
+        b, s = results["buyer"], results["seller"]
+        b_st = set(b.get("strengths", [])); s_st = set(s.get("strengths", []))
+        b_ms = set(b.get("missing_clauses", [])); s_ms = set(s.get("missing_clauses", []))
+        comparison = {
+            "shared_strengths": sorted(b_st & s_st),
+            "buyer_unique_strengths": sorted(b_st - s_st),
+            "seller_unique_strengths": sorted(s_st - b_st),
+            "shared_missing": sorted(b_ms & s_ms),
+            "buyer_unique_concerns": sorted(b_ms - s_ms),
+            "seller_unique_concerns": sorted(s_ms - b_ms),
+        }
+
+    return JSONResponse({"contract_id": contract_id, "buyer": results.get("buyer", {}),
+                         "seller": results.get("seller", {}), "comparison": comparison})

@@ -7,6 +7,21 @@
 
 ## 核心原则
 
+### 0. 先独立思考，再参考外部评价
+
+当用户提供外部评价（DeepSeek网页评价、AI网页检测报告等）让我参考时：
+- **必须先独立分析**，形成自己的结论和评分
+- **然后再看外部评价**，对比差异
+- **最后给出综合判断**，标注哪些观点来自自己、哪些与外部一致/不一致
+
+**严禁行为：跳过独立思考直接引用外部评价的结论。**
+外部评价是参考，不是标准答案。如果我自己的分析与外部评价不同，说明分歧点并给出理由，
+而不是简单地"外部说X所以X是对的"。
+
+**2026-04-30 案例：** 评估 report-10 时，直接引用了 DeepSeek 的 94 分评分框架，
+没有先给出自己的独立量化分析。用户指出这是"多次犯的错误"。
+**教训**：不管外部评价是谁写的、看起来多么权威，必须先自己思考再参考他人。
+
 ### 1. 每一个概率数字必须有可追溯的来源
 
 系统中任何概率数字（CPT值、权重、P(high)等）的合法来源只有三种：
@@ -71,10 +86,12 @@
 - 工作清单：`worklist/WORKLIST.md`
 - 进度记录：`worklist/PROGRESS.md`（每次改动后更新）
 - Python 解释器：`.venv/Scripts/python.exe`
+- **后端入口：`backend/main.py`（端口 9527）**——不是 `src/contract_risk_analysis/web/server.py`
+- 前端配置：`frontend/vite.config.ts`（API 代理到 localhost:9527）
+- 启动命令：`.venv/Scripts/python.exe -m uvicorn backend.main:app --port 9527 --reload`
 
 ### 测试
-- 运行核心测试：`.venv/Scripts/python.exe -m pytest tests/ --ignore=tests/demo/ -q`
-- 已知问题：4 个 Streamlit demo 测试预存失败（非本次引入）
+- 运行核心测试：`.venv/Scripts/python.exe -m pytest tests/ -q`
 
 ### 报告版本管理
 - 报告命名：`contract-review-{合同类型}-{序号}.md`
@@ -84,6 +101,22 @@
 ---
 
 ## 犯错记录
+
+### 2026-04-30：在错误的后端文件上开发，导致 404
+
+**上下文**：P3-P6 阶段新增了大量 API 端点（导出、历史、反馈、双视角等），全部写在了
+`src/contract_risk_analysis/web/server.py`。但项目实际运行的是 `backend/main.py`（端口 9527），
+两个文件各自创建独立的 FastAPI app，新端点在实际服务上根本不存在。
+
+**为什么错**：
+1. 没有先确认项目实际运行的是哪个文件，凭"看到 server.py 有 FastAPI app"就假设它是入口
+2. 前端 `vite.config.ts` 代理到 `localhost:9527`，启动脚本 `backend/main.py` 写在 `启动.txt` 里——都没注意到
+3. 擅自把端口从 9527 改成 8000，没查项目约定
+
+**正确做法**：
+1. 动手改 API 前，先看 `启动.txt` + `vite.config.ts` 确认后端入口和端口
+2. 新 API 端点应该加到 `backend/main.py`，不是另起炉灶
+3. 端口跟随项目约定（9527），不擅自改
 
 ### 2026-04-29：提出无数据依据的手动调参方案
 

@@ -462,9 +462,9 @@ def run_sensitivity_analysis(
             except Exception:
                 dim_baselines[dim_node] = 0.0
 
-    # Identify which state is "best" for each evidence node
-    # Dynamically discover all contract_fact and legal_semantics nodes from config
-    favorable_states = {
+    # Identify which state is "best" for each evidence node.
+    # Hardcoded map for known nodes; auto-discovery fills the rest.
+    favorable_states: dict[str, str] = {
         "termination_clause": "present",
         "liability_cap": "acceptable",
         "confidentiality_nli": "entailment",
@@ -479,6 +479,14 @@ def run_sensitivity_analysis(
         "jurisdiction_fairness": "balanced",
         "acceptance_process_clarity": "present",
         "confidentiality_scope_reasonableness": "entailment",
+        # Sales-contract-specific nodes (P0: ensure comprehensive coverage)
+        "payment_structure": "balanced",
+        "delivery_terms": "present",
+        "risk_transfer_point": "favorable",
+        "dispute_venue_fairness": "balanced",
+        "force_majeure_completeness": "present",
+        "warranty_scope": "broad",
+        "dispute_resolution_completeness": "present",
     }
 
     # Auto-discover all evidence-layer nodes from config (CUAD + sales + existing)
@@ -490,11 +498,17 @@ def run_sensitivity_analysis(
             # Auto-infer favorable state for nodes not in the hardcoded map
             if node_name not in favorable_states:
                 states = node_cfg.get("states", [])
+                # Extended candidate list for broader coverage (P0 fix)
                 for fav in ("present", "balanced", "acceptable", "favorable",
-                            "entailment", "broad", "low"):
+                            "entailment", "broad", "low", "sufficient",
+                            "strong", "reasonable", "clear", "complete",
+                            "adequate", "exists", "yes"):
                     if fav in states:
                         favorable_states[node_name] = fav
                         break
+                # Fallback: use the last state (typically the "good" one)
+                if node_name not in favorable_states and states:
+                    favorable_states[node_name] = states[-1]
 
     results: list[dict] = []
     for node_name in fact_semantics_nodes:
@@ -613,3 +627,114 @@ def _build_node_to_dimension_map(config: dict) -> dict[str, list[str]]:
             evidence_to_dims[node_name] = reachable_dims
 
     return evidence_to_dims
+
+
+@dataclass(frozen=True)
+class JointRiskResult:
+    """Joint probability of two risk dimensions both being 'high'."""
+    dim_a: str
+    dim_b: str
+    dim_a_label: str
+    dim_b_label: str
+    p_a_high: float          # P(A=high)
+    p_b_high: float          # P(B=high)
+    p_joint_high: float      # P(A=high ∩ B=high)
+    multiplier: float        # P(A∩B) / (P(A) * P(B)) — >1 = multiplicative
+    description: str
+
+
+def query_joint_probability(
+    dim_pairs: list[tuple[str, str]],
+    evidence: dict[str, str] | None = None,
+    model: BayesianNetwork | None = None,
+    config: dict | None = None,
+) -> list[JointRiskResult]:
+    """Compute P(A=high ∩ B=high) for each dimension pair.
+
+    The multiplier indicates whether the two dimensions interact
+    multiplicatively (>1), independently (=1), or negatively (<1).
+
+    Args:
+        dim_pairs: List of (dim_a, dim_b) tuples to query.
+        evidence: BN evidence dict.
+        model: Pre-built model (optional).
+        config: BN config (optional).
+
+    Returns:
+        List of JointRiskResult sorted by multiplier descending.
+    """
+    if config is None:
+        config = load_v2_config()
+    if model is None:
+        model = build_model(config)
+
+    inference = VariableElimination(model)
+    clean_evidence = dict(evidence or {})
+
+    # First get marginal P(high) for each unique dimension
+    unique_dims: set[str] = set()
+    for a, b in dim_pairs:
+        unique_dims.add(a)
+        unique_dims.add(b)
+
+    marginals: dict[str, float] = {}
+    for dim in unique_dims:
+        try:
+            factor = inference.query(
+                variables=[dim],
+                evidence=clean_evidence if clean_evidence else None,
+            )
+            dist = _discrete_factor_to_distribution(factor, dim)
+            marginals[dim] = dist.get("high", 0.0)
+        except Exception:
+            marginals[dim] = 0.0
+
+    results: list[JointRiskResult] = []
+    for dim_a, dim_b in dim_pairs:
+        p_a = marginals.get(dim_a, 0.0)
+        p_b = marginals.get(dim_b, 0.0)
+        try:
+            joint_factor = inference.query(
+                variables=[dim_a, dim_b],
+                evidence=clean_evidence if clean_evidence else None,
+            )
+            # Extract P(dim_a=high, dim_b=high)
+            dim_a_idx = list(joint_factor.variables).index(dim_a)
+            dim_b_idx = list(joint_factor.variables).index(dim_b)
+            values = joint_factor.values
+            # Find indices of 'high' state in each dimension
+            high_idx_a = joint_factor.state_names[dim_a].index("high")
+            high_idx_b = joint_factor.state_names[dim_b].index("high")
+            # Build slice to extract the joint probability
+            slices = [slice(None)] * len(joint_factor.variables)
+            slices[dim_a_idx] = high_idx_a
+            slices[dim_b_idx] = high_idx_b
+            p_joint = float(values[tuple(slices)])
+        except Exception:
+            p_joint = 0.0
+
+        # Multiplier: >1 = synergistic, =1 = independent, <1 = antagonistic
+        independent = p_a * p_b
+        multiplier = round(p_joint / independent, 2) if independent > 0 else 1.0
+
+        dim_a_label = DIMENSION_LABELS.get(dim_a, dim_a)
+        dim_b_label = DIMENSION_LABELS.get(dim_b, dim_b)
+
+        if multiplier > 1.3:
+            desc = f"「{dim_a_label}」与「{dim_b_label}」存在乘数效应：联合高风险概率 {p_joint:.1%}，乘数因子 {multiplier}x。两个风险维度相互放大，需同步处理。"
+        elif multiplier > 0.9:
+            desc = f"「{dim_a_label}」与「{dim_b_label}」基本独立：联合高风险概率 {p_joint:.1%}。"
+        else:
+            desc = f"「{dim_a_label}」与「{dim_b_label}」存在负相关：联合高风险概率 {p_joint:.1%}。改善一个维度可能降低另一维度风险。"
+
+        results.append(JointRiskResult(
+            dim_a=dim_a, dim_b=dim_b,
+            dim_a_label=dim_a_label, dim_b_label=dim_b_label,
+            p_a_high=round(p_a, 4), p_b_high=round(p_b, 4),
+            p_joint_high=round(p_joint, 4),
+            multiplier=multiplier,
+            description=desc,
+        ))
+
+    results.sort(key=lambda r: -r.multiplier)
+    return results

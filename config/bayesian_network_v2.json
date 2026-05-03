@@ -285,6 +285,54 @@
     [
       "warranty_scope",
       "financial_exposure_risk"
+    ],
+    [
+      "raw_material_acceptance_std",
+      "performance_delivery_risk"
+    ],
+    [
+      "batch_settlement_terms",
+      "financial_exposure_risk"
+    ],
+    [
+      "energy_pricing_terms",
+      "financial_exposure_risk"
+    ],
+    [
+      "supply_guarantee_terms",
+      "performance_delivery_risk"
+    ],
+    [
+      "quality_inspection_rights",
+      "performance_delivery_risk"
+    ],
+    [
+      "price_adjustment_mechanism",
+      "clause_balance_risk"
+    ],
+    [
+      "inventory_storage_responsibility",
+      "financial_exposure_risk"
+    ],
+    [
+      "calorific_value_pricing",
+      "financial_exposure_risk"
+    ],
+    [
+      "trial_burn_acceptance",
+      "performance_delivery_risk"
+    ],
+    [
+      "measurement_dispute_resolution",
+      "dispute_resolution_risk"
+    ],
+    [
+      "unilateral_inspection_rights",
+      "clause_balance_risk"
+    ],
+    [
+      "transportation_loss_allocation",
+      "financial_exposure_risk"
     ]
   ],
   "nodes": {
@@ -607,7 +655,12 @@
         "cuad_agg_financial_a",
         "cuad_agg_financial_b",
         "payment_structure",
-        "warranty_scope"
+        "warranty_scope",
+        "batch_settlement_terms",
+        "energy_pricing_terms",
+        "inventory_storage_responsibility",
+        "calorific_value_pricing",
+        "transportation_loss_allocation"
       ],
       "cpt_source": "noisy_max_with_cross_dim",
       "cpt": {
@@ -655,7 +708,11 @@
         "legal_enforceability_risk",
         "cuad_agg_performance",
         "delivery_terms",
-        "risk_transfer_point"
+        "risk_transfer_point",
+        "raw_material_acceptance_std",
+        "supply_guarantee_terms",
+        "quality_inspection_rights",
+        "trial_burn_acceptance"
       ],
       "cpt_source": "noisy_max_with_cross_dim",
       "cpt": {
@@ -696,7 +753,8 @@
         "governing_law_clarity",
         "financial_exposure_risk",
         "cuad_agg_dispute",
-        "dispute_venue_fairness"
+        "dispute_venue_fairness",
+        "measurement_dispute_resolution"
       ],
       "cpt_source": "noisy_max_with_cross_dim",
       "cpt": {
@@ -737,7 +795,9 @@
         "termination_right_balance",
         "liability_cap_strength",
         "cuad_agg_balance_a",
-        "cuad_agg_balance_b"
+        "cuad_agg_balance_b",
+        "price_adjustment_mechanism",
+        "unilateral_inspection_rights"
       ],
       "cpt_source": "noisy_max_with_cuad_agg",
       "cpt": {
@@ -1597,6 +1657,232 @@
         "unknown": 0.05
       },
       "cpt_source": "expert_estimated"
+    },
+    "raw_material_acceptance_std": {
+      "label": "原料验收标准",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.45,
+          "missing": 0.25
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "原料（粘土/釉料等）的质量验收标准是否明确约定"
+    },
+    "batch_settlement_terms": {
+      "label": "批次结算条款",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.25,
+          "neutral": 0.45,
+          "unfavorable": 0.3
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "付款是否按批次验收后结算，而非一次性预付"
+    },
+    "energy_pricing_terms": {
+      "label": "能源计价条款",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.2,
+          "neutral": 0.4,
+          "unfavorable": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "能源（天然气/电力）价格是否与市场指数挂钩，调价机制是否合理"
+    },
+    "supply_guarantee_terms": {
+      "label": "供货保障条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.35,
+          "missing": 0.35
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "供应商延迟/拒绝交货的违约金和赔偿机制是否充分"
+    },
+    "quality_inspection_rights": {
+      "label": "质量检测权",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.3,
+          "neutral": 0.4,
+          "unfavorable": 0.3
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "买方是否有权在交货前/中/后进行独立质量检测"
+    },
+    "price_adjustment_mechanism": {
+      "label": "价格调整机制",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.25,
+          "vague": 0.35,
+          "missing": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "长期供应合同中的价格调整公式/触发条件是否明确"
+    },
+    "inventory_storage_responsibility": {
+      "label": "库存仓储责任",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.3,
+          "neutral": 0.35,
+          "unfavorable": 0.35
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "库存保管责任和仓储费用由谁承担"
+    },
+    "calorific_value_pricing": {
+      "label": "热值计价条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.25,
+          "missing": 0.45
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "煤炭是否按实际热值(kcal/kg)计价而非仅按重量"
+    },
+    "trial_burn_acceptance": {
+      "label": "试烧验收条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.2,
+          "vague": 0.25,
+          "missing": 0.55
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "是否约定通过试烧验证煤炭质量后再批量验收"
+    },
+    "measurement_dispute_resolution": {
+      "label": "计量争议解决",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.25,
+          "vague": 0.3,
+          "missing": 0.45
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "矿发量与到厂量差异的争议解决机制（第三方检验/共同取样）"
+    },
+    "unilateral_inspection_rights": {
+      "label": "单方检验权",
+      "layer": "contract_fact",
+      "states": [
+        "balanced",
+        "counterparty_favorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "balanced": 0.3,
+          "counterparty_favorable": 0.7
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "质量检验权是否由一方独享（煤炭行业通常卖方独享装车检验）"
+    },
+    "transportation_loss_allocation": {
+      "label": "运输损耗承担",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.25,
+          "neutral": 0.35,
+          "unfavorable": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "运输途中的水分蒸发/损耗由谁承担（煤炭运输损耗通常3-5%）"
     }
   },
   "thresholds": {

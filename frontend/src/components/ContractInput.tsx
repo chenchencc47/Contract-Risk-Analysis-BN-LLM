@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 interface Props {
-  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller") => void;
+  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean, strategy: boolean) => void;
   isLoading: boolean;
 }
 
@@ -37,6 +37,8 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
   const [text, setText] = useState("");
   const [id, setId] = useState("contract-001");
   const [reviewParty, setReviewParty] = useState<"buyer" | "seller">("buyer");
+  const [dualMode, setDualMode] = useState(false);
+  const [strategyMode, setStrategyMode] = useState(false);
   const [file, setFile] = useState<FileInfo | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,10 +76,10 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
 
   const handleSubmit = () => {
     if (file) {
-      onSubmit(file.content, id.trim() || "contract-001", reviewParty);
+      onSubmit(file.content, id.trim() || "contract-001", reviewParty, dualMode, strategyMode);
     } else {
       const finalText = text.trim() || SAMPLE;
-      onSubmit(finalText, id.trim() || "contract-001", reviewParty);
+      onSubmit(finalText, id.trim() || "contract-001", reviewParty, dualMode, strategyMode);
     }
   };
 
@@ -195,13 +197,13 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
       )}
 
       {/* ── Review Party Selector ── */}
-      <div className="flex items-center gap-3 mt-5">
+      <div className="flex items-center gap-3 mt-5 flex-wrap">
         <span className="text-xs font-medium text-[#6B5E53] tracking-wide">审查立场</span>
         <div className="flex bg-[#F0EBE4] rounded-lg p-0.5">
           <button
-            onClick={() => setReviewParty("buyer")}
+            onClick={() => { setReviewParty("buyer"); setDualMode(false); }}
             className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-              reviewParty === "buyer"
+              reviewParty === "buyer" && !dualMode
                 ? "bg-white text-[#8B6F5C] shadow-sm"
                 : "text-[#9B8E83] hover:text-[#6B5E53]"
             }`}
@@ -209,16 +211,35 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
             甲方（买方）
           </button>
           <button
-            onClick={() => setReviewParty("seller")}
+            onClick={() => { setReviewParty("seller"); setDualMode(false); }}
             className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-              reviewParty === "seller"
+              reviewParty === "seller" && !dualMode
                 ? "bg-white text-[#8B6F5C] shadow-sm"
                 : "text-[#9B8E83] hover:text-[#6B5E53]"
             }`}
           >
             乙方（卖方）
           </button>
+          <button
+            onClick={() => setDualMode(true)}
+            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+              dualMode
+                ? "bg-white text-[#7B8B6F] shadow-sm"
+                : "text-[#9B8E83] hover:text-[#6B5E53]"
+            }`}
+          >
+            🔄 双视角对比
+          </button>
         </div>
+        <label className="flex items-center gap-1.5 cursor-pointer ml-3">
+          <input
+            type="checkbox"
+            checked={strategyMode}
+            onChange={(e) => setStrategyMode(e.target.checked)}
+            className="rounded"
+          />
+          <span className="text-xs text-[#6B5E53]">♟ 谈判策略</span>
+        </label>
       </div>
 
       <button

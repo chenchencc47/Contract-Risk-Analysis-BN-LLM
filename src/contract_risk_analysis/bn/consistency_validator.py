@@ -69,10 +69,43 @@ def build_consistency_report(
     except Exception:
         bn_posteriors = {}
 
+    # Step 6 (P6.1): Joint probability analysis for multiplicative risk pairs
+    joint_risks: list[dict] = []
+    try:
+        from contract_risk_analysis.bn.pgmpy_adapter import (
+            DIMENSION_NODES, query_joint_probability,
+        )
+        dim_pairs: list[tuple[str, str]] = [
+            ("financial_exposure_risk", "dispute_resolution_risk"),
+            ("performance_delivery_risk", "legal_enforceability_risk"),
+            ("financial_exposure_risk", "clause_balance_risk"),
+            ("dispute_resolution_risk", "legal_enforceability_risk"),
+            ("performance_delivery_risk", "financial_exposure_risk"),
+            ("performance_delivery_risk", "dispute_resolution_risk"),
+        ]
+        joint_results = query_joint_probability(
+            dim_pairs=dim_pairs, evidence=node_states,
+        )
+        for jr in joint_results:
+            joint_risks.append({
+                "dim_a": jr.dim_a,
+                "dim_b": jr.dim_b,
+                "dim_a_label": jr.dim_a_label,
+                "dim_b_label": jr.dim_b_label,
+                "p_a_high": jr.p_a_high,
+                "p_b_high": jr.p_b_high,
+                "p_joint_high": jr.p_joint_high,
+                "multiplier": jr.multiplier,
+                "description": jr.description,
+            })
+    except Exception:
+        pass
+
     return ConsistencyReport(
         contract_id=free_output.contract_id,
         annotations=all_annotations,
         counterfactuals=counterfactuals,
         bn_posteriors=bn_posteriors,
         bn_summary=bn_summary,
+        joint_risks=joint_risks,
     )

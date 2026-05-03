@@ -312,12 +312,13 @@ class BnValidator:
         return annotations
 
     def run_counterfactual_analysis(
-        self, node_states: dict[str, str], top_n: int = 5
+        self, node_states: dict[str, str], top_n: int = 8
     ) -> list[CounterfactualResult]:
         """Run counterfactual simulations and return as CounterfactualResult list.
 
-        Now includes dimension-level deltas: for each evidence node flip,
-        we also compute the probability change on its associated dimension(s).
+        Includes dimension-level deltas and a floor guarantee: if fewer than 3
+        counterfactuals pass the overall-delta threshold, dimension-level deltas
+        are used to supplement the results (P0 fix for output stability).
         """
         try:
             model = build_model(self.v2_config)
@@ -331,50 +332,100 @@ class BnValidator:
             return []
 
         results: list[CounterfactualResult] = []
+        # Track items filtered out for potential fallback inclusion
+        fallback_pool: list[dict] = []
+
         for sr in sensitivity[:top_n]:
-            if sr["delta_high_risk"] < 0.01:
+            if sr["delta_high_risk"] < 0.003:
+                # P0: keep in fallback pool if has significant dimension-level delta
+                has_significant_dim_delta = any(
+                    dd.get("delta", 0) >= 0.05 for dd in sr.get("dimension_deltas", [])
+                )
+                if has_significant_dim_delta:
+                    fallback_pool.append(sr)
                 continue
             node_label = NODE_LABELS.get(sr["node_name"], sr["node_name"])
+            results.append(self._build_counterfactual_result(sr, node_label))
 
-            # Build dimension-level deltas
-            dim_deltas: list[DimensionDelta] = [
-                DimensionDelta(
-                    dimension_key=dd["dimension_key"],
-                    dimension_label=dd["dimension_label"],
-                    base_high=dd["base_high"],
-                    counterfactual_high=dd["counterfactual_high"],
-                    delta=dd["delta"],
-                )
-                for dd in sr.get("dimension_deltas", [])
-            ]
-
-            # Enrich description with dimension-level info
-            desc_parts = [
-                f"若将「{node_label}」从当前状态改善为目标状态，"
-                f"合同整体高风险概率预计从 {sr['base_high_risk']:.1%} "
-                f"降至 {sr['counterfactual_high_risk']:.1%}，"
-                f"降幅 {sr['delta_high_risk']:.1%}。"
-            ]
-            for dd in dim_deltas:
-                desc_parts.append(
-                    f"→ {dd.dimension_label}：P(high)从 {dd.base_high:.1%} 降至 {dd.counterfactual_high:.1%}，降幅 {dd.delta:.1%}。"
-                )
-
-            results.append(
-                CounterfactualResult(
-                    node_name=sr["node_name"],
-                    node_label=node_label,
-                    current_state=sr["current_state"],
-                    proposed_state=sr["best_state"],
-                    base_high_risk=sr["base_high_risk"],
-                    counterfactual_high_risk=sr["counterfactual_high_risk"],
-                    delta_high_risk=sr["delta_high_risk"],
-                    description="\n".join(desc_parts),
-                    dimension_deltas=dim_deltas,
-                )
-            )
+        # P0: floor guarantee — if < 3 results, supplement from fallback pool
+        if len(results) < 3 and fallback_pool:
+            fallback_pool.sort(key=lambda r: r["delta_high_risk"], reverse=True)
+            needed = 3 - len(results)
+            for sr in fallback_pool[:needed]:
+                node_label = NODE_LABELS.get(sr["node_name"], sr["node_name"])
+                results.append(self._build_counterfactual_result(sr, node_label))
 
         return results
+
+    def _build_counterfactual_result(
+        self, sr: dict, node_label: str
+    ) -> CounterfactualResult:
+        """Build a CounterfactualResult from a sensitivity result dict."""
+        dim_deltas: list[DimensionDelta] = [
+            DimensionDelta(
+                dimension_key=dd["dimension_key"],
+                dimension_label=dd["dimension_label"],
+                base_high=dd["base_high"],
+                counterfactual_high=dd["counterfactual_high"],
+                delta=dd["delta"],
+            )
+            for dd in sr.get("dimension_deltas", [])
+        ]
+
+        desc_parts = [
+            f"若将「{node_label}」从当前状态改善为目标状态，"
+            f"合同整体高风险概率预计从 {sr['base_high_risk']:.1%} "
+            f"降至 {sr['counterfactual_high_risk']:.1%}，"
+            f"降幅 {sr['delta_high_risk']:.1%}。"
+        ]
+        for dd in dim_deltas:
+            desc_parts.append(
+                f"→ {dd.dimension_label}：P(high)从 {dd.base_high:.1%} 降至 {dd.counterfactual_high:.1%}，降幅 {dd.delta:.1%}。"
+            )
+
+        # P1: Build derivation chain
+        derivation_chain = self._build_derivation_chain(sr)
+
+        return CounterfactualResult(
+            node_name=sr["node_name"],
+            node_label=node_label,
+            current_state=sr["current_state"],
+            proposed_state=sr["best_state"],
+            base_high_risk=sr["base_high_risk"],
+            counterfactual_high_risk=sr["counterfactual_high_risk"],
+            delta_high_risk=sr["delta_high_risk"],
+            description="\n".join(desc_parts),
+            dimension_deltas=dim_deltas,
+            derivation_chain=derivation_chain,
+        )
+
+    def _build_derivation_chain(self, sr: dict) -> str:
+        """P1: Build a traceable derivation chain for a counterfactual result.
+
+        Format: 条款状态 X→Y | CPT来源 Z | pgmpy VE推理 → δ=-43.3%
+        """
+        node_name = sr["node_name"]
+        node_cfg = self.v2_config.get("nodes", {}).get(node_name, {})
+        cpt_source = node_cfg.get("cpt_source", "expert_estimated")
+        cpt_source_label = {
+            "cuad_empirical": "CUAD数据集统计",
+            "contractnli_empirical": "ContractNLI数据集统计",
+            "expert_estimated": "专家估计",
+        }.get(cpt_source, cpt_source)
+
+        chain_parts = [
+            f"条款状态 {sr['current_state']}→{sr['best_state']}",
+            f"CPT来源：{cpt_source_label}",
+            f"pgmpy变量消除推理 → 整体δ={sr['delta_high_risk']:.1%}",
+        ]
+
+        # Add dimension-level delta summary if present
+        for dd in sr.get("dimension_deltas", [])[:2]:
+            chain_parts.append(
+                f"{dd['dimension_label']}δ={dd['delta']:.1%}"
+            )
+
+        return " | ".join(chain_parts)
 
     def generate_bn_summary(
         self,

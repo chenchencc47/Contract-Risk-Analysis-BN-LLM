@@ -4,6 +4,7 @@ import { DimensionCard } from "./DimensionCard";
 import { AttributionChain } from "./AttributionChain";
 import { IssueReportList } from "./IssueReport";
 import { ActionPlan } from "./ActionPlan";
+import { ExportButtons } from "./ExportButtons";
 import { useState, useMemo } from "react";
 import { marked } from "marked";
 
@@ -117,30 +118,10 @@ export function RiskReport({ data }: Props) {
       {viewMode === "document" && hasReport && (
         <div className="animate-fade-in">
           <div className="flex justify-end mb-4 gap-2">
-            <button
-              onClick={() => {
-                const blob = new Blob([polished!.narrative_report], { type: "text/markdown" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `contract-review-${data.contract_id}.md`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="text-xs text-[#8B6F5C] hover:text-[#6B5243] font-medium
-                         px-3 py-1.5 border border-[#E8E2DB] rounded-md
-                         hover:border-[#8B6F5C] transition-all duration-200"
-            >
-              ⬇ 下载 Markdown
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="text-xs text-[#8B6F5C] hover:text-[#6B5243] font-medium
-                         px-3 py-1.5 border border-[#E8E2DB] rounded-md
-                         hover:border-[#8B6F5C] transition-all duration-200"
-            >
-              🖨 打印 PDF
-            </button>
+            <ExportButtons
+              contractId={data.contract_id}
+              markdown={polished!.narrative_report}
+            />
           </div>
 
           <article

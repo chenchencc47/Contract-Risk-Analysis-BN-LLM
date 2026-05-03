@@ -10,10 +10,12 @@ requires-python = ">=3.11"
 dependencies = [
   "openai>=1.76",
   "python-dotenv>=1.0",
-  "streamlit>=1.44",
   "fastapi>=0.110",
   "uvicorn>=0.29",
   "pgmpy>=1.1.0",
+  "markdown>=3.4",
+  "fpdf2>=2.8",
+  "pymysql>=1.1",
 ]
 
 [project.optional-dependencies]
