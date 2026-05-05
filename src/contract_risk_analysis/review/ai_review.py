@@ -5,6 +5,7 @@ import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import yaml
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -17,9 +18,139 @@ from contract_risk_analysis.domain.review_schema import ReviewFinding, ReviewRes
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ENV_PATH = PROJECT_ROOT / ".env"
 BN_CONFIG_PATH = PROJECT_ROOT / "config" / "bayesian_network_v2.json"
+CONTRACT_TYPE_ROUTING_PATH = PROJECT_ROOT / "config" / "contract_type_routing.yaml"
+COMPANY_REDLINES_PATH = PROJECT_ROOT / "config" / "company_redlines.yaml"
 
 
-def _build_bn_checklist() -> str:
+@dataclass(frozen=True)
+class ContractTypeRoutingResult:
+    primary_type: str | None
+    matched_types: list[str]
+    selected_nodes: list[str]
+    confidence: float
+
+
+def load_contract_type_routing_config() -> dict:
+    with open(CONTRACT_TYPE_ROUTING_PATH, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def load_company_redlines(matched_types: list[str] | None = None) -> tuple[list[dict], list[dict]]:
+    """Load company redline rules filtered by matched contract types.
+
+    Returns (hard_rules, reasoning_hints) — both lists of dicts with keys:
+    id, label, description, severity.
+    """
+    if not COMPANY_REDLINES_PATH.exists():
+        return [], []
+    with open(COMPANY_REDLINES_PATH, encoding="utf-8") as f:
+        all_sections: dict = yaml.safe_load(f) or {}
+
+    hard_rules: list[dict] = []
+    reasoning_hints: list[dict] = []
+
+    def _collect(section: dict) -> None:
+        hard_rules.extend(section.get("hard_rules", []))
+        reasoning_hints.extend(section.get("reasoning_hints", []))
+
+    if matched_types:
+        for contract_type in matched_types:
+            section = all_sections.get(contract_type)
+            if isinstance(section, dict):
+                _collect(section)
+
+    general = all_sections.get("通用")
+    if isinstance(general, dict):
+        _collect(general)
+
+    return hard_rules, reasoning_hints
+
+
+def _format_redlines_section(hard_rules: list[dict], reasoning_hints: list[dict]) -> str:
+    if not hard_rules and not reasoning_hints:
+        return ""
+    lines: list[str] = []
+
+    if hard_rules:
+        lines.extend([
+            "## 公司红线（不可妥协的底线原则）",
+            "",
+            "以下规则来自公司风险政策，审查时必须逐条对照，违反即为不可接受：",
+        ])
+        for r in hard_rules:
+            level = r.get("severity", r.get("level", ""))
+            label = r.get("label", r.get("id", ""))
+            desc = r.get("description", "")
+            lines.append(f"- [{level}] {label}：{desc}")
+        lines.append("")
+
+    if reasoning_hints:
+        lines.extend([
+            "## 推理指引（结合行业惯例与标的属性判断，不套用固定数字）",
+            "",
+        ])
+        for h in reasoning_hints:
+            label = h.get("label", h.get("id", ""))
+            desc = h.get("description", "")
+            lines.append(f"- {label}：{desc}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def detect_contract_type_routing(contract_text: str) -> ContractTypeRoutingResult:
+    config = load_contract_type_routing_config()
+    universal_core = config.get("universal_core", {}).get("nodes", [])
+    contract_types = config.get("contract_types", {})
+    text_triggers = config.get("text_triggers", {})
+    low_confidence_threshold = float(
+        config.get("fallback", {}).get("low_confidence_threshold", 0.0)
+    )
+    text = contract_text.lower()
+
+    scored_types: list[tuple[str, float]] = []
+    best_type: str | None = None
+    best_score = 0.0
+    for contract_type, type_cfg in contract_types.items():
+        keywords = type_cfg.get("keywords", [])
+        if not keywords:
+            continue
+        match_count = sum(1 for keyword in keywords if str(keyword).lower() in text)
+        score = match_count / len(keywords)
+        if score > 0:
+            scored_types.append((contract_type, score))
+        if score > best_score:
+            best_type = contract_type
+            best_score = score
+
+    matched_types = [
+        contract_type for contract_type, score in scored_types if score >= low_confidence_threshold
+    ]
+
+    selected_nodes = list(dict.fromkeys(universal_core))
+    for contract_type in matched_types:
+        selected_nodes.extend(
+            node for node in contract_types.get(contract_type, {}).get("nodes", [])
+            if node not in selected_nodes
+        )
+
+    for trigger_cfg in text_triggers.values():
+        trigger_words = trigger_cfg.get("any_of", [])
+        if any(str(word).lower() in text for word in trigger_words):
+            selected_nodes.extend(
+                node for node in trigger_cfg.get("nodes", [])
+                if node not in selected_nodes
+            )
+
+    return ContractTypeRoutingResult(
+        primary_type=best_type,
+        matched_types=matched_types,
+        selected_nodes=selected_nodes,
+        confidence=best_score,
+    )
+
+
+def _build_bn_checklist(contract_text: str | None = None) -> str:
     """Build a systematic risk-dimension checklist from the BN node inventory.
 
     Reads all contract_fact and legal_semantics layer nodes from the BN config,
@@ -32,6 +163,28 @@ def _build_bn_checklist() -> str:
     with open(BN_CONFIG_PATH, encoding="utf-8") as f:
         config = json.load(f)
 
+    bn_node_names = set(config["nodes"])
+    selected_names: set[str] | None = None
+    if contract_text:
+        routing_config = load_contract_type_routing_config()
+        low_confidence_threshold = float(
+            routing_config.get("fallback", {}).get("low_confidence_threshold", 0.0)
+        )
+        routing_result = detect_contract_type_routing(contract_text)
+        unknown_nodes = sorted(
+            node for node in routing_result.selected_nodes if node not in bn_node_names
+        )
+        if unknown_nodes:
+            raise ValueError(
+                "合同类型路由配置包含未定义的 BN 节点: "
+                + ", ".join(unknown_nodes)
+            )
+        if (
+            routing_result.matched_types
+            and routing_result.selected_nodes
+        ):
+            selected_names = set(routing_result.selected_nodes)
+
     # ── Collect non-aggregate evidence-layer nodes ──
     contract_fact_nodes: list[tuple[str, str]] = []
     legal_semantics_nodes: list[tuple[str, str]] = []
@@ -41,6 +194,8 @@ def _build_bn_checklist() -> str:
         label = node_cfg.get("label", node_name)
         if node_name.startswith("cuad_agg_"):
             continue  # skip aggregate nodes
+        if selected_names is not None and node_name not in selected_names:
+            continue
         if layer == "contract_fact":
             contract_fact_nodes.append((node_name, label))
         elif layer == "legal_semantics":
@@ -61,7 +216,7 @@ def _build_bn_checklist() -> str:
         lines.append(f"- [ ] {label} (`{name}`)")
 
     lines.append("")
-    lines.append("### 法律语义层（legal_semantics）")
+    lines.append("### 法律语义层（legal_semantics)")
     for name, label in legal_semantics_nodes:
         lines.append(f"- [ ] {label} (`{name}`)")
 
@@ -253,6 +408,10 @@ def _free_review_schema() -> dict:
                             ]
                         },
                         "legal_basis": _nullable_string(),
+                        "negotiation_chip": _nullable_string(),
+                        "counterparty_attack_vector": _nullable_string(),
+                        "priority_rank": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 5}, {"type": "null"}]},
+                        "commercial_impact": _nullable_string(),
                     },
                     "required": [
                         "clause_type",
@@ -269,6 +428,7 @@ def _free_review_schema() -> dict:
             "strengths": {"type": "array", "items": {"type": "string"}},
             "review_type": _nullable_string(),
             "source_document": _nullable_string(),
+            "overall_strategic_assessment": _nullable_string(),
         },
         "required": [
             "contract_id",
@@ -285,14 +445,18 @@ def _free_review_prompt(
     contract_text: str, contract_id: str, source_document: str | None,
     review_party: str = "buyer",
 ) -> str:
-    checklist = _build_bn_checklist()
+    checklist = _build_bn_checklist(contract_text=contract_text)
     all_bn_node_names = _get_all_evidence_node_names()
     party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
     counterparty_label = "乙方（卖方）" if review_party == "buyer" else "甲方（买方）"
 
+    routing = detect_contract_type_routing(contract_text)
+    hard_rules, reasoning_hints = load_company_redlines(routing.matched_types)
+    redlines_section = _format_redlines_section(hard_rules, reasoning_hints)
+
     return (
-        f"你是{party_label}的代理律师，需要对以下合同进行全面、深入的风险审查。"
-        "请输出严格JSON格式的审查结果。\n\n"
+        f"你是{party_label}的代理律师/商业谈判顾问，需要对以下合同进行全面、深入"
+        "的风险审查和博弈分析。请输出严格JSON格式的审查结果。\n\n"
         "## 审查要求\n"
         f"1. **立场**：审查必须始终站在{party_label}立场。"
         f"对{party_label}有利的条款要去识别并标注为 strengths；"
@@ -300,11 +464,26 @@ def _free_review_prompt(
         "2. **全面覆盖**：必须系统性检查下方审查清单中的每一项。"
         "对每一项都要给出明确判断（已覆盖/缺失/不适用），不得遗漏。\n"
         "3. **深入分析**：对每项风险，不仅指出问题，更要解释为什么构成风险、"
-        f"对{party_label}可能引发什么商业后果。\n"
+        f"对{party_label}可能引发什么商业后果（包括现金流、运营效率、合作关系等商业层面影响）。\n"
         "4. **证据导向**：每个发现必须附上合同原文摘录作为证据。\n"
         "5. **区分缺失与不公**：条款完全不存在标注为 missing_clauses；"
         "条款存在但内容不公平的标注在 risk_segments 中。\n"
-        f"6. **正面评价**：如果合同中有对{party_label}有利的条款，也请记录在 strengths 中。\n\n"
+        f"6. **正面评价**：如果合同中有对{party_label}有利的条款，也请记录在 strengths 中。\n"
+        f"7. **筹码识别**：识别合同中对{party_label}而言是核心谈判筹码的条款。"
+        "筹码是指对方有强烈动机去修改、但我方应当坚守的条款（如极低的预付款比例、"
+        "我方所在地管辖、极早的风险转移节点等）。对每个筹码项，填入 negotiation_chip 字段，"
+        "说明：为什么它是筹码、对方最可能从什么角度攻击它、守住该筹码的谈判策略。\n"
+        "8. **对手预判**：对每个高风险项，预测对方律师可能从哪些角度发起攻击："
+        "法律角度（如'显失公平'、'违反强制性规定'）、商业角度（如'行业惯例并非如此'、"
+        "'影响合作意愿'）、策略角度（如'用次要条款换取对我方不利的修改'）。"
+        "结果填入 counterparty_attack_vector 字段。\n"
+        "9. **优先级排序**：对每个风险项按谈判紧迫性和严重性给出 1-5 级优先级"
+        "（填入 priority_rank 字段）："
+        "1=签约底线（必须修改，否则不建议签署）；2=核心谈判目标（尽最大努力争取）；"
+        "3=可交易项（可让步换取更高优先级目标）；"
+        "4=低优先级（接受或仅做提示）；5=仅供参考（不影响谈判立场）。\n"
+        "10. **商业影响评估**：对每个风险项，在 commercial_impact 字段中评估其商业层面影响，"
+        f"包括对{party_label}的现金流压力、运营效率、合作关系、市场竞争力等。\n\n"
         "## 输出字段说明\n"
         "- overall_assessment: 2-4段执行摘要，概括合同整体风险态势\n"
         "- risk_segments: 识别到的所有风险项，每项包含:\n"
@@ -319,9 +498,15 @@ def _free_review_prompt(
         "  - suggested_bn_nodes: 一个可选的BN节点名称数组，用于后续贝叶斯网络校验\n"
         f"    （可用的节点名：{', '.join(sorted(all_bn_node_names))}）\n"
         "  - legal_basis: 相关法条引用（如民法典第622条）\n"
+        "  - negotiation_chip: （可选）筹码分析，说明该条款为何是核心筹码及防守策略\n"
+        "  - counterparty_attack_vector: （可选）对手攻击预判\n"
+        "  - priority_rank: （可选）谈判优先级 1-5\n"
+        "  - commercial_impact: （可选）商业影响分析（现金流、运营等）\n"
         "- missing_clauses: 合同中完全缺失的条款类型列表\n"
-        "- strengths: 合同中的有利条款或亮点\n\n"
+        "- strengths: 合同中的有利条款或亮点\n"
+        "- overall_strategic_assessment: （可选）整体战略评估，包括核心筹码概括、力量对比和建议谈判姿态\n\n"
         f"{checklist}\n\n"
+        f"{redlines_section}\n"
         "## 重要提醒\n"
         "- 不要输出总体风险结论（由后续环节处理）\n"
         "- 如果文本无法支持某项，不要臆造\n"

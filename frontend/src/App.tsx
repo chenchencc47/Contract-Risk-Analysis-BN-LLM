@@ -5,6 +5,7 @@ import { ContractInput } from "./components/ContractInput";
 import { RiskReport } from "./components/RiskReport";
 import { SandboxPanel } from "./components/SandboxPanel";
 import { ReportHistory } from "./components/ReportHistory";
+import { RedlineManager } from "./components/RedlineManager";
 import { useReview } from "./hooks/useReview";
 
 type Page =
@@ -13,7 +14,8 @@ type Page =
   | { name: "sandbox" }
   | { name: "history" }
   | { name: "history-detail"; reportId: number }
-  | { name: "history-diff"; id1: number; id2: number };
+  | { name: "history-diff"; id1: number; id2: number }
+  | { name: "redlines" };
 
 function App() {
   const { status, data, error, submitReview, submitDualReview, dualData, reset } = useReview();
@@ -29,12 +31,22 @@ function App() {
     }
   };
 
+  const navigate = (name: string) => {
+    switch (name) {
+      case "input": reset(); setPage({ name: "input" }); break;
+      case "history": setPage({ name: "history" }); break;
+      case "sandbox": setPage({ name: "sandbox" }); break;
+      case "report": setPage({ name: "report" }); break;
+      case "redlines": setPage({ name: "redlines" }); break;
+    }
+  };
+
   // ── Pages ──
 
   if (page.name === "history") {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
-        <Header />
+        <Header currentPage={page.name} onNavigate={navigate} />
         <ReportHistory
           onBack={() => setPage({ name: "input" })}
           onViewReport={(id) => setPage({ name: "history-detail", reportId: id })}
@@ -47,7 +59,7 @@ function App() {
   if (page.name === "history-detail") {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
-        <Header />
+        <Header currentPage={page.name} onNavigate={navigate} />
         <HistoryDetail
           reportId={page.reportId}
           onBack={() => setPage({ name: "history" })}
@@ -59,7 +71,7 @@ function App() {
   if (page.name === "history-diff") {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
-        <Header />
+        <Header currentPage={page.name} onNavigate={navigate} />
         <HistoryDiff
           id1={page.id1}
           id2={page.id2}
@@ -69,10 +81,19 @@ function App() {
     );
   }
 
+  if (page.name === "redlines") {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5]">
+        <Header currentPage={page.name} onNavigate={navigate} />
+        <RedlineManager onBack={() => setPage({ name: "input" })} />
+      </div>
+    );
+  }
+
   if (page.name === "sandbox") {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
-        <Header />
+        <Header currentPage={page.name} onNavigate={navigate} />
         <div className="max-w-7xl mx-auto px-6 pt-4">
           <button
             onClick={() => setPage({ name: "report" })}
@@ -90,7 +111,7 @@ function App() {
   // ── Main: Input / Loading / Report ──
   return (
     <div className="min-h-screen bg-[#FAF8F5]">
-      <Header />
+      <Header currentPage={page.name} onNavigate={navigate} />
 
       {status === "success" && data ? (
         <div>
@@ -204,33 +225,57 @@ function App() {
         />
       )}
 
-      {status === "loading" && (
-        <div className="max-w-2xl mx-auto px-6 pb-20 animate-fade-in">
-          <div className="space-y-4">
-            {[
-              "LLM 正在对合同进行全面自由审查...",
-              "贝叶斯网络正在进行一致性校验...",
-              "BN 正在执行反事实模拟分析...",
-              "正在生成综合风险评估报告...",
-            ].map((msg, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 animate-slide-up"
-                style={{ animationDelay: `${i * 400}ms` }}
-              >
-                <div className="w-5 h-5 border-2 border-[#E8E2DB] border-t-[#8B6F5C] rounded-full animate-spin" />
-                <span className="text-sm text-[#9B8E83]">{msg}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {status === "loading" && <LoadingScreen />}
 
       <footer className="border-t border-[#E8E2DB] mt-12 py-6 text-center">
         <p className="text-[10px] text-[#C4B8AC] tracking-wide">
           ContractLens · LLM（自由审查）→ BN（一致性校验）→ LLM（综合报告） · pgmpy 推理引擎
         </p>
       </footer>
+    </div>
+  );
+}
+
+// ── Loading Screen with timer ──
+
+function LoadingScreen() {
+  const [elapsed, setElapsed] = useState(0);
+  useState(() => {
+    const start = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(timer);
+  });
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const timeStr = mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+
+  const stages = [
+    { label: "LLM 正在对合同进行全面自由审查...", min: 0 },
+    { label: "贝叶斯网络正在进行一致性校验...", min: 15 },
+    { label: "BN 正在执行反事实模拟分析...", min: 40 },
+    { label: "正在生成综合风险评估报告...", min: 90 },
+  ];
+
+  const currentStage = stages.reduce((best, s) => (elapsed >= s.min ? s : best), stages[0]);
+
+  return (
+    <div className="max-w-2xl mx-auto px-6 pb-20 animate-fade-in">
+      <div className="text-center mb-6">
+        <span className="text-3xl text-[#8B6F5C] font-mono font-bold">{timeStr}</span>
+        <p className="text-xs text-[#9B8E83] mt-1">审查进行中，请耐心等待...</p>
+      </div>
+      <div className="space-y-3">
+        {stages.map((s, i) => (
+          <div key={i} className={`flex items-center gap-3 transition-all duration-500 ${elapsed >= s.min ? "opacity-100" : "opacity-30"}`}>
+            {elapsed >= s.min
+              ? (i < stages.indexOf(currentStage) ? <span className="text-green-500 text-sm">✓</span>
+                : i === stages.indexOf(currentStage) ? <div className="w-5 h-5 border-2 border-[#E8E2DB] border-t-[#8B6F5C] rounded-full animate-spin" />
+                : <span className="w-5 h-5" />)
+              : <span className="w-5 h-5" />}
+            <span className="text-sm text-[#9B8E83]">{s.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

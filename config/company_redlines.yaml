@@ -1,0 +1,76 @@
+通用:
+  hard_rules:
+    - id: no_unlimited_liability
+      label: 禁止无限责任
+      description: 任何合同不得接受无限赔偿责任或无上限直接损失赔偿
+      severity: 企业红线
+
+    - id: exclude_indirect_loss
+      label: 间接损失必须排除或限制
+      description: 应明确排除利润损失、商誉损失、第三方索赔等间接损失
+      severity: 企业红线
+
+    - id: dispute_venue_buyer
+      label: 争议管辖地优先约定甲方所在地法院
+      description: 避免约定在对方所在地，否则维权成本将大幅增加
+      severity: 企业红线
+
+    - id: no_auto_acceptance
+      label: 不得包含默示接受条款
+      description: 不得包含"逾期视为接受"或类似默示接受条款，此类条款法律上无效且会被法院否定
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: liability_cap_ratio
+      label: 责任上限比例按交易规模与风险分配推理
+      description: 责任上限比例不得拍脑袋固定，需结合合同金额、标的属性、行业惯例和议价地位判断
+
+    - id: damages_foreseeability
+      label: 可预见规则是民法典默认规则
+      description: 即使合同未写，民法典第584条已限制赔偿范围为"可预见损失"，无需额外接受宽泛赔偿条款
+
+销售合同:
+  hard_rules:
+    - id: retention_not_subjective_acceptance
+      label: 质保金不能完全依赖对方主观验收
+      description: 尾款或质保金支付节点不能仅由对方单方认定是否"验收合格"决定
+      severity: 高
+
+    - id: no_unilateral_price_change
+      label: 禁止供应商单方调价
+      description: 价格条款不得赋予对方单方调价权，价格调整必须有客观触发条件和双方确认机制
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: acceptance_window_rule
+      label: 异议期按标的物可检验性推理
+      description: 外观异议期、内在质量异议期应结合标的物的可见性、施工依赖性和行业惯例判断
+
+    - id: liquidated_damages_symmetry
+      label: 违约金应对等
+      description: 违约金条款应对等约束双方，避免对方享有宽限而我方承担严苛罚则
+
+    - id: warranty_period_reasoning
+      label: 质保期按行业惯例和标的属性推理
+      description: 质保期长度需结合标的物属性、行业惯例判断，不应拍脑袋指定具体天数
+
+采购合同:
+  hard_rules:
+    - id: third_party_inspection
+      label: 必须保留第三方检测权
+      description: 不得接受供应商单方检测结果为最终依据，须保留委托第三方权威机构检验的权利
+      severity: 高
+
+    - id: no_accept_before_inspection
+      label: 验收前付款风险暴露禁止
+      description: 不得接受先全额付款后验收的条款，付款节点应与验收通过挂钩
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: batch_settlement_risk
+      label: 批次结算需与验收挂钩
+      description: 批次结算机制需明确每批验收标准，避免以"连续供货"为由滚动占用款项
+
+    - id: supply_guarantee_reasoning
+      label: 供货保障条款需含违约救济
+      description: 供货保障条款不能仅写"尽力供货"，需含断供时的替代采购权利和差价补偿

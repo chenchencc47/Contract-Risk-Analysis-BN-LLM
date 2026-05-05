@@ -53,6 +53,23 @@ class RiskSegment:
     legal_basis: str | None = None
     """Relevant legal principle or statute reference, e.g. '民法典第622条'."""
 
+    negotiation_chip: str | None = None
+    """If this risk item represents a bargaining chip the counterparty will likely
+    target, describe its strategic value and why it must be defended."""
+
+    counterparty_attack_vector: str | None = None
+    """Predicted counterparty negotiation angle: legal (显失公平/违反强制性规定),
+    commercial (行业惯例/合作意愿), or strategic (用次要条款换我方让步)."""
+
+    priority_rank: int | None = None
+    """Negotiation priority 1-5:
+    1=签约底线(必须修改), 2=核心谈判目标, 3=可交易项,
+    4=低优先级, 5=仅供参考."""
+
+    commercial_impact: str | None = None
+    """Business impact beyond legal risk: cash flow, operations, relationship,
+    market competitiveness."""
+
 
 @dataclass(frozen=True)
 class FreeReviewOutput:
@@ -78,6 +95,10 @@ class FreeReviewOutput:
 
     review_type: str | None = None
     source_document: str | None = None
+
+    overall_strategic_assessment: str | None = None
+    """Optional high-level strategic assessment: key bargaining chips,
+    power balance between parties, recommended negotiation posture."""
 
 
 # ── BN validator output ──────────────────────────────────────────
@@ -142,7 +163,7 @@ class CounterfactualResult:
 
     # ── Derivation chain (P1) ──
     derivation_chain: str = ""
-    """Traceable derivation: evidence → CPT prior → inference → posterior delta."""
+    """Traceable derivation: 条款状态X→Y | CPT来源 | pgmpy VE推理 → δ=-43.3%"""
 
 
 @dataclass(frozen=True)
@@ -181,8 +202,8 @@ class ConsistencyReport:
     """2-3 paragraph BN perspective in Chinese.
     Explains what the BN validated, what it flagged, and its confidence."""
 
-    joint_risks: list[dict] = field(default_factory=list)
-    """P6.1: Joint probability analysis results.
-    Each entry: {dim_a, dim_b, p_a_high, p_b_high, p_joint_high, multiplier, description}"""
-
     bn_config_version: str = "2.0"
+
+    # ── Joint probability risks (P6.1) ──
+    joint_risks: list[dict] = field(default_factory=list)
+    """Cross-dimension joint probability analysis results."""

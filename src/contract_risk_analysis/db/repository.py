@@ -233,7 +233,14 @@ def list_reports(
                 "overall_risk_level", "overall_p_high",
                 "bn_counterfactual_count", "created_at",
                 "contract_name", "contract_type"]
-        return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
+        results: list[dict[str, Any]] = []
+        for row in cur.fetchall():
+            d = dict(zip(cols, row, strict=False))
+            for k, v in d.items():
+                if hasattr(v, "__float__") and not isinstance(v, (int, float)):
+                    d[k] = float(v)
+            results.append(d)
+        return results
 
 
 def get_report_diff(
@@ -288,20 +295,131 @@ def get_report_diff(
 # ── Helpers ───────────────────────────────────────────────────
 
 
+def _d(v):
+    """Convert Decimal to float, pass through everything else."""
+    if hasattr(v, "__float__") and not isinstance(v, (int, float, bool)):
+        return float(v)
+    return v
+
+
 def _row_to_contract(row: tuple) -> ContractRecord:
     return ContractRecord(
-        id=row[0], contract_name=row[1], contract_type=row[2],
-        contract_text=row[3], file_name=row[4],
-        party_a=row[5], party_b=row[6],
-        contract_amount=row[7], created_at=row[8],
+        id=_d(row[0]), contract_name=_d(row[1]), contract_type=_d(row[2]),
+        contract_text=_d(row[3]), file_name=_d(row[4]),
+        party_a=_d(row[5]), party_b=_d(row[6]),
+        contract_amount=_d(row[7]), created_at=_d(row[8]),
     )
 
 
 def _row_to_report(row: tuple) -> ReportRecord:
     return ReportRecord(
-        id=row[0], contract_id=row[1], report_version=row[2],
-        review_party=row[3], overall_risk_level=row[4],
-        overall_p_high=row[5], summary_text=row[6],
-        report_content_md=row[7], bn_counterfactual_count=row[8],
-        review_duration_ms=row[9], created_at=row[10],
+        id=_d(row[0]), contract_id=_d(row[1]), report_version=_d(row[2]),
+        review_party=_d(row[3]), overall_risk_level=_d(row[4]),
+        overall_p_high=_d(row[5]), summary_text=_d(row[6]),
+        report_content_md=_d(row[7]), bn_counterfactual_count=_d(row[8]),
+        review_duration_ms=_d(row[9]), created_at=_d(row[10]),
     )
+
+
+# ── Company Redlines CRUD ──────────────────────────────────────
+
+
+def load_active_redlines(
+    contract_types: list[str] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Load active hard_rules and reasoning_hints filtered by contract types.
+
+    Returns (hard_rules, reasoning_hints). Always includes '通用' type rules.
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+        types = list(contract_types or [])
+        if "通用" not in types:
+            types.append("通用")
+        placeholders = ",".join(["%s"] * len(types))
+        cur.execute(
+            f"""SELECT contract_type, category, rule_id, label, description, severity
+                FROM company_redlines
+                WHERE contract_type IN ({placeholders}) AND is_active = 1
+                ORDER BY contract_type, category, id""",
+            types,
+        )
+        hard_rules: list[dict[str, Any]] = []
+        reasoning_hints: list[dict[str, Any]] = []
+        for row in cur.fetchall():
+            item = {
+                "contract_type": row[0], "rule_id": row[2],
+                "label": row[3], "description": row[4], "severity": row[5],
+            }
+            if row[1] == "hard_rules":
+                hard_rules.append(item)
+            else:
+                reasoning_hints.append(item)
+        return hard_rules, reasoning_hints
+
+
+def list_all_redlines() -> list[dict[str, Any]]:
+    """List all redlines (active and inactive) for management UI."""
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT id, contract_type, category, rule_id, label, description,
+                      severity, is_active, created_at
+               FROM company_redlines ORDER BY contract_type, category, id"""
+        )
+        cols = ["id", "contract_type", "category", "rule_id", "label",
+                "description", "severity", "is_active", "created_at"]
+        results: list[dict[str, Any]] = []
+        for row in cur.fetchall():
+            d = dict(zip(cols, row, strict=False))
+            for k, v in d.items():
+                if hasattr(v, "__float__") and not isinstance(v, (int, float, bool)):
+                    d[k] = float(v)
+                elif hasattr(v, "isoformat"):
+                    d[k] = v.isoformat()
+            results.append(d)
+        return results
+
+
+def upsert_redline(
+    *, contract_type: str, category: str, rule_id: str,
+    label: str, description: str, severity: str | None = None, is_active: int = 1,
+) -> int:
+    """Insert or update a redline rule. Returns the row id."""
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO company_redlines
+               (contract_type, category, rule_id, label, description, severity, is_active)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)
+               ON DUPLICATE KEY UPDATE
+                 category = VALUES(category), label = VALUES(label),
+                 description = VALUES(description), severity = VALUES(severity),
+                 is_active = VALUES(is_active), updated_at = CURRENT_TIMESTAMP""",
+            (contract_type, category, rule_id, label, description, severity, is_active),
+        )
+        if cur.lastrowid:
+            return cur.lastrowid
+        cur.execute(
+            "SELECT id FROM company_redlines WHERE contract_type=%s AND rule_id=%s",
+            (contract_type, rule_id),
+        )
+        row = cur.fetchone()
+        return row[0] if row else 0
+
+
+def delete_redline(redline_id: int) -> bool:
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM company_redlines WHERE id=%s", (redline_id,))
+        return cur.rowcount > 0
+
+
+def get_redline_contract_types() -> list[str]:
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT DISTINCT contract_type FROM company_redlines "
+            "WHERE is_active=1 ORDER BY contract_type"
+        )
+        return [row[0] for row in cur.fetchall()]

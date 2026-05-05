@@ -77,6 +77,60 @@ async def health() -> dict:
     }
 
 
+# ── BN Interactive Sandbox API ──
+
+
+@app.get("/api/bn/nodes")
+async def api_bn_nodes():
+    from contract_risk_analysis.bn.pgmpy_adapter import load_v2_config, _build_node_to_dimension_map
+    from contract_risk_analysis.constants import DIMENSION_LABELS as DL
+    config = load_v2_config()
+    nodes: list[dict] = []
+    node_map = _build_node_to_dimension_map(config)
+    for node_name, node_cfg in config["nodes"].items():
+        layer = node_cfg.get("layer", "")
+        if layer not in ("contract_fact", "legal_semantics"):
+            continue
+        if node_name.startswith("cuad_agg_"):
+            continue
+        dims = node_map.get(node_name, [])
+        nodes.append({
+            "node_name": node_name,
+            "label": node_cfg.get("label", node_name),
+            "layer": layer,
+            "states": node_cfg.get("states", []),
+            "affects_dimensions": dims,
+            "affects_dimension_labels": [DL.get(d, d) for d in dims],
+        })
+    return JSONResponse({"nodes": nodes, "dimension_labels": DL})
+
+
+@app.post("/api/bn/simulate")
+async def api_bn_simulate(request: Request):
+    body = await request.json()
+    evidence = body.get("evidence", {})
+    if not isinstance(evidence, dict):
+        return JSONResponse({"error": "evidence must be a dict"}, status_code=400)
+    from contract_risk_analysis.bn.pgmpy_adapter import DIMENSION_NODES, build_model, load_v2_config
+    from contract_risk_analysis.constants import DIMENSION_LABELS as DL
+    from pgmpy.inference import VariableElimination
+    config = load_v2_config()
+    model = build_model(config)
+    try:
+        inference = VariableElimination(model)
+    except Exception:
+        return JSONResponse({"error": "BN model build failed"}, status_code=500)
+    posteriors: dict[str, dict[str, float]] = {}
+    for target in DIMENSION_NODES + ["overall_contract_risk"]:
+        try:
+            result = inference.query(variables=[target], evidence=evidence if evidence else None)
+            dist = {str(state): round(float(prob), 4) for state, prob in zip(result.state_names[target], result.values)}
+            posteriors[target] = dist
+        except Exception:
+            posteriors[target] = {"error": "computation failed"}
+    return JSONResponse({"evidence": evidence, "posteriors": posteriors, "dimension_labels": DL})
+
+
 @app.post("/api/review")
 async def review(request: Request) -> JSONResponse:
     """Contract risk review — v2 pipeline (free LLM → BN validator → combined report).
@@ -240,11 +294,12 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         logger.warning("QUALITY_GATE: top risks BN coverage %s/%s (target ≥66%%)", len(covered_top), len(top_risk_nodes))
 
     # ── Layer 3: Combined report generation ──
+    import traceback as _tb
     polished = None
     try:
         polished = generate_combined_report(free_output, consistency, review_party, strategy_mode)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.error("LLM₂ report generation failed: %s\n%s", exc, _tb.format_exc())
 
     # ── DB auto-save (P3) ──
     report_id: int | None = None
@@ -312,8 +367,15 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
             "executive_view": polished.executive_view,
             "generation_mode": polished.generation_mode,
         }
+        response["narrative_report"] = polished.narrative_report
+        response["executive_summary"] = polished.executive_summary
+        response["signing_advice"] = polished.signing_advice
+        response["action_plan"] = polished.action_plan
+        response["cross_dimension_notes"] = polished.cross_dimension_notes
     else:
         response["polished"] = None
+        response["narrative_report"] = ""
+        logger.error("LLM₂ report generation returned None — check DEEPSEEK_MODEL and API connectivity")
 
     if include_debug:
         response["debug"] = {
@@ -415,6 +477,60 @@ async def api_diff_reports(request: Request):
         return JSONResponse(get_report_diff(int(id1), int(id2)))
     except Exception as exc:
         return JSONResponse({"error": f"对比失败：{exc}"}, status_code=500)
+
+
+# ── Company Redlines CRUD ──
+
+
+@app.get("/api/redlines")
+async def api_list_redlines():
+    from contract_risk_analysis.db.repository import list_all_redlines
+    try:
+        redlines = list_all_redlines()
+        return JSONResponse({"redlines": redlines, "count": len(redlines)})
+    except Exception as exc:
+        return JSONResponse({"error": f"查询失败：{exc}"}, status_code=500)
+
+
+@app.post("/api/redlines")
+async def api_save_redline(request: Request):
+    body = await request.json()
+    for key in ("contract_type", "category", "rule_id", "label", "description"):
+        if not body.get(key):
+            return JSONResponse({"error": f"{key} 不能为空"}, status_code=400)
+    from contract_risk_analysis.db.repository import upsert_redline
+    try:
+        rid = upsert_redline(
+            contract_type=str(body["contract_type"]), category=str(body["category"]),
+            rule_id=str(body["rule_id"]), label=str(body["label"]),
+            description=str(body["description"]), severity=body.get("severity"),
+            is_active=int(body.get("is_active", 1)),
+        )
+        return JSONResponse({"id": rid, "status": "ok"})
+    except Exception as exc:
+        return JSONResponse({"error": f"保存失败：{exc}"}, status_code=500)
+
+
+@app.delete("/api/redlines/{redline_id}")
+async def api_delete_redline(redline_id: int):
+    from contract_risk_analysis.db.repository import delete_redline
+    try:
+        ok = delete_redline(redline_id)
+        if not ok:
+            return JSONResponse({"error": "规则不存在"}, status_code=404)
+        return JSONResponse({"status": "ok"})
+    except Exception as exc:
+        return JSONResponse({"error": f"删除失败：{exc}"}, status_code=500)
+
+
+@app.get("/api/redlines/types")
+async def api_redline_types():
+    from contract_risk_analysis.db.repository import get_redline_contract_types
+    try:
+        types = get_redline_contract_types()
+        return JSONResponse({"types": types})
+    except Exception as exc:
+        return JSONResponse({"error": f"查询失败：{exc}"}, status_code=500)
 
 
 # ── BN Feedback ──

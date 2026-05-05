@@ -1,0 +1,88 @@
+universal_core:
+  nodes:
+    - payment_structure
+    - delivery_terms
+    - acceptance_process_clarity
+    - liability_cap_strength
+    - damages_exposure
+    - termination_clause_completeness
+    - termination_right_balance
+    - dispute_resolution_clarity
+    - jurisdiction_fairness
+    - governing_law_clarity
+    - force_majeure_completeness
+
+contract_types:
+  销售合同:
+    keywords: [购销, 买卖, 供货, 发货, 收货, 质保金]
+    nodes:
+      - risk_transfer_point
+      - warranty_scope
+      - cuad_warranty_duration
+      - cuad_liquidated_damages
+      - dispute_venue_fairness
+
+  采购合同:
+    keywords: [采购, 原料, 供应商, 批次结算, 第三方检测]
+    nodes:
+      - raw_material_acceptance_std
+      - batch_settlement_terms
+      - quality_inspection_rights
+      - price_adjustment_mechanism
+      - supply_guarantee_terms
+      - inventory_storage_responsibility
+
+  煤炭合同:
+    keywords: [煤炭, 热值, 收到基, 试烧, 途耗, kcal]
+    nodes:
+      - calorific_value_pricing
+      - trial_burn_acceptance
+      - measurement_dispute_resolution
+      - unilateral_inspection_rights
+      - transportation_loss_allocation
+
+text_triggers:
+  质保信号:
+    any_of: [质保期, 保修, warranty]
+    nodes:
+      - warranty_scope
+      - cuad_warranty_duration
+
+  违约金信号:
+    any_of: [违约金, penalty, liquidated damages]
+    nodes:
+      - cuad_liquidated_damages
+
+  管辖信号:
+    any_of: [仲裁, 管辖法院, jurisdiction]
+    nodes:
+      - dispute_venue_fairness
+
+  煤炭信号:
+    any_of: [热值, 收到基, 发热量, kcal, 试烧, 途耗]
+    nodes:
+      - calorific_value_pricing
+      - trial_burn_acceptance
+      - measurement_dispute_resolution
+      - transportation_loss_allocation
+
+  保密信号:
+    any_of: [保密, 机密信息, 技术资料, 商业秘密, 返还, 存续]
+    nodes:
+      - confidentiality_nli
+
+  价格联动信号:
+    any_of: [调价, 价格波动, 指数, 原材料上涨]
+    nodes:
+      - price_adjustment_mechanism
+
+  软件交付信号:
+    any_of: [源代码, license, SaaS, 软件授权]
+    nodes:
+      - cuad_source_code_escrow
+      - cuad_license_grant
+
+fallback:
+  low_confidence_threshold: 0.6
+  sparse_type_hit_threshold: 3
+  mode: expanded_then_full
