@@ -19,7 +19,7 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File as FastAPIFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 
@@ -41,6 +41,7 @@ from contract_risk_analysis.review.report_writer import (
 )
 from contract_risk_analysis.bn.config_validator import validate_v2_config
 from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
+from contract_risk_analysis.evidence.rules import run_validation_rules
 
 app = FastAPI(title="合同风险审查系统", docs_url="/docs")
 
@@ -64,6 +65,43 @@ def _score_to_level(score: float) -> str:
 @app.get("/favicon.ico")
 async def favicon() -> Response:
     return Response(status_code=204)
+
+
+@app.post("/api/upload")
+async def api_upload(file: UploadFile = FastAPIFile(...)):
+    """Upload a contract file (PDF/Word/TXT) and return extracted text."""
+    import tempfile, os as _os
+
+    if not file.filename:
+        return JSONResponse({"error": "未选择文件"}, status_code=400)
+
+    filename = file.filename
+    suffix = Path(filename).suffix.lower()
+    if suffix not in (".pdf", ".docx", ".doc", ".txt", ".md"):
+        return JSONResponse({"error": f"不支持的文件格式: {suffix}，支持 .pdf / .docx / .txt"}, status_code=400)
+
+    try:
+        content = await file.read()
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+
+        from contract_risk_analysis.utils.file_extractor import extract_text
+        text, error = extract_text(tmp_path, filename)
+        _os.unlink(tmp_path)
+
+        if error:
+            return JSONResponse({"error": error}, status_code=422)
+        if not text.strip():
+            return JSONResponse({"error": "文件内容为空"}, status_code=422)
+
+        return JSONResponse({
+            "filename": filename,
+            "text": text,
+            "char_count": len(text),
+        })
+    except Exception as exc:
+        return JSONResponse({"error": f"文件处理失败: {exc}"}, status_code=500)
 
 
 @app.get("/api/health")
@@ -258,6 +296,9 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     # ── Layer 2: BN consistency validation ──
     consistency = build_consistency_report(free_output)
 
+    # ── P2: Post-hoc rule validation (deterministic, no LLM dependency) ──
+    rule_matches = run_validation_rules(contract_text)
+
     # Also produce legacy report for backward-compatible structured data
     legacy_evidence = build_evidence_from_free_output(free_output)
     legacy_report = assess_risk(legacy_evidence)
@@ -349,6 +390,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
             "annotations": [asdict(a) for a in consistency.annotations],
             "counterfactuals": [asdict(c) for c in consistency.counterfactuals],
             "bn_summary": consistency.bn_summary,
+            "rule_matches": [asdict(m) for m in rule_matches],
         },
         "report": legacy_dict,
     }

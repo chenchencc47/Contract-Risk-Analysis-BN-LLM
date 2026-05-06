@@ -29,6 +29,22 @@
       label: 可预见规则是民法典默认规则
       description: 即使合同未写，民法典第584条已限制赔偿范围为"可预见损失"，无需额外接受宽泛赔偿条款
 
+    - id: payment_guarantee_timing
+      label: 质保金/履约保证金应在付款前提交
+      description: "审查付款与担保的时间顺序，若合同要求先付全款后收支票/保函，则担保对甲方形同虚设，属于结构性风险"
+
+    - id: penalty_base_must_be_specific
+      label: 违约金基数应与具体违约义务价值挂钩
+      description: "以合同总价为基数计算的违约金极易被法院调减，应改为以迟交/未履行部分价值为基数"
+
+    - id: delivery_location_precision
+      label: 交付地点应为精确地址
+      description: "仅写某市辖区或甲方指定不构成有效约定，应写明精确到门牌号的地址及联系人"
+
+    - id: no_deemed_acceptance
+      label: 区分外观验收与风险转移
+      description: "签字确认视为交付可能被解释为风险转移。外观初验签字仅确认数量和包装完好，不等于货物风险转移"
+
 销售合同:
   hard_rules:
     - id: retention_not_subjective_acceptance

@@ -339,7 +339,7 @@ class BnValidator:
             if sr["delta_high_risk"] < 0.003:
                 # P0: keep in fallback pool if has significant dimension-level delta
                 has_significant_dim_delta = any(
-                    dd.get("delta", 0) >= 0.05 for dd in sr.get("dimension_deltas", [])
+                    dd.get("delta", 0) >= 0.03 for dd in sr.get("dimension_deltas", [])
                 )
                 if has_significant_dim_delta:
                     fallback_pool.append(sr)

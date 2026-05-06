@@ -82,6 +82,28 @@ text_triggers:
       - cuad_source_code_escrow
       - cuad_license_grant
 
+  付款担保逻辑信号:
+    any_of: [质保金, 保证金, 保函, 质量保证金, 履约担保]
+    nodes:
+      - payment_structure
+      - cuad_uncapped_liability
+
+  交付地点信号:
+    any_of: [市辖区范围, 指定地点, 甲方指定地点, 乙方指定地点]
+    nodes:
+      - delivery_terms
+
+  违约金基数信号:
+    any_of: [按合同总价, 按合同金额]
+    nodes:
+      - cuad_liquidated_damages
+
+  默示接受信号:
+    any_of: [视为接受, 视为交付, 视为验收, 视为合格, 逾期视为, 逾期未提出异议]
+    nodes:
+      - acceptance_process_clarity
+      - risk_transfer_point
+
 fallback:
   low_confidence_threshold: 0.6
   sparse_type_hit_threshold: 3

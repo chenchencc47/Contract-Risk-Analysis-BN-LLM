@@ -502,7 +502,8 @@ def run_sensitivity_analysis(
                 for fav in ("present", "balanced", "acceptable", "favorable",
                             "entailment", "broad", "low", "sufficient",
                             "strong", "reasonable", "clear", "complete",
-                            "adequate", "exists", "yes"):
+                            "adequate", "exists", "yes",
+                            "specific", "precise", "explicit"):
                     if fav in states:
                         favorable_states[node_name] = fav
                         break
@@ -533,7 +534,7 @@ def run_sensitivity_analysis(
         cf_high = cf_dist.get("high", 0.0)
         delta = round(base_high - cf_high, 6)
 
-        if delta > 0.001:
+        if delta > 0.0001:
             # Compute dimension-level deltas
             dim_deltas: list[dict] = []
             affected_dims = node_to_dims.get(node_name, [])

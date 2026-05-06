@@ -43,24 +43,45 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((f: File) => {
-    if (!f.name.endsWith(".md") && !f.name.endsWith(".txt")) {
-      alert("目前仅支持 .md 和 .txt 文件");
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = useCallback(async (f: File) => {
+    const suffix = f.name.split(".").pop()?.toLowerCase() || "";
+    // Text files: read locally
+    if (suffix === "md" || suffix === "txt") {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setFile({ name: f.name, content });
+        setId(f.name.replace(/\.(md|txt)$/i, "") || "contract-001");
+      };
+      reader.readAsText(f);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setFile({ name: f.name, content });
-      // Auto-fill contract ID from filename
-      const nameWithoutExt = f.name.replace(/\.(md|txt)$/i, "");
-      if (nameWithoutExt && !id.startsWith("contract-")) {
-        // Only auto-set if user hasn't manually changed the ID
+    // PDF/Word: upload to server for extraction
+    if (suffix === "pdf" || suffix === "docx" || suffix === "doc") {
+      setUploading(true);
+      try {
+        const form = new FormData();
+        form.append("file", f);
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: "上传失败" }));
+          alert(err.error || "文件解析失败");
+          return;
+        }
+        const data = await res.json();
+        setFile({ name: f.name, content: data.text });
+        setId(f.name.replace(/\.(pdf|docx|doc)$/i, "") || "contract-001");
+      } catch {
+        alert("文件上传失败，请检查网络连接");
+      } finally {
+        setUploading(false);
       }
-      setId(nameWithoutExt || "contract-001");
-    };
-    reader.readAsText(f);
-  }, [id]);
+      return;
+    }
+    alert("不支持的文件格式，支持 .pdf / .docx / .doc / .md / .txt");
+  }, []);
 
   const removeFile = () => {
     setFile(null);
@@ -120,9 +141,10 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-xl p-8 text-center
             transition-all duration-200 mb-4
+            ${uploading ? "cursor-wait opacity-70" : "cursor-pointer"}
             ${dragOver
               ? "border-[#8B6F5C] bg-[#F5F0EB]"
               : "border-[#E0D8CE] bg-[#FAF8F5] hover:border-[#D4A574] hover:bg-[#FDFCFA]"
@@ -131,20 +153,30 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".md,.txt"
+            accept=".pdf,.docx,.doc,.md,.txt"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) handleFile(f);
             }}
             className="hidden"
+            disabled={uploading}
           />
-          <span className="text-3xl block mb-2 select-none">📄</span>
-          <p className="text-sm text-[#6B5E53] font-medium mb-1">
-            点击上传或拖拽合同文件到此处
-          </p>
-          <p className="text-xs text-[#9B8E83]">
-            支持 Markdown（.md）和纯文本（.txt）
-          </p>
+          {uploading ? (
+            <>
+              <span className="w-8 h-8 border-2 border-[#E8E2DB] border-t-[#8B6F5C] rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm text-[#8B6F5C] font-medium">正在解析文件...</p>
+            </>
+          ) : (
+            <>
+              <span className="text-3xl block mb-2 select-none">📄</span>
+              <p className="text-sm text-[#6B5E53] font-medium mb-1">
+                点击上传或拖拽合同文件到此处
+              </p>
+              <p className="text-xs text-[#9B8E83]">
+                支持 PDF / Word / Markdown / 纯文本
+              </p>
+            </>
+          )}
         </div>
       ) : (
         /* ── File loaded state ── */
@@ -244,7 +276,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
 
       <button
         onClick={handleSubmit}
-        disabled={isLoading}
+        disabled={isLoading || uploading}
         className="mt-5 w-full sm:w-auto px-8 py-3 bg-[#8B6F5C] text-white text-sm
                    font-medium rounded-lg tracking-wide
                    hover:bg-[#6B5243] active:scale-[0.98]
