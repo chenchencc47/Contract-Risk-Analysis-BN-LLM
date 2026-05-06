@@ -514,8 +514,6 @@ def run_sensitivity_analysis(
     results: list[dict] = []
     for node_name in fact_semantics_nodes:
         current_state = clean_evidence.get(node_name)
-        if current_state is None:
-            continue
         best_state = favorable_states.get(node_name)
         if best_state is None or best_state == current_state:
             continue
@@ -563,12 +561,13 @@ def run_sensitivity_analysis(
 
             results.append({
                 "node_name": node_name,
-                "current_state": current_state,
+                "current_state": current_state or "unassessed",
                 "best_state": best_state,
                 "delta_high_risk": delta,
                 "base_high_risk": round(base_high, 4),
                 "counterfactual_high_risk": round(cf_high, 4),
                 "dimension_deltas": dim_deltas,
+                "observed": current_state is not None,
             })
 
     results.sort(key=lambda r: r["delta_high_risk"], reverse=True)
