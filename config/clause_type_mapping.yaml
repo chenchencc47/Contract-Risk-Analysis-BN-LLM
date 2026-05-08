@@ -1,0 +1,480 @@
+# CLAUSE_TYPE_HINTS — maps LLM clause_type (English or Chinese) to BN node names.
+# Used by BnMappingService to resolve risk segments to BN evidence nodes.
+#
+# To add hints for a new contract type:
+#   Add entries below. No Python code changes needed.
+#   contract_types annotation is for documentation only.
+
+# ── English clause types ──────────────────────────────────────────────────
+termination:
+  nodes: [termination_clause_completeness, termination_right_balance]
+  contract_types: [universal]
+
+liability_cap:
+  nodes: [liability_cap_strength, damages_exposure]
+  contract_types: [universal]
+
+confidentiality:
+  nodes: []
+  contract_types: [universal]
+
+governing_law:
+  nodes: [governing_law_clarity, cuad_governing_law]
+  contract_types: [universal]
+
+dispute_resolution:
+  nodes: [dispute_resolution_clarity, jurisdiction_fairness]
+  contract_types: [universal]
+
+acceptance:
+  nodes: [acceptance_process_clarity]
+  contract_types: [universal]
+
+# CUAD-derived
+termination_for_convenience:
+  nodes: [cuad_termination_for_convenience]
+  contract_types: [universal]
+
+notice_period:
+  nodes: [cuad_notice_period_to_terminate]
+  contract_types: [universal]
+
+third_party_beneficiary:
+  nodes: [cuad_third_party_beneficiary]
+  contract_types: [universal]
+
+audit_rights:
+  nodes: [cuad_audit_rights]
+  contract_types: [universal]
+
+uncapped_liability:
+  nodes: [cuad_uncapped_liability]
+  contract_types: [universal]
+
+cap_on_liability:
+  nodes: [cuad_cap_on_liability]
+  contract_types: [universal]
+
+liquidated_damages:
+  nodes: [cuad_liquidated_damages]
+  contract_types: [universal]
+
+insurance:
+  nodes: [cuad_insurance]
+  contract_types: [universal]
+
+warranty:
+  nodes: [cuad_warranty_duration]
+  contract_types: [universal]
+
+warranty_duration:
+  nodes: [cuad_warranty_duration]
+  contract_types: [universal]
+
+revenue_sharing:
+  nodes: [cuad_revenue_profit_sharing]
+  contract_types: [universal]
+
+minimum_commitment:
+  nodes: [cuad_minimum_commitment]
+  contract_types: [universal]
+
+volume_restriction:
+  nodes: [cuad_volume_restriction]
+  contract_types: [universal]
+
+post_termination:
+  nodes: [cuad_post_termination_services]
+  contract_types: [universal]
+
+source_code_escrow:
+  nodes: [cuad_source_code_escrow]
+  contract_types: [universal]
+
+covenant_not_to_sue:
+  nodes: [cuad_covenant_not_to_sue]
+  contract_types: [universal]
+
+no_solicit:
+  nodes: [cuad_no_solicit_of_customers, cuad_no_solicit_of_employees]
+  contract_types: [universal]
+
+non_disparagement:
+  nodes: [cuad_non_disparagement]
+  contract_types: [universal]
+
+anti_assignment:
+  nodes: [cuad_anti_assignment]
+  contract_types: [universal]
+
+change_of_control:
+  nodes: [cuad_change_of_control]
+  contract_types: [universal]
+
+non_compete:
+  nodes: [cuad_non_compete]
+  contract_types: [universal]
+
+exclusivity:
+  nodes: [cuad_exclusivity]
+  contract_types: [universal]
+
+most_favored_nation:
+  nodes: [cuad_most_favored_nation]
+  contract_types: [universal]
+
+ip_ownership:
+  nodes: [cuad_ip_ownership_assignment, cuad_joint_ip_ownership]
+  contract_types: [universal]
+
+license:
+  nodes: [cuad_license_grant, cuad_non_transferable_license]
+  contract_types: [universal]
+
+rofr:
+  nodes: [cuad_rofr_rofo_rofn]
+  contract_types: [universal]
+
+price_restrictions:
+  nodes: [cuad_price_restrictions]
+  contract_types: [universal]
+
+# Sales-contract specific
+payment:
+  nodes: [payment_structure]
+  contract_types: [universal]
+
+delivery:
+  nodes: [delivery_terms]
+  contract_types: [universal]
+
+risk_transfer:
+  nodes: [risk_transfer_point]
+  contract_types: [universal]
+
+dispute_venue:
+  nodes: [dispute_venue_fairness]
+  contract_types: [universal]
+
+force_majeure:
+  nodes: [force_majeure_completeness]
+  contract_types: [universal]
+
+indemnification:
+  nodes: []
+  contract_types: [universal]
+
+warranty_scope:
+  nodes: [warranty_scope]
+  contract_types: [universal]
+
+default:
+  nodes: []
+  contract_types: [universal]
+
+quality:
+  nodes: [cuad_warranty_duration, warranty_scope]
+  contract_types: [universal]
+
+# ── Chinese aliases ───────────────────────────────────────────────────────
+付款:
+  nodes: [payment_structure]
+  contract_types: [universal]
+
+付款方式:
+  nodes: [payment_structure]
+  contract_types: [universal]
+
+付款条款:
+  nodes: [payment_structure]
+  contract_types: [universal]
+
+验收:
+  nodes: [acceptance_process_clarity]
+  contract_types: [universal]
+
+验收条款:
+  nodes: [acceptance_process_clarity]
+  contract_types: [universal]
+
+验收流程:
+  nodes: [acceptance_process_clarity]
+  contract_types: [universal]
+
+交货:
+  nodes: [delivery_terms]
+  contract_types: [universal]
+
+交付:
+  nodes: [delivery_terms]
+  contract_types: [universal]
+
+运输:
+  nodes: [delivery_terms, risk_transfer_point]
+  contract_types: [universal]
+
+风险转移:
+  nodes: [risk_transfer_point]
+  contract_types: [universal]
+
+管辖:
+  nodes: [dispute_resolution_clarity, jurisdiction_fairness, dispute_venue_fairness]
+  contract_types: [universal]
+
+争议:
+  nodes: [dispute_resolution_clarity, dispute_venue_fairness]
+  contract_types: [universal]
+
+争议解决:
+  nodes: [dispute_resolution_clarity, jurisdiction_fairness, dispute_venue_fairness]
+  contract_types: [universal]
+
+终止:
+  nodes: [termination_clause_completeness]
+  contract_types: [universal]
+
+解除:
+  nodes: [termination_right_balance]
+  contract_types: [universal]
+
+解除权:
+  nodes: [termination_right_balance]
+  contract_types: [universal]
+
+违约:
+  nodes: [cuad_liquidated_damages, liability_cap_strength]
+  contract_types: [universal]
+
+违约金:
+  nodes: [cuad_liquidated_damages]
+  contract_types: [universal]
+
+违约责任:
+  nodes: [cuad_liquidated_damages, liability_cap_strength]
+  contract_types: [universal]
+
+质量:
+  nodes: [cuad_warranty_duration, warranty_scope]
+  contract_types: [universal]
+
+质保:
+  nodes: [cuad_warranty_duration, warranty_scope]
+  contract_types: [universal]
+
+不可抗力:
+  nodes: [force_majeure_completeness]
+  contract_types: [universal]
+
+责任上限:
+  nodes: [liability_cap_strength]
+  contract_types: [universal]
+
+责任限制:
+  nodes: [liability_cap_strength]
+  contract_types: [universal]
+
+赔偿:
+  nodes: [liability_cap_strength, damages_exposure]
+  contract_types: [universal]
+
+适用法律:
+  nodes: [governing_law_clarity, cuad_governing_law]
+  contract_types: [universal]
+
+法律适用:
+  nodes: [governing_law_clarity]
+  contract_types: [universal]
+
+保密:
+  nodes: []
+  contract_types: [universal]
+
+知识产权:
+  nodes: [cuad_ip_ownership_assignment, cuad_joint_ip_ownership]
+  contract_types: [universal]
+
+保险:
+  nodes: [cuad_insurance]
+  contract_types: [universal]
+
+色差:
+  nodes: [cuad_warranty_duration, warranty_scope]
+  contract_types: [universal]
+
+颜色:
+  nodes: [cuad_warranty_duration]
+  contract_types: [universal]
+
+通知:
+  nodes: []
+  contract_types: [universal]
+
+送达:
+  nodes: []
+  contract_types: [universal]
+
+# ── P5.1: 采购合同专属 ──────────────────────────────────────────────────
+原料验收:
+  nodes: [raw_material_acceptance_std]
+  contract_types: [采购合同]
+
+原料验收标准:
+  nodes: [raw_material_acceptance_std]
+  contract_types: [采购合同]
+
+验收标准:
+  nodes: [raw_material_acceptance_std, acceptance_process_clarity]
+  contract_types: [universal]
+
+批次结算:
+  nodes: [batch_settlement_terms]
+  contract_types: [采购合同]
+
+结算条款:
+  nodes: [batch_settlement_terms]
+  contract_types: [采购合同]
+
+能源计价:
+  nodes: [energy_pricing_terms]
+  contract_types: [采购合同]
+
+能源价格:
+  nodes: [energy_pricing_terms]
+  contract_types: [采购合同]
+
+气价:
+  nodes: [energy_pricing_terms]
+  contract_types: [采购合同]
+
+电价:
+  nodes: [energy_pricing_terms]
+  contract_types: [采购合同]
+
+供货保障:
+  nodes: [supply_guarantee_terms]
+  contract_types: [采购合同]
+
+供货保证:
+  nodes: [supply_guarantee_terms]
+  contract_types: [采购合同]
+
+断供:
+  nodes: [supply_guarantee_terms]
+  contract_types: [采购合同]
+
+质量检测:
+  nodes: [quality_inspection_rights]
+  contract_types: [采购合同]
+
+检验权:
+  nodes: [quality_inspection_rights]
+  contract_types: [采购合同]
+
+质检权:
+  nodes: [quality_inspection_rights]
+  contract_types: [采购合同]
+
+第三方检测:
+  nodes: [quality_inspection_rights]
+  contract_types: [采购合同]
+
+价格调整:
+  nodes: [price_adjustment_mechanism]
+  contract_types: [采购合同]
+
+调价机制:
+  nodes: [price_adjustment_mechanism]
+  contract_types: [采购合同]
+
+价格公式:
+  nodes: [price_adjustment_mechanism]
+  contract_types: [采购合同]
+
+库存责任:
+  nodes: [inventory_storage_responsibility]
+  contract_types: [采购合同]
+
+仓储:
+  nodes: [inventory_storage_responsibility]
+  contract_types: [采购合同]
+
+仓储费用:
+  nodes: [inventory_storage_responsibility]
+  contract_types: [采购合同]
+
+库存:
+  nodes: [inventory_storage_responsibility]
+  contract_types: [采购合同]
+
+# ── P5.2: 煤炭/大宗商品合同专属 ──────────────────────────────────────────
+热值计价:
+  nodes: [calorific_value_pricing]
+  contract_types: [煤炭合同]
+
+热值:
+  nodes: [calorific_value_pricing]
+  contract_types: [煤炭合同]
+
+发热量:
+  nodes: [calorific_value_pricing]
+  contract_types: [煤炭合同]
+
+kcal:
+  nodes: [calorific_value_pricing]
+  contract_types: [煤炭合同]
+
+试烧:
+  nodes: [trial_burn_acceptance]
+  contract_types: [煤炭合同]
+
+试烧验收:
+  nodes: [trial_burn_acceptance]
+  contract_types: [煤炭合同]
+
+试烧条款:
+  nodes: [trial_burn_acceptance]
+  contract_types: [煤炭合同]
+
+计量争议:
+  nodes: [measurement_dispute_resolution]
+  contract_types: [煤炭合同]
+
+计量差异:
+  nodes: [measurement_dispute_resolution]
+  contract_types: [煤炭合同]
+
+矿发量:
+  nodes: [measurement_dispute_resolution]
+  contract_types: [煤炭合同]
+
+到厂量:
+  nodes: [measurement_dispute_resolution]
+  contract_types: [煤炭合同]
+
+途耗:
+  nodes: [transportation_loss_allocation]
+  contract_types: [煤炭合同]
+
+运输损耗:
+  nodes: [transportation_loss_allocation]
+  contract_types: [煤炭合同]
+
+水分蒸发:
+  nodes: [transportation_loss_allocation]
+  contract_types: [煤炭合同]
+
+单方检验:
+  nodes: [unilateral_inspection_rights]
+  contract_types: [煤炭合同]
+
+装车检验:
+  nodes: [unilateral_inspection_rights]
+  contract_types: [煤炭合同]
+
+卖方检验:
+  nodes: [unilateral_inspection_rights]
+  contract_types: [煤炭合同]
+
+检验权不对等:
+  nodes: [unilateral_inspection_rights]
+  contract_types: [煤炭合同]

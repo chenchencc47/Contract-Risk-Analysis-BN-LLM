@@ -4,6 +4,68 @@
 
 > LLM₁ 自由审查 → BN 一致性校验 & 反事实模拟 → LLM₂ 综合报告
 
+## English Quick Start
+
+**What it is**
+
+ContractLens is an AI-assisted contract review system that combines:
+
+- **LLM₁** for free-form legal/commercial review
+- **Bayesian Network** for consistency checking and counterfactual simulation
+- **LLM₂** for the final narrative report
+
+**Why BN instead of pure LLM**
+
+Most AI contract review tools stop at "LLM finds issues and writes a summary." ContractLens adds a Bayesian Network as a validation layer so the system can answer questions like:
+
+> "If we fix clause X, how much does the overall risk go down?"
+
+That gives the project two differentiators:
+
+- more transparent cross-dimension reasoning
+- counterfactual analysis grounded in BN inference instead of pure text generation
+
+**Quick Start**
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/chenchencc47/BN-Contract-Risk-Analysis.git
+cd BN-Contract-Risk-Analysis
+
+# 2. Copy environment template
+cp .env.example .env
+
+# 3. Start in demo mode (optional, no API key required)
+# edit .env and set DEMO_MODE=true
+
+# 4. Or configure real API/database credentials in .env
+# OPENAI_API_KEY=...
+# DEEPSEEK_API_KEY=...
+# MYSQL_HOST=...
+
+# 5. Run backend
+python -m uvicorn backend.main:app --port 9527 --reload
+
+# 6. Run frontend (new terminal)
+cd frontend && npm install && npm run dev
+
+# 7. Open the app
+# http://localhost:5173
+# API docs: http://localhost:9527/docs
+# Demo endpoint: http://localhost:9527/api/demo
+```
+
+**Architecture**
+
+```text
+Contract text
+  → LLM₁ free review
+  → BN consistency check + counterfactual simulation
+  → LLM₂ final report
+```
+
+---
+
 ## 核心思路
 
 传统 AI 合同审查直接让 LLM 打分，结果不稳定、不可解释。ContractLens 把 **贝叶斯网络作为一致性校验器**：LLM 先自由审查合同条款，BN 再对审查结果进行交叉维度的概率推理和反事实模拟（"如果修掉这个条款，整体风险降多少？"），最后 LLM 基于 BN 的量化数据生成可信的综合报告。

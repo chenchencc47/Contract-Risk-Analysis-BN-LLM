@@ -54,8 +54,11 @@ class RiskSegment:
     """Relevant legal principle or statute reference, e.g. '民法典第622条'."""
 
     negotiation_chip: str | None = None
-    """If this risk item represents a bargaining chip the counterparty will likely
-    target, describe its strategic value and why it must be defended."""
+    """Bargaining chip assessment. Three types (not every type exists in every contract):
+    - 底线筹码 (defensive): favorable term the counterparty wants to change; must defend
+    - 交换筹码 (trading): unfavorable term the counterparty wants to keep; concede strategically
+    - 响应筹码 (responsive): term the counterparty fears; wait for them to raise, then trade
+    Include: chip type, clause location, why it's a chip, counterparty's likely attack, strategy."""
 
     counterparty_attack_vector: str | None = None
     """Predicted counterparty negotiation angle: legal (显失公平/违反强制性规定),

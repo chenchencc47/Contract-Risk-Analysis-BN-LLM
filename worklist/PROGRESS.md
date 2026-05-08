@@ -1,6 +1,6 @@
 # 实施进度记录
 
-> 最后更新：2026-05-03
+> 最后更新：2026-05-07
 
 ---
 
@@ -326,3 +326,95 @@ WORKLIST.md 全面重构：
 | CUAD | contract_fact | ~35 | 统计 P(present) | 仅商业合同，缺购销专属维度 |
 | ContractNLI | legal_semantics | 保密相关 | NLI 转移概率 | 仅 NDA |
 | 专家补充 | contract_fact | ~7 | expert_estimated | 付款/交货/验收等 CUAD 不覆盖 |
+
+---
+
+## v2.9：开源化提升（2026-05-06 规划，待执行）
+
+基于项目多维度量化评估（开源评分 63/100）制定。核心目标：降低"让别人跑起来"的门槛。
+
+### 目标
+
+开源评分从 63 → 75+。预计工期 5-7 天。
+
+### 依赖关系
+
+```
+P0-1（.env.example + Demo）──→ P0-2（Docker Compose）──→ P0-3（拆分 main.py）
+                                                              │
+                                                              └──→ P0-6（CI）
+
+P0-4（HINTS 配置化）──→ 独立并行
+P0-5（英文 README）──→ 独立并行
+P0-7（社区文件）─────→ 独立并行
+```
+
+### 执行任务清单
+
+| 序号 | 任务 | 工期 | 依赖 | 说明 |
+|------|------|:--:|------|------|
+| P0-1 | `.env.example` + Demo 模式 | 1天 | 无 | ✅ 2026-05-06 | 模板配置 + 无 API Key demo |
+| P0-2 | Docker Compose 一键启动 | 2-3天 | P0-1 | ✅ 2026-05-07 | mysql + backend + frontend 三服务编排 |
+| P0-3 | 拆分 `backend/main.py` | 1天 | P0-2 | ✅ 2026-05-07 | 739行→41行main + 8 router文件 |
+| P0-4 | `CLAUSE_TYPE_HINTS` 配置化 | 1天 | 无 | ✅ 2026-05-06 | 170行硬编码→YAML |
+| P0-5 | 英文 README | 0.5天 | 无 | ✅ 2026-05-06 | Quick Start + 架构说明 |
+| P0-6 | GitHub Actions CI | 0.5天 | P0-2 | ✅ 2026-05-07 | test + lint workflow |
+| P0-7 | 社区基础文件 | 0.5天 | 无 | ✅ 2026-05-06 | CONTRIBUTING + Issue/PR 模板 |
+
+### 执行记录
+
+**P0-1/P0-4/P0-5/P0-7 已完成（2026-05-06）** ✅
+- `.env.example`：模板配置 + DEMO_MODE 注释
+- `/api/demo`：预计算 demo 响应，无需 API Key 即可展示系统输出
+- `CLAUSE_TYPE_HINTS` 配置化：170 行硬编码 → `config/clause_type_mapping.yaml`
+- 英文 README Quick Start + 架构说明
+- 社区文件：CONTRIBUTING.md / CODE_OF_CONDUCT.md / Issue/PR 模板
+- 回归验证：`test_bn_mapping.py` 保证映射变更不破坏报告质量
+
+**P0-2 Docker Compose 一键启动（2026-05-07）** ✅
+- 新建 6 个文件：
+  - `backend/Dockerfile`：python:3.11-slim + `pip install .` + uvicorn 9527
+  - `frontend/Dockerfile`：多阶段构建（node:20-alpine build → nginx:1.27-alpine serve）
+  - `frontend/nginx.conf`：`/api/` 反向代理到 backend:9527，SPA fallback
+  - `docker/mysql/init.sql`：6 张表（contracts/reports/report_risks/report_counterfactuals/company_redlines/bn_feedback），含索引和外键
+  - `docker-compose.yml`：mysql(8.4) + backend + frontend 三服务编排，健康检查 + 数据卷持久化
+  - `tests/docker/test_docker_stack.py`：5 个测试覆盖 Dockerfile/nginx/compose/SQL 结构
+- **设计决策**：前端不改 fetch 路径，用 Nginx 反向代理 `/api/` → backend:9527，避免触碰报告主链路
+- **数据库**：schema 直接从 `repository.py`/`feedback.py` 代码推导，非旧文档复制
+
+**P0-6 GitHub Actions CI（2026-05-07）** ✅
+- 新建 `.github/workflows/ci.yml`：push/PR 到 main 时自动运行 pytest
+- Python 3.11 + `pip install .[test]` + `pytest tests/ -q`
+- 超时 15 分钟，与 BN 推理时间（~5min）匹配
+- 新增 `tests/docker/test_ci_workflow.py` 结构校验
+
+**P0-3 拆分 backend/main.py（2026-05-07）** ✅
+- `backend/main.py`：739 行 → 41 行（仅保留 app 创建 + CORS + 9 行 router 注册）
+- 新建 `backend/__init__.py`：自动注入 `src/` 到 sys.path，所有子模块共享
+- 新建 `backend/routers/` 目录，8 个功能域文件：
+
+| 文件 | 行数 | 路由 |
+|------|-----|------|
+| `misc.py` | 141 | /favicon.ico, /api/health, /api/demo |
+| `upload.py` | 43 | /api/upload |
+| `sandbox.py` | 57 | /api/bn/nodes, /api/bn/simulate |
+| `review.py` | 262 | /api/review, /api/v2/review + _run_v1_pipeline, _run_v2_pipeline, _score_to_level |
+| `dual.py` | 63 | /api/v2/review/dual |
+| `export.py` | 37 | /api/export/pdf, /api/export/md |
+| `history.py` | 56 | /api/reports, /api/reports/{id}, /api/reports/diff |
+| `redlines.py` | 68 | /api/redlines CRUD (4 routes) |
+| `feedback.py` | 41 | /api/feedback, /api/feedback/summary |
+
+- 所有 20 个 API 端点行为完全不变，import 路径无变更
+- 更新 `tests/web/test_backend_main_demo.py` 适配新 import 路径
+- **设计决策**：`_run_v1_pipeline`/`_run_v2_pipeline` 放在 `review.py`（仅 review 路由调用）；dual 端点独立文件（不经过管道函数）；每个 router 自包含所需 import
+
+### 预期效果
+
+| 维度 | 当前 | 预期 | 提升 |
+|------|:---:|:---:|:---:|
+| 上手体验 | 10/20 | 14/20 | +4（Docker + .env.example） |
+| 代码可读性 | 16/20 | 17/20 | +1（拆分 main.py + HINTS 配置化） |
+| 可扩展性 | 8/15 | 10/15 | +2（HINTS 配置化） |
+| 社区就绪度 | 2/10 | 7/10 | +5（CI + 社区文件 + 英文 README） |
+| **加权总分** | **63** | **~76** | **+13** |

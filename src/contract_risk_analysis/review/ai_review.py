@@ -440,6 +440,43 @@ def _free_review_schema() -> dict:
         "additionalProperties": False,
     }
 
+def _build_chip_instruction(review_party: str, party_label: str) -> str:
+    """Build perspective-aware chip identification instructions for LLM₁."""
+    if review_party == "buyer":
+        examples = (
+            "例：管辖在己方住所地——对方必然攻击'管辖不公'，但这是程序优势底线。\n"
+            "② **交换筹码** — 对己方不利但对方极度想保留的条款。策略原则：主动出牌——"
+            "用'愿意在此条款上做有控制的让步'换取对方在底线条款上的妥协。"
+            "例：过高的预付款比例——买方想降至30%，卖方想保80%，"
+            "买方'同意只降到50%而非30%'即可交换卖方的其他让步。\n"
+            "③ **响应筹码** — 对己方有利或中性，但对方有生存级恐惧、必然主动要求修改的条款。"
+            "策略原则：绝不主动提出修改；等对方提出时，将'同意修改'作为交换条件。"
+            "例：合同中未排除间接损失——卖方恐惧无限赔偿敞口，"
+            "买方可用'同意加入间接损失排除'换取卖方在付款结构上的让步。\n"
+        )
+    else:
+        examples = (
+            "例：付款节点在发货前（先款后货）——买方可能要求改为验收后付款，"
+            "但这是卖方现金流安全的核心保障。\n"
+            "② **交换筹码** — 对己方不利但对方极度想保留的条款。策略原则：主动出牌——"
+            "用'愿意在此条款上做有控制的让步'换取对方在底线条款上的妥协。"
+            "例：过低的预付款比例——卖方想提高至50%，买方想压到10%，"
+            "卖方'同意只提到30%而非50%'即可交换买方在其他条款上的让步。\n"
+            "③ **响应筹码** — 对己方有利或中性，但对方有生存级恐惧、必然主动要求修改的条款。"
+            "策略原则：绝不主动提出修改；等对方提出时，将'同意修改'作为交换条件。"
+            "例：买方拥有过于宽泛的单方解除权——买方不希望失去合同灵活性，"
+            "卖方可用'同意加入合理限制'换取买方在付款结构上的让步。\n"
+        )
+    return (
+        f"7. **筹码识别**：按以下三类框架，识别合同中对{party_label}的谈判筹码。"
+        "有则识别，无则不填——并非每类都在每份合同中存在。"
+        "对每个筹码，填入 negotiation_chip 字段（含：属于哪一类、条款位置、为何是筹码、"
+        f"对方可能的攻击角度、对应策略）。\n"
+        f"① **底线筹码** — 对{party_label}有利且对方强烈想改的条款。一旦失去，"
+        f"{party_label}的系统性优势将永久受损。策略原则：寸步不让，不列入交换菜单。"
+        + examples
+    )
+
 
 def _free_review_prompt(
     contract_text: str, contract_id: str, source_document: str | None,
@@ -453,6 +490,7 @@ def _free_review_prompt(
     routing = detect_contract_type_routing(contract_text)
     hard_rules, reasoning_hints = load_company_redlines(routing.matched_types)
     redlines_section = _format_redlines_section(hard_rules, reasoning_hints)
+    chip_instruction = _build_chip_instruction(review_party, party_label)
 
     return (
         f"你是{party_label}的代理律师/商业谈判顾问，需要对以下合同进行全面、深入"
@@ -469,10 +507,7 @@ def _free_review_prompt(
         "5. **区分缺失与不公**：条款完全不存在标注为 missing_clauses；"
         "条款存在但内容不公平的标注在 risk_segments 中。\n"
         f"6. **正面评价**：如果合同中有对{party_label}有利的条款，也请记录在 strengths 中。\n"
-        f"7. **筹码识别**：识别合同中对{party_label}而言是核心谈判筹码的条款。"
-        "筹码是指对方有强烈动机去修改、但我方应当坚守的条款（如极低的预付款比例、"
-        "我方所在地管辖、极早的风险转移节点等）。对每个筹码项，填入 negotiation_chip 字段，"
-        "说明：为什么它是筹码、对方最可能从什么角度攻击它、守住该筹码的谈判策略。\n"
+        f"{chip_instruction}"
         "8. **对手预判**：对每个高风险项，预测对方律师可能从哪些角度发起攻击："
         "法律角度（如'显失公平'、'违反强制性规定'）、商业角度（如'行业惯例并非如此'、"
         "'影响合作意愿'）、策略角度（如'用次要条款换取对我方不利的修改'）。"

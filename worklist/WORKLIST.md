@@ -1,6 +1,6 @@
 # BN-Contract-Risk-Analysis 优化工作清单
 
-> 最后更新：2026-05-03
+> 最后更新：2026-05-07
 > 基于全部10份报告版本纵向对比 + AI网页检测横向对比 + 商业产品(Ironclad/幂律/LawGeex)对标分析
 
 ---
@@ -478,3 +478,201 @@ P0（合同类型分层路由）
 ```
 P0（检查清单强制化+盲区提示） → P1（关键词冲突检测） → P2（管线覆盖验证）
 ```
+
+---
+
+## v2.9：开源化提升 — 从"能跑"到"别人也能跑"
+
+> 基于 2026-05-06 项目多维度量化评估。个人项目 87/100，报告质量 92/100，
+> 但开源项目仅 63/100、商业对标仅 56/100。差距不在核心能力，在"让人跑起来"的基础设施。
+> 创新吸引力满分（10/10），但上手体验（10/20）和社区就绪度（2/10）拖累总分。
+
+### 核心原则
+
+**先解决"能不能跑"，再解决"好不好改"。** 依赖关系：
+
+```
+.env.example ──→ Docker Compose ──→ 拆分 main.py（Docker稳定后再拆，否则验证不了）
+                     │
+                     └──→ CI/CD
+                     
+CLAUSE_TYPE_HINTS配置化 ────→ 独立可并行
+英文README ────────────────→ 独立可并行
+社区基础文件 ──────────────→ 独立可并行
+```
+
+---
+
+### P0-1：`.env.example` + Demo 模式（1天）
+
+**问题**：当前 `.env` 不入库，新开发者不知道需要哪些环境变量。且系统无 API Key 时完全跑不起来。
+
+**修复**：
+- 创建 `.env.example` 模板（含所有必填变量 + 注释说明）
+- 在 `backend/main.py` 中新增 `DEMO_MODE` 环境变量检查
+- Demo 模式：用预置合同 + 预计算 BN 结果返回完整报告，不调用 DeepSeek API、不连 MySQL
+- 新增 `GET /api/demo` 端点返回预置示例结果
+
+**完成标准**：开发者 clone 后创建 `.env` 即可配置；不填 API Key 也能通过 demo 端点看到系统输出效果。
+
+---
+
+### P0-2：Docker Compose 一键启动（2-3天）
+
+**问题**：当前依赖 Python 3.11+ + Node 22+ + MySQL 8.0+ 三套环境，前后端需分别启动。
+这是开源项目转化率最高的单一配置缺失。
+
+**修复**：
+- 编写 `Dockerfile`（后端：python:3.12-slim，装依赖，uvicorn 启动）
+- 编写 `frontend/Dockerfile`（前端：node:22-alpine build + nginx 部署）
+- 编写 `docker-compose.yml`：mysql + backend + frontend 三服务编排
+- 前端 API base URL 支持环境变量（Docker 环境不走 Vite proxy）
+- `docker/mysql/init.sql`：自动建表脚本
+
+```yaml
+# docker-compose.yml
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: contractlens
+      MYSQL_DATABASE: contractlens
+    ports: ["3306:3306"]
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: .
+    ports: ["9527:9527"]
+    depends_on: [mysql]
+    env_file: .env
+
+  frontend:
+    build: ./frontend
+    ports: ["80:80"]
+    depends_on: [backend]
+```
+
+**完成标准**：`git clone + docker-compose up + 浏览器打开 localhost` — 5 分钟跑通。
+
+---
+
+### P0-3：拆分 `backend/main.py`（1天）
+
+**问题**：`backend/main.py` 659 行单文件，16 个 API 端点混在一起。新贡献者找不到改哪个文件。
+
+**修复**：按功能域拆分为 7 个 router 文件：
+
+```
+backend/
+  main.py              # FastAPI app 创建 + CORS + lifespan（~40 行）
+  routers/
+    health.py          # GET /api/health
+    upload.py          # POST /api/upload
+    review.py          # POST /api/review, /api/v2/review, /api/v2/review/dual
+    sandbox.py         # GET /api/bn/nodes, POST /api/bn/simulate
+    export.py          # POST /api/export/pdf, /api/export/md
+    history.py         # GET /api/reports/*
+    redlines.py        # GET/POST/DELETE /api/redlines/*
+    feedback.py        # POST /api/feedback, GET /api/feedback/summary
+```
+
+**完成标准**：每个 router 文件 < 150 行，文件名即功能域。原有所有 API 端点和行为完全不变。
+
+---
+
+### P0-4：`CLAUSE_TYPE_HINTS` 配置化（1天）
+
+**问题**：`bn_mapping.py` 中 170 行硬编码字典 `CLAUSE_TYPE_HINTS`，是开源项目中最劝退贡献者的模式。
+加一个合同类型的中文关键词映射需要改 Python 源码。
+
+**修复**：
+- 新建 `config/clause_type_mapping.yaml`
+- 将 170 行硬编码字典迁移为 YAML 结构
+- `bn_mapping.py` 改为 `__init__` 时从 YAML 加载
+- 对调用方完全透明，不改变任何 API 行为
+
+```yaml
+# config/clause_type_mapping.yaml
+payment_structure:
+  keywords: [付款方式, 付款条款, 付款条件, payment, payment_term]
+  contract_types: [universal]
+
+delivery_terms:
+  keywords: [交货, 交付, 运输, 收货, delivery]
+  contract_types: [universal]
+```
+
+**完成标准**：社区贡献者加新合同类型的中文关键词映射时，只需编辑 YAML 文件，无需改 Python 代码。
+
+---
+
+### P0-5：英文 README（0.5天）
+
+**问题**：所有文档是中文，国际开源社区开发者无法快速理解项目。
+
+**修复**：在现有中文 README 基础上，增加英文 Quick Start 部分（不需要全文翻译，3 件事即可）：
+1. What：一句话 + 架构图（LLM₁→BN→LLM₂）
+2. Why BN：一段话讲清"为什么不是纯 LLM"，引出反事实分析
+3. Quick Start：`git clone && docker-compose up && open localhost`
+
+**完成标准**：非中文开发者能通过 README 理解项目在做什么 + 5 分钟跑起来。
+
+---
+
+### P0-6：GitHub Actions CI（0.5天）
+
+**问题**：无任何 CI/CD，贡献者不知道改动是否破坏了核心功能。
+
+**修复**：
+- `.github/workflows/test.yml`：push/PR 触发，运行 `pytest tests/ -q`
+- `.github/workflows/lint.yml`：push/PR 触发，运行 ruff 检查
+- 测试不依赖 MySQL（pytest 中 mock 掉），无需 Docker Compose 环境
+
+```yaml
+# .github/workflows/test.yml
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - run: pip install -e ".[test]"
+      - run: pytest tests/ -q
+```
+
+**完成标准**：每次 push 自动跑测试，失败时 PR 收到阻断通知。
+
+---
+
+### P0-7：社区基础文件（0.5天）
+
+**问题**：无 CONTRIBUTING.md、Code of Conduct、Issue/PR 模板。项目看起来"没人维护"。
+
+**修复**：
+- `CONTRIBUTING.md`：加新合同类型的步骤 + 代码风格 + PR 流程
+- `CODE_OF_CONDUCT.md`：Contributor Covenant 标准模板
+- `.github/ISSUE_TEMPLATE/bug_report.md`
+- `.github/ISSUE_TEMPLATE/feature_request.md`
+- `.github/pull_request_template.md`：检查清单（测试通过？新节点 CPT 来源标注？）
+
+**完成标准**：GitHub 社区功能齐全，贡献者知道怎么参与。
+
+---
+
+### 执行顺序
+
+```
+第一波（并行）：
+  P0-1（.env.example + Demo） ✅ + P0-4（HINTS配置化） ✅ + P0-5（英文README） ✅ + P0-7（社区文件） ✅
+  
+第二波（依赖 P0-1）：
+  P0-2（Docker Compose） ✅
+
+第三波（依赖 P0-2）：
+  P0-3（拆分 main.py） ✅ + P0-6（CI） ✅
+```
+
+总工期：5-7 天。预期开源评分：63 → 75+。

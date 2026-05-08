@@ -17,6 +17,7 @@ This module handles clause-type-to-BN-node mapping and heuristic state inference
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from contract_risk_analysis.bn.network_schema import load_network_config
 from contract_risk_analysis.bn.pgmpy_adapter import (
@@ -37,134 +38,25 @@ from contract_risk_analysis.domain.free_review_schema import (
 )
 from contract_risk_analysis.evidence.normalize import load_mapping_config
 
+def _load_clause_type_hints() -> dict[str, list[str]]:
+    """Load clause-type-to-BN-node hints from YAML config (config/clause_type_mapping.yaml).
+
+    Community contributors can edit the YAML file to add new clause type mappings
+    without touching Python code. Falls back to empty dict if config is unavailable.
+    """
+    import yaml as _yaml
+    config_path = Path(__file__).resolve().parents[3] / "config" / "clause_type_mapping.yaml"
+    try:
+        with open(config_path, encoding="utf-8") as fh:
+            raw = _yaml.safe_load(fh) or {}
+    except Exception:
+        return {}
+    return {key: entry.get("nodes", []) for key, entry in raw.items()}
+
+
 # Clause type → plausible BN node name hints (for heuristic matching)
-# Expanded with CUAD-derived nodes and sales-contract-specific nodes
-CLAUSE_TYPE_HINTS: dict[str, list[str]] = {
-    # Original nodes
-    "termination": ["termination_clause_completeness", "termination_right_balance"],
-    "liability_cap": ["liability_cap_strength", "damages_exposure"],
-    "confidentiality": [],
-    "governing_law": ["governing_law_clarity", "cuad_governing_law"],
-    "dispute_resolution": ["dispute_resolution_clarity", "jurisdiction_fairness"],
-    "acceptance": ["acceptance_process_clarity"],
-    # CUAD-derived contract_fact nodes
-    "termination_for_convenience": ["cuad_termination_for_convenience"],
-    "notice_period": ["cuad_notice_period_to_terminate"],
-    "third_party_beneficiary": ["cuad_third_party_beneficiary"],
-    "audit_rights": ["cuad_audit_rights"],
-    "uncapped_liability": ["cuad_uncapped_liability"],
-    "cap_on_liability": ["cuad_cap_on_liability"],
-    "liquidated_damages": ["cuad_liquidated_damages"],
-    "insurance": ["cuad_insurance"],
-    "warranty": ["cuad_warranty_duration"],
-    "warranty_duration": ["cuad_warranty_duration"],
-    "revenue_sharing": ["cuad_revenue_profit_sharing"],
-    "minimum_commitment": ["cuad_minimum_commitment"],
-    "volume_restriction": ["cuad_volume_restriction"],
-    "post_termination": ["cuad_post_termination_services"],
-    "source_code_escrow": ["cuad_source_code_escrow"],
-    "covenant_not_to_sue": ["cuad_covenant_not_to_sue"],
-    "no_solicit": ["cuad_no_solicit_of_customers", "cuad_no_solicit_of_employees"],
-    "non_disparagement": ["cuad_non_disparagement"],
-    "anti_assignment": ["cuad_anti_assignment"],
-    "change_of_control": ["cuad_change_of_control"],
-    "non_compete": ["cuad_non_compete"],
-    "exclusivity": ["cuad_exclusivity"],
-    "most_favored_nation": ["cuad_most_favored_nation"],
-    "ip_ownership": ["cuad_ip_ownership_assignment", "cuad_joint_ip_ownership"],
-    "license": ["cuad_license_grant", "cuad_non_transferable_license"],
-    "rofr": ["cuad_rofr_rofo_rofn"],
-    "price_restrictions": ["cuad_price_restrictions"],
-    # Sales-contract-specific nodes (expert-defined, not CUAD)
-    "payment": ["payment_structure"],
-    "delivery": ["delivery_terms"],
-    "risk_transfer": ["risk_transfer_point"],
-    "dispute_venue": ["dispute_venue_fairness"],
-    "force_majeure": ["force_majeure_completeness"],
-    "indemnification": [],
-    "warranty_scope": ["warranty_scope"],
-    # Generic fallbacks
-    "default": [],
-    "quality": ["cuad_warranty_duration", "warranty_scope"],
-    # Chinese aliases (LLM may output Chinese clause_types despite English prompt)
-    "付款": ["payment_structure"],
-    "付款方式": ["payment_structure"],
-    "付款条款": ["payment_structure"],
-    "验收": ["acceptance_process_clarity"],
-    "验收条款": ["acceptance_process_clarity"],
-    "验收流程": ["acceptance_process_clarity"],
-    "交货": ["delivery_terms"],
-    "交付": ["delivery_terms"],
-    "运输": ["delivery_terms", "risk_transfer_point"],
-    "风险转移": ["risk_transfer_point"],
-    "管辖": ["dispute_resolution_clarity", "jurisdiction_fairness", "dispute_venue_fairness"],
-    "争议": ["dispute_resolution_clarity", "dispute_venue_fairness"],
-    "争议解决": ["dispute_resolution_clarity", "jurisdiction_fairness", "dispute_venue_fairness"],
-    "终止": ["termination_clause_completeness"],
-    "解除": ["termination_right_balance"],
-    "解除权": ["termination_right_balance"],
-    "违约": ["cuad_liquidated_damages", "liability_cap_strength"],
-    "违约金": ["cuad_liquidated_damages"],
-    "违约责任": ["cuad_liquidated_damages", "liability_cap_strength"],
-    "质量": ["cuad_warranty_duration", "warranty_scope"],
-    "质保": ["cuad_warranty_duration", "warranty_scope"],
-    "不可抗力": ["force_majeure_completeness"],
-    "责任上限": ["liability_cap_strength"],
-    "责任限制": ["liability_cap_strength"],
-    "赔偿": ["liability_cap_strength", "damages_exposure"],
-    "适用法律": ["governing_law_clarity", "cuad_governing_law"],
-    "法律适用": ["governing_law_clarity"],
-    "保密": [],
-    "知识产权": ["cuad_ip_ownership_assignment", "cuad_joint_ip_ownership"],
-    "保险": ["cuad_insurance"],
-    "色差": ["cuad_warranty_duration", "warranty_scope"],
-    "颜色": ["cuad_warranty_duration"],
-    "通知": [],
-    "送达": [],
-    # ── P5.1: 采购合同专属节点 ──
-    "原料验收": ["raw_material_acceptance_std"],
-    "原料验收标准": ["raw_material_acceptance_std"],
-    "验收标准": ["raw_material_acceptance_std", "acceptance_process_clarity"],
-    "批次结算": ["batch_settlement_terms"],
-    "结算条款": ["batch_settlement_terms"],
-    "能源计价": ["energy_pricing_terms"],
-    "能源价格": ["energy_pricing_terms"],
-    "气价": ["energy_pricing_terms"],
-    "电价": ["energy_pricing_terms"],
-    "供货保障": ["supply_guarantee_terms"],
-    "供货保证": ["supply_guarantee_terms"],
-    "断供": ["supply_guarantee_terms"],
-    "质量检测": ["quality_inspection_rights"],
-    "检验权": ["quality_inspection_rights"],
-    "质检权": ["quality_inspection_rights"],
-    "第三方检测": ["quality_inspection_rights"],
-    "价格调整": ["price_adjustment_mechanism"],
-    "调价机制": ["price_adjustment_mechanism"],
-    "价格公式": ["price_adjustment_mechanism"],
-    "库存责任": ["inventory_storage_responsibility"],
-    "仓储": ["inventory_storage_responsibility"],
-    "仓储费用": ["inventory_storage_responsibility"],
-    "库存": ["inventory_storage_responsibility"],
-    # ── P5.2: 煤炭/大宗商品合同专属节点 ──
-    "热值计价": ["calorific_value_pricing"],
-    "热值": ["calorific_value_pricing"],
-    "发热量": ["calorific_value_pricing"],
-    "kcal": ["calorific_value_pricing"],
-    "试烧": ["trial_burn_acceptance"],
-    "试烧验收": ["trial_burn_acceptance"],
-    "试烧条款": ["trial_burn_acceptance"],
-    "计量争议": ["measurement_dispute_resolution"],
-    "计量差异": ["measurement_dispute_resolution"],
-    "矿发量": ["measurement_dispute_resolution"],
-    "到厂量": ["measurement_dispute_resolution"],
-    "途耗": ["transportation_loss_allocation"],
-    "运输损耗": ["transportation_loss_allocation"],
-    "水分蒸发": ["transportation_loss_allocation"],
-    "单方检验": ["unilateral_inspection_rights"],
-    "装车检验": ["unilateral_inspection_rights"],
-    "卖方检验": ["unilateral_inspection_rights"],
-    "检验权不对等": ["unilateral_inspection_rights"],
-}
+# Source: config/clause_type_mapping.yaml — community-extensible, no code change needed.
+CLAUSE_TYPE_HINTS: dict[str, list[str]] = _load_clause_type_hints()
 
 # Severity to state mapping for heuristic node state inference
 SEVERITY_TO_STATE_HINT: dict[str, str] = {
@@ -224,6 +116,8 @@ class BnMappingService:
     v2_config: dict | None = None
 
     def __post_init__(self):
+        global CLAUSE_TYPE_HINTS
+        CLAUSE_TYPE_HINTS = _load_clause_type_hints()
         if self.mapping_config is None:
             self.mapping_config = load_mapping_config()
         if self.v2_config is None:
