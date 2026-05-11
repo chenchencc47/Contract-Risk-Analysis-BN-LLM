@@ -1,1 +1,20 @@
-{}
+{
+  "damages_exposure": {
+    "clause_type": "damages_exposure",
+    "risk_title": "间接损失未排除",
+    "severity": "high",
+    "confidence": 0.95,
+    "contract_id": "",
+    "last_seen": "2026-05-08T15:07:59.818911",
+    "occurrence_count": 1
+  },
+  "confidentiality_nli": {
+    "clause_type": "confidentiality_nli",
+    "risk_title": "保密条款缺失",
+    "severity": "medium",
+    "confidence": 0.99,
+    "contract_id": "",
+    "last_seen": "2026-05-08T15:07:59.821877",
+    "occurrence_count": 1
+  }
+}

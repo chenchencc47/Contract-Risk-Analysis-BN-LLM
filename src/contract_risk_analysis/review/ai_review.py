@@ -11,6 +11,7 @@ from openai import OpenAI
 
 from contract_risk_analysis.domain.free_review_schema import (
     FreeReviewOutput,
+    NegotiationChip,
     RiskSegment,
 )
 from contract_risk_analysis.domain.review_schema import ReviewFinding, ReviewResult
@@ -408,7 +409,29 @@ def _free_review_schema() -> dict:
                             ]
                         },
                         "legal_basis": _nullable_string(),
-                        "negotiation_chip": _nullable_string(),
+                        "negotiation_chip": {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "chip_type": _nullable_string(),
+                                        "location": _nullable_string(),
+                                        "reason": _nullable_string(),
+                                        "counterparty_attack": _nullable_string(),
+                                        "strategy": _nullable_string(),
+                                    },
+                                    "required": [
+                                        "chip_type",
+                                        "location",
+                                        "reason",
+                                        "counterparty_attack",
+                                        "strategy",
+                                    ],
+                                    "additionalProperties": False,
+                                },
+                                {"type": "null"},
+                            ]
+                        },
                         "counterparty_attack_vector": _nullable_string(),
                         "priority_rank": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 5}, {"type": "null"}]},
                         "commercial_impact": _nullable_string(),
@@ -470,8 +493,8 @@ def _build_chip_instruction(review_party: str, party_label: str) -> str:
     return (
         f"7. **筹码识别**：按以下三类框架，识别合同中对{party_label}的谈判筹码。"
         "有则识别，无则不填——并非每类都在每份合同中存在。"
-        "对每个筹码，填入 negotiation_chip 字段（含：属于哪一类、条款位置、为何是筹码、"
-        f"对方可能的攻击角度、对应策略）。\n"
+        "对每个筹码，填入 negotiation_chip 对象，字段固定为 chip_type、location、reason、"
+        f"counterparty_attack、strategy（均可为字符串或 null，不得输出额外字段）。\n"
         f"① **底线筹码** — 对{party_label}有利且对方强烈想改的条款。一旦失去，"
         f"{party_label}的系统性优势将永久受损。策略原则：寸步不让，不列入交换菜单。"
         + examples
@@ -545,7 +568,7 @@ def _free_review_prompt(
         "  - suggested_bn_nodes: 一个可选的BN节点名称数组，用于后续贝叶斯网络校验\n"
         f"    （可用的节点名：{', '.join(sorted(all_bn_node_names))}）\n"
         "  - legal_basis: 相关法条引用（如民法典第622条）\n"
-        "  - negotiation_chip: （可选）筹码分析，说明该条款为何是核心筹码及防守策略\n"
+        "  - negotiation_chip: （可选）对象，包含 chip_type、location、reason、counterparty_attack、strategy，所有字段均可为字符串或 null\n"
         "  - counterparty_attack_vector: （可选）对手攻击预判\n"
         "  - priority_rank: （可选）谈判优先级 1-5\n"
         "  - commercial_impact: （可选）商业影响分析（现金流、运营等）\n"
@@ -566,11 +589,57 @@ def _free_review_prompt(
     )
 
 
+def _parse_negotiation_chip(value: object) -> NegotiationChip | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        required_keys = {
+            "chip_type",
+            "location",
+            "reason",
+            "counterparty_attack",
+            "strategy",
+        }
+        actual_keys = set(value)
+        if actual_keys != required_keys:
+            missing_keys = sorted(required_keys - actual_keys)
+            extra_keys = sorted(actual_keys - required_keys)
+            details: list[str] = []
+            if missing_keys:
+                details.append(f"缺少字段: {', '.join(missing_keys)}")
+            if extra_keys:
+                details.append(f"存在额外字段: {', '.join(extra_keys)}")
+            raise ValueError(f"negotiation_chip 对象字段不合法（{'；'.join(details)}）。")
+        for key in required_keys:
+            field_value = value[key]
+            if field_value is not None and not isinstance(field_value, str):
+                raise ValueError(f"negotiation_chip.{key} 必须是字符串或 null。")
+        return NegotiationChip(
+            chip_type=value["chip_type"],
+            location=value["location"],
+            reason=value["reason"],
+            counterparty_attack=value["counterparty_attack"],
+            strategy=value["strategy"],
+        )
+    if isinstance(value, str):
+        chip_type = value if value in {"底线筹码", "交换筹码", "响应筹码"} else None
+        return NegotiationChip(
+            chip_type=chip_type,
+            reason=value,
+        )
+    raise ValueError("negotiation_chip 必须是对象、字符串或 null。")
+
+
+
 def _parse_free_review_payload(payload: dict) -> FreeReviewOutput:
     segments_payload = payload.get("risk_segments")
     if not isinstance(segments_payload, list):
         raise ValueError("free review 结果必须包含 risk_segments 数组。")
-    segments = [RiskSegment(**item) for item in segments_payload]
+    segments: list[RiskSegment] = []
+    for item in segments_payload:
+        normalized = dict(item)
+        normalized["negotiation_chip"] = _parse_negotiation_chip(item.get("negotiation_chip"))
+        segments.append(RiskSegment(**normalized))
     return FreeReviewOutput(
         contract_id=payload["contract_id"],
         overall_assessment=payload.get("overall_assessment", ""),
@@ -604,27 +673,35 @@ def free_review_contract_text(
         raise ValueError("合同文本不能为空。")
     settings = load_ai_review_settings()
     client = OpenAI(api_key=settings.api_key, base_url=settings.base_url)
-    completion = client.chat.completions.create(
-        model=settings.model,
-        messages=[
-            {
-                "role": "system",
-                "content": "你是一位资深法务风控顾问，输出必须严格符合给定JSON Schema。",
-            },
-            {
-                "role": "user",
-                "content": _free_review_prompt(
-                    contract_text, contract_id, source_document, review_party
-                ),
-            },
-        ],
-        max_tokens=16384,
-        response_format={"type": "json_object"},
-    )
-    payload = _completion_to_payload(completion)
-    payload["contract_id"] = contract_id
-    payload["source_document"] = source_document
-    return _parse_free_review_payload(payload)
+
+    for attempt in range(2):
+        completion = client.chat.completions.create(
+            model=settings.model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "你是一位资深法务风控顾问，输出必须严格符合给定JSON Schema。",
+                },
+                {
+                    "role": "user",
+                    "content": _free_review_prompt(
+                        contract_text, contract_id, source_document, review_party
+                    ),
+                },
+            ],
+            max_tokens=16384,
+            response_format={"type": "json_object"},
+        )
+        try:
+            payload = _completion_to_payload(completion)
+            payload["contract_id"] = contract_id
+            payload["source_document"] = source_document
+            return _parse_free_review_payload(payload)
+        except ValueError as exc:
+            if "JSON 解析失败" not in str(exc) or attempt == 1:
+                raise
+
+    raise AssertionError("unreachable")
 
 
 def free_review_to_legacy_result(

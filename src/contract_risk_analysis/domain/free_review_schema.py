@@ -13,13 +13,27 @@ from dataclasses import dataclass, field
 # ── LLM₁ output ──────────────────────────────────────────────────
 
 
-@dataclass(frozen=True)
+@dataclass
+class NegotiationChip:
+    """Structured bargaining chip analysis for a risk segment."""
+
+    chip_type: str | None = None
+    location: str | None = None
+    reason: str | None = None
+    counterparty_attack: str | None = None
+    strategy: str | None = None
+
+
+@dataclass
 class RiskSegment:
     """A single risk item identified by LLM₁ free-form review.
 
     Unlike ReviewFinding, this does not depend on a fixed finding_key
     or a predefined set of clause types. LLM₁ is free to identify any
     risk in any contract domain.
+
+    NOT frozen — canonical_type is populated AFTER LLM₁ output by the
+    canonicalization layer, then frozen by the adjudication layer.
     """
 
     clause_type: str
@@ -40,6 +54,12 @@ class RiskSegment:
     severity: str
     """LLM's severity rating: 'critical' | 'high' | 'medium' | 'low' | 'positive'."""
 
+    canonical_type: str | None = None
+    """Deterministic normalized clause category assigned by the canonicalization layer.
+    Populated AFTER LLM₁ output. Used by BnMappingService as the primary lookup key.
+    Falls back to clause_type heuristic only when canonical_type is absent.
+    This field STABILIZES the LLM₁→BN handoff across repeated runs."""
+
     counterparty_impact: str | None = None
     """Who benefits: 'buyer_favorable' | 'seller_favorable' | 'neutral'."""
 
@@ -53,7 +73,7 @@ class RiskSegment:
     legal_basis: str | None = None
     """Relevant legal principle or statute reference, e.g. '民法典第622条'."""
 
-    negotiation_chip: str | None = None
+    negotiation_chip: NegotiationChip | None = None
     """Bargaining chip assessment. Three types (not every type exists in every contract):
     - 底线筹码 (defensive): favorable term the counterparty wants to change; must defend
     - 交换筹码 (trading): unfavorable term the counterparty wants to keep; concede strategically
@@ -74,12 +94,15 @@ class RiskSegment:
     market competitiveness."""
 
 
-@dataclass(frozen=True)
+@dataclass
 class FreeReviewOutput:
     """LLM₁'s complete free-form contract review output.
 
     Contains rich, unconstrained risk analysis covering any risk type
     the LLM identifies, without being limited to a predefined BN node set.
+
+    NOT frozen — risk_segments are mutated in-place by canonicalization
+    and adjudication layers before being frozen by the dossier builder.
     """
 
     contract_id: str
@@ -210,3 +233,143 @@ class ConsistencyReport:
     # ── Joint probability risks (P6.1) ──
     joint_risks: list[dict] = field(default_factory=list)
     """Cross-dimension joint probability analysis results."""
+
+
+# ── Report Dossier (Phase A: stable fact sheet) ───────────────────
+
+
+@dataclass
+class DossierRiskItem:
+    """A frozen risk fact in the report dossier.
+
+    These fields are DETERMINISTIC and must not be altered by LLM₂.
+    LLM₂ may only translate them into professional Chinese prose.
+    """
+
+    issue_id: str
+    """Stable identifier, e.g. 'ISSUE-001'. Assigned by the adjudication layer."""
+
+    risk_title: str
+    """Short Chinese label, frozen from LLM₁ output."""
+
+    clause_type: str
+    """Original free-form clause category from LLM₁."""
+
+    severity: str
+    """Frozen severity: 'critical' | 'high' | 'medium' | 'low' | 'positive'."""
+
+    priority_rank: int
+    """Frozen negotiation priority 1-5."""
+
+    evidence_text: str
+    """Contract excerpt supporting this finding."""
+
+    confidence: float
+    """LLM₁ self-assessed confidence, informational only."""
+
+    canonical_type: str | None = None
+    """Deterministic normalized clause category from the canonicalization layer."""
+
+    recommendation: str | None = None
+    legal_basis: str | None = None
+    negotiation_chip: NegotiationChip | None = None
+    counterparty_impact: str | None = None
+    commercial_impact: str | None = None
+
+    # ── BN linkage ──
+    bn_node: str | None = None
+    """Mapped BN node name, if any."""
+    bn_coverage: bool = False
+    """Does BN have counterfactual data for this item?"""
+
+    # ── Quality flags ──
+    manual_review: bool = False
+    """Flagged for human review (conflict / low evidence / unstable)."""
+    internal_conflict: str | None = None
+    """If this item conflicts with another in the same report, describe the conflict."""
+
+
+@dataclass
+class ReportDossier:
+    """Structured, deterministic fact sheet — the system's single source of truth.
+
+    This is NOT narrative. It is the stable core that LLM₂ must render faithfully.
+    LLM₂ is FORBIDDEN from:
+    - Adding or removing risk items
+    - Changing severity, priority_rank, or signing advice
+    - Altering BN probability numbers
+    - Suppressing manual_review flags
+
+    Phase A: The dossier is the authoritative conclusion. The narrative report
+    is a professional Chinese translation of this dossier.
+    """
+
+    contract_id: str
+    review_party: str
+
+    risk_items: list[DossierRiskItem]
+    """All risk items with frozen severity, priority, evidence, and flags."""
+
+    counterfactuals: list[CounterfactualResult]
+    """BN counterfactual simulations — these numbers are BN-owned and immutable."""
+
+    bn_annotations: list[ValidationAnnotation]
+    """BN validation notes — gap_detected, contradiction, cross_dimension_risk, etc."""
+
+    joint_risks: list[dict]
+    """Cross-dimension joint probability risks."""
+
+    bn_summary: str
+    """BN perspective summary in Chinese."""
+
+    overall_assessment: str
+    """LLM₁ executive summary — treated as frozen context, not editable by LLM₂."""
+
+    strengths: list[str]
+    missing_clauses: list[str]
+
+    # ── Signing guardrails (frozen) ──
+    signing_forbidden: list[str]
+    """Conditions under which the contract MUST NOT be signed."""
+    signing_acceptable: list[str]
+    """Conditions that must ALL be met before signing."""
+    negotiation_bottom_lines: list[str]
+    """Absolute red lines — must not be traded away."""
+
+    # ── Post-v2.10 fields with defaults ──
+    favorable_terms: list[FavorableTerm] = field(default_factory=list)
+    """Terms that are advantageous to the review party — NOT risks. LLM₂ must
+    render these as advantages to protect, not as risks to fix."""
+
+    # ── Quality ──
+    manual_review_items: list[str] = field(default_factory=list)
+    """issue_ids flagged for mandatory human review."""
+    internal_conflicts: list[str] = field(default_factory=list)
+    """Descriptions of internal consistency violations found in this report."""
+
+
+@dataclass
+class FavorableTerm:
+    """A contract term that is advantageous to the review party — NOT a risk.
+
+    These are identified by the adjudication layer through party-aware rules.
+    LLM₂ must render them as advantages to PROTECT, not as risks to FIX.
+    """
+
+    term_name: str
+    """Short label, e.g. '无责任上限' or '争议管辖在甲方住所地'."""
+
+    clause_type: str
+    """Normalized clause category, e.g. 'liability_cap'."""
+
+    description: str
+    """Why this term is favorable to the review party."""
+
+    defense_priority: str = "坚守"
+    """'坚守' | '可交换' | '可让步' — how hard to defend this term."""
+
+    evidence_text: str = ""
+    """Contract excerpt showing this term."""
+
+    chip_type: str = ""
+    """Negotiation chip classification: '底线筹码' | '响应筹码' | '交换筹码'."""

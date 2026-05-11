@@ -145,6 +145,26 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     except Exception as exc:
         return JSONResponse({"error": f"AI 自由审查失败：{exc}"}, status_code=502)
 
+    # ── Phase A P2: Canonicalize clause types (stable LLM₁ → BN handoff) ──
+    from contract_risk_analysis.review.canonicalize import canonicalize_free_review
+    free_output = canonicalize_free_review(free_output)
+    canonical_count = sum(1 for s in free_output.risk_segments if s.canonical_type)
+    if canonical_count > 0:
+        logger.info(
+            "CANONICALIZATION: %s/%s risk segments mapped to canonical types",
+            canonical_count, len(free_output.risk_segments),
+        )
+
+    # ── Phase A P3: Adjudication (dedup + normalize + enforce priority) ──
+    from contract_risk_analysis.review.adjudicate import adjudicate
+    pre_adj_count = len(free_output.risk_segments)
+    free_output = adjudicate(free_output, review_party)
+    if len(free_output.risk_segments) < pre_adj_count:
+        logger.info(
+            "ADJUDICATION: deduplicated %s→%s risk segments",
+            pre_adj_count, len(free_output.risk_segments),
+        )
+
     # ── Layer 2: BN consistency validation ──
     consistency = build_consistency_report(free_output)
 
@@ -186,11 +206,25 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     if len(top_risk_nodes) > 0 and len(covered_top) < max(1, len(top_risk_nodes) * 2 // 3):
         logger.warning("QUALITY_GATE: top risks BN coverage %s/%s (target ≥66%%)", len(covered_top), len(top_risk_nodes))
 
-    # ── Layer 3: Combined report generation ──
+    # ── Phase A: Build structured Report Dossier (system truth source) ──
+    from contract_risk_analysis.review.report_writer import _build_dossier
+    dossier = _build_dossier(free_output, consistency, review_party)
+
+    # ── Internal consistency check (Phase A P5) ──
+    if dossier.internal_conflicts:
+        logger.warning(
+            "QUALITY_GATE_INTERNAL_CONSISTENCY: %s conflict(s) in dossier: %s",
+            len(dossier.internal_conflicts),
+            "; ".join(dossier.internal_conflicts[:5]),
+        )
+
+    # ── Layer 3: Combined report generation (Phase A: constrained renderer) ──
     import traceback as _tb
     polished = None
     try:
-        polished = generate_combined_report(free_output, consistency, review_party, strategy_mode)
+        polished = generate_combined_report(
+            free_output, consistency, review_party, strategy_mode, dossier=dossier,
+        )
     except Exception as exc:
         logger.error("LLM₂ report generation failed: %s\n%s", exc, _tb.format_exc())
 
@@ -270,6 +304,64 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         response["polished"] = None
         response["narrative_report"] = ""
         logger.error("LLM₂ report generation returned None — check DEEPSEEK_MODEL and API connectivity")
+
+    # ── Phase D: Fact Sheet (zero-LLM, purely from dossier) ──
+    response["fact_sheet"] = {
+        "contract_id": dossier.contract_id,
+        "review_party": dossier.review_party,
+        "risk_items": [
+            {
+                "issue_id": item.issue_id,
+                "risk_title": item.risk_title,
+                "clause_type": item.clause_type,
+                "canonical_type": item.canonical_type,
+                "severity": item.severity,
+                "priority_rank": item.priority_rank,
+                "evidence_text": item.evidence_text,
+                "bn_coverage": item.bn_coverage,
+                "bn_node": item.bn_node,
+                "manual_review": item.manual_review,
+                "internal_conflict": item.internal_conflict,
+                "recommendation": item.recommendation,
+                "legal_basis": item.legal_basis,
+                "negotiation_chip": asdict(item.negotiation_chip) if item.negotiation_chip else None,
+            }
+            for item in dossier.risk_items
+        ],
+        "counterfactuals": [
+            {
+                "node_name": cf.node_name,
+                "node_label": cf.node_label,
+                "current_state": cf.current_state,
+                "proposed_state": cf.proposed_state,
+                "base_high_risk": cf.base_high_risk,
+                "counterfactual_high_risk": cf.counterfactual_high_risk,
+                "delta_high_risk": cf.delta_high_risk,
+                "description": cf.description,
+                "derivation_chain": cf.derivation_chain,
+                "dimension_deltas": [
+                    {
+                        "dimension_key": dd.dimension_key,
+                        "dimension_label": dd.dimension_label,
+                        "base_high": dd.base_high,
+                        "counterfactual_high": dd.counterfactual_high,
+                        "delta": dd.delta,
+                    }
+                    for dd in cf.dimension_deltas
+                ],
+            }
+            for cf in dossier.counterfactuals
+        ],
+        "signing_guardrails": {
+            "forbidden": dossier.signing_forbidden,
+            "acceptable": dossier.signing_acceptable,
+            "bottom_lines": dossier.negotiation_bottom_lines,
+        },
+        "manual_review_items": dossier.manual_review_items,
+        "internal_conflicts": dossier.internal_conflicts,
+        "strengths": dossier.strengths,
+        "missing_clauses": dossier.missing_clauses,
+    }
 
     if include_debug:
         response["debug"] = {

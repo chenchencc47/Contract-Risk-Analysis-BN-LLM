@@ -1,9 +1,19 @@
 通用:
   hard_rules:
-    - id: no_unlimited_liability
-      label: 禁止无限责任
-      description: 任何合同不得接受无限赔偿责任或无上限直接损失赔偿
+    - id: no_unlimited_liability_seller_side
+      label: 卖方立场禁止无限责任
+      description: 卖方不得接受无限赔偿责任。必须设置责任上限（不低于合同总价100%）并排除间接损失。
       severity: 企业红线
+      applies_to: seller
+
+    - id: liability_cap_floor_buyer_side
+      label: 买方立场如设责任上限，底线为合同总价100%
+      description: >
+        买方立场下，无责任上限在法理上对买方有利（买方违约概率低、损失量级远小于卖方）。
+        如因公司合规要求必须设置责任上限，底线为合同总价的100%，绝不得低于此比例。
+        30%等低比例意味着对方只需退还少量款项即可免除全部赔偿责任——对买方不可接受。
+      severity: 企业红线
+      applies_to: buyer
 
     - id: exclude_indirect_loss
       label: 间接损失必须排除或限制

@@ -349,12 +349,14 @@ class BnMappingService:
     ) -> tuple[str | None, str | None]:
         """Fallback: match by clause_type hints + severity.
 
-        Tries multiple lookup strategies:
-        1. Exact match on clause_type (English or Chinese)
-        2. Normalized match (lowercase, stripped)
-        3. Substring match against known keys
+        Priority order:
+        1. canonical_type (deterministic, set by canonicalization layer)
+        2. Exact match on clause_type (English or Chinese)
+        3. Normalized match (lowercase, stripped)
+        4. Substring match against known keys
         """
-        ct = segment.clause_type
+        # Strategy 0: canonical_type first (Phase A P2 — stable handoff)
+        ct = getattr(segment, "canonical_type", None) or segment.clause_type
 
         # Strategy 1: exact match
         hints = CLAUSE_TYPE_HINTS.get(ct)
@@ -364,7 +366,14 @@ class BnMappingService:
             hints = CLAUSE_TYPE_HINTS.get(normalized)
 
         if hints is None:
-            # Strategy 3: substring match — check if any known key is in the clause_type
+            # Strategy 3: fall back to original clause_type if canonical didn't match
+            if ct != segment.clause_type:
+                hints = CLAUSE_TYPE_HINTS.get(segment.clause_type)
+                if hints is None:
+                    hints = CLAUSE_TYPE_HINTS.get(segment.clause_type.lower().strip())
+
+        if hints is None:
+            # Strategy 4: substring match — check if any known key is in the lookup key
             for key in CLAUSE_TYPE_HINTS:
                 if key in ct or ct in key:
                     hints = CLAUSE_TYPE_HINTS[key]

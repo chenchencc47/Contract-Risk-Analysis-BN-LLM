@@ -1,10 +1,277 @@
 # 实施进度记录
 
-> 最后更新：2026-05-07
+> 最后更新：2026-05-08（新增报告-6 vs 报告-7 对比评估 + v2.11 工作项）
 
 ---
 
-## 2026-04-30：v2.5 阶段一执行（P0 → P1 → P2 → P4.3）
+## 2026-05-08：v2.10 版本发布 + 报告稳定性路线确定
+
+### v2.10 发布 ✅
+- 已创建新提交：`98a20e2` — `Release v2.10: 开源化基础设施完善与后端路由拆分`
+- 已创建并推送标签：`v2.10`
+- 已推送远端分支：`origin/release/v2.8`
+- 本次发布未混入本地分析材料、合同 PDF 与临时评估文件，保持源码版本边界清晰
+
+### 报告稳定性路线结论（已确认，待实施）
+基于对当前链路 `LLM₁ 自由审查 → BN 一致性校验/反事实 → LLM₂ 最终报告` 的复盘，确认：
+
+1. 当前核心问题是**架构问题**，不是单纯 prompt 问题；
+2. 第一阶段优先 **先稳结论**，先保证核心风险、严重度、优先级、BN数字、签署底线稳定一致；
+3. 未来采用 **稳定事实核 + LLM解释层** 路线：
+   - LLM 负责合同理解、法律解释、修改建议与律师式表达；
+   - BN / 规则 / 裁决层负责稳定事实；
+   - LLM₂ 不再拥有最终改判权，只负责受约束渲染。
+
+### 外部咨询确认（2026-05-08） ✅
+用户就"AI合同审查是否应每次结果完全一致"做了外部咨询，结论与本方案**总体一致**：
+- 不需要追求整份报告逐字逐句绝对一致；
+- 必须锁定**事实层**和**核心判断层**的一致性；
+- 允许**表达层**存在有限自然差异；
+- 特别强调**单次报告内部一致性**（同份报告前后不打仗）与跨轮稳定性同等重要。
+
+此结论已同步进方案文档（`方向/报告稳定性优先与架构演进方案.md`），并新增"分层一致性目标"章节和"单次报告内部一致性验证"验证项。
+
+### 文档产出 ✅
+- 新增方案文档：`方向/报告稳定性优先与架构演进方案.md`
+- `WORKLIST.md` 已补充 **v2.10：报告稳定性优先 + 架构演进** 路线
+
+### 下一阶段实施焦点
+- P0：LLM₂ 降级为受约束渲染器
+- P1：引入结构化 Report Dossier 作为最终事实源
+- P2：稳定 LLM₁ → BN 的 canonicalization / issue_id 层
+- P3：新增 adjudication layer
+- P4：重复运行稳定性与 narrative guardrail 质量门禁
+
+---
+
+## 2026-05-08：Phase A 实施 — LLM₂ 降级为受约束渲染器
+
+### P0：LLM₂ 角色改造 ✅
+改造文件：`src/contract_risk_analysis/review/report_writer.py`
+
+1. **`_combined_system_prompt()`**：LLM₂ 角色从"最终判断者"改为"受约束渲染器"
+   - 移除"你拥有最终判断权"和"以你的法律判断为准"
+   - 新增"绝对禁止的行为"清单（8条：禁改风险项、禁改严重度、禁改优先级、禁改BN数字、禁改签署底线、禁压制人工复核标记等）
+   - 明确 LLM₂ 的任务是"把 Dossier 翻译成专业中文法律报告"
+
+2. **`_build_combined_prompt()`**：信息来源从两层改为三层
+   - 信息来源一：Report Dossier（系统最终结论，必须严格遵循）—— 新增
+   - 信息来源二：AI初审法律分析（用于展开论述和撰写话术）—— 降级
+   - 信息来源三：BN校验摘要（仅供参考）—— 降级
+   - "审核与判断原则"替换为"核心规则：你的角色是受约束渲染器"（7条）
+   - "严禁行为"新增5条 dossier 相关禁令
+
+3. **`generate_combined_report()`**：
+   - 新增 `dossier` 参数（可选，None 时自动构建）
+   - temperature 从 0.5 → 0.1
+   - `generation_mode` 改为 "combined_phase_a"
+   - 新增内部一致性日志记录
+
+### P1：结构化 Report Dossier ✅
+改造文件：`src/contract_risk_analysis/domain/free_review_schema.py`
+
+- 新增 `DossierRiskItem` dataclass：issue_id、severity、priority_rank、evidence、bn_coverage、manual_review、internal_conflict
+- 新增 `ReportDossier` dataclass：risk_items、counterfactuals、bn_annotations、signing_forbidden、signing_acceptable、negotiation_bottom_lines、internal_conflicts
+
+改造文件：`src/contract_risk_analysis/review/report_writer.py`
+
+- 新增 `_build_dossier()`：确定性构建 dossier，冻结所有 risk items 的 severity/priority/evidence，生成签署底线，标记人工复核项，检测内部不一致
+- 新增 `_fmt_dossier_section()`：将 dossier 格式化为 LLM₂ prompt 中的权威数据段
+
+### P5：内部一致性校验 ✅
+改造文件：`src/contract_risk_analysis/review/report_writer.py` + `backend/routers/review.py`
+
+- dossier 构建时自动检测 BN 矛盾标注和 gap_detected 并标记为 manual_review
+- `_run_v2_pipeline` 中新增 `QUALITY_GATE_INTERNAL_CONSISTENCY` 日志告警
+- manual_review 标记通过 Dossier 传递给 LLM₂，LLM₂ 被禁止绕过
+
+### 管线集成 ✅
+改造文件：`backend/routers/review.py`
+
+- v2 管线在 LLM₂ 调用前构建 dossier
+- dossier 内部冲突通过 quality_gate 日志输出
+
+---
+
+## 2026-05-08：Phase A P2 — 稳定 LLM₁ → BN 交接层
+
+### P2：Canonicalization 层 ✅
+改造文件：
+- `src/contract_risk_analysis/domain/free_review_schema.py`：RiskSegment 解除 frozen + 新增 `canonical_type` 字段
+- `src/contract_risk_analysis/review/canonicalize.py`（新文件）：确定性 clause_type 归一化模块
+  - `canonicalize_clause_type()`：3 层匹配策略（精确→归一化→子串），基于 `clause_type_mapping.yaml` 词汇表
+  - `canonicalize_free_review()`：批量归一化所有 risk segments
+  - 中英文双向映射（付款→payment, delivery→delivery 等）
+- `src/contract_risk_analysis/bn/bn_mapping.py`：`_heuristic_match()` 优先使用 `canonical_type`，回退到原始 `clause_type`
+- `backend/routers/review.py`：管线中在 LLM₁ 输出后、BN 映射前执行 canonicalization，含日志统计
+
+### 设计要点
+- canonical_type 由系统确定性赋值，不依赖 LLM 生成
+- canonical vocabulary 来自 `config/clause_type_mapping.yaml`，贡献者可编辑
+- BnMappingService 三层回退：canonical → clause_type exact → clause_type substring
+- 同一风险的多种写法（payment/Payment/付款/支付方式）归一化到同一 canonical type
+
+### 测试：68/68 全部通过（BN 75节点，API 20路由）
+
+---
+
+## 2026-05-08：Phase A P3 — 裁决层（Adjudication Layer）
+
+### P3：Adjudication Layer ✅
+新建文件：`src/contract_risk_analysis/review/adjudicate.py`
+
+1. **去重**：基于 canonical_type 匹配 + 中文标题字符级 Jaccard 相似度（≥0.5）+ 证据重叠度（≥0.3），合并重复风险项
+2. **严重度归一化**：对比 LLM₁ severity 与 BN posterior P(high)，检测不一致但暂不自动改判
+3. **优先级强制执行**：critical→P1、high→P2 硬规则
+4. **证据质量评估**：低置信度+无BN覆盖的弱证据项标记
+
+管线接入：`backend/routers/review.py` — canonicalization 之后、BN mapping 之前执行，带去重统计日志
+
+### 测试：68/68 全部通过（BN 75节点，API 20路由）
+
+---
+
+## 2026-05-08：Phase A P4 — 稳定性验证基础设施
+
+### P4：稳定性验证 + Narrative Guardrail ✅
+新建文件：`tests/stability/__init__.py` + `tests/stability/test_report_stability.py`
+
+1. **`DossierSnapshot`**：从 pipeline 响应中提取稳定字段
+2. **`StabilityReport`**：跨 N 次运行的聚合分析
+3. **`check_narrative_guardrail()`**：检查 narrative 是否引入 dossier 中不存在的新风险
+4. **`TestAdjudicationStability`**（离线）：验证裁决层去重的确定性
+5. **`TestReportStability`**（在线，需 API Key）：3 次全链路运行 + 稳定性校验
+
+### 测试：69 通过（+1 稳定性单元测试），5 skipped（需后端运行的集成测试）
+
+---
+
+## Phase A 全部完成总结（2026-05-08）
+
+| 任务 | 内容 | 状态 |
+|------|------|:--:|
+| P0 | LLM₂ 降级为受约束渲染器 | ✅ |
+| P1 | 结构化 Report Dossier | ✅ |
+| P2 | Canonicalization 层（稳定 LLM₁→BN） | ✅ |
+| P3 | Adjudication Layer（去重+裁决） | ✅ |
+| P4 | 稳定性验证基础设施 | ✅ |
+| P5 | 单次报告内部一致性校验 | ✅ |
+
+**新增文件（3个）：**
+- `src/contract_risk_analysis/review/canonicalize.py`
+- `src/contract_risk_analysis/review/adjudicate.py`
+- `tests/stability/test_report_stability.py`
+
+**改造文件（5个）：**
+- `src/contract_risk_analysis/domain/free_review_schema.py`
+- `src/contract_risk_analysis/review/report_writer.py`
+- `src/contract_risk_analysis/bn/bn_mapping.py`
+- `backend/routers/review.py`
+
+**关键参数变更：**
+- LLM₂ temperature: 0.5 → 0.1
+- 管线链路：LLM₁ → canonicalize → adjudicate → BN → dossier → LLM₂（受约束渲染）
+
+### E2E 线上验证 ✅ (2026-05-08)
+启动后端（localhost:9527），使用买卖合同样本跑完整 v2 管线：
+- 状态码：200
+- 耗时：307s（含 BN 推理 ~5min）
+- 风险项：5 个，全部 5/5 (100%) canonicalization 覆盖率
+- BN 反事实：8 个
+- BN 校验标注：65 个
+- 管线链路验证通过：LLM₁ → canonicalize → adjudicate → BN → dossier → LLM₂
+
+### 最终测试统计
+- **单元测试：69 passed**（68 原有 + 1 新增稳定性单元测试）
+- **5 skipped**（需 API Key + 后端运行的集成测试，可手动触发）
+- 0 failed
+
+### 向后兼容
+- `generate_combined_report()` 的 dossier 参数默认为 None，自动构建
+- `dual.py`、旧版 `web/server.py` 等调用方无需改动
+- 旧 API 行为完全不受影响
+
+---
+
+## 2026-05-08：Phase B/C 逐条完成度审计
+
+> 对照方案文档 `方向/报告稳定性优先与架构演进方案.md` 逐动作核实。
+
+### Phase B：稳定 LLM₁ → BN 的交接
+
+| # | 动作 | 状态 | 说明 |
+|---|------|:--:|------|
+| 1 | `canonical_type` 字段 | ✅ | `RiskSegment.canonical_type` 已加 |
+| 2 | canonicalization 层 | ✅ | `canonicalize.py`，基于 `clause_type_mapping.yaml` |
+| 3 | 归并同义标签+重复风险项 | ⚠️ | canonicalize 做了映射；adjudicate 做了同 canonical_type 去重；**不同 canonical_type 但描述同一风险的跨类型归并未做** |
+| 4 | 稳定 issue_id（内容派生） | ❌ | 当前为顺序编号 ISSUE-001，两次运行同一风险可能拿不同 ID |
+| 5 | BnMappingService 优先 canonical | ✅ | `_heuristic_match()` 已优先 `canonical_type` |
+
+### Phase C：新增裁决层
+
+| # | 职责 | 状态 | 说明 |
+|---|------|:--:|------|
+| 1 | 合并重复 finding | ✅ | `adjudicate.py` `_deduplicate()` |
+| 2 | 分配统一 issue_id | ❌ | 同上，顺序编号不稳定 |
+| 3 | 规则决定 severity | ❌ | priority 已强制执行（critical→P1），但 **severity 仍完全来自 LLM₁，无规则裁决** |
+| 4 | 结合 BN 输出生成 dossier | ✅ | `_build_dossier()` |
+| 5 | 人工复核标记 | ✅ | BN 矛盾/gap_detected → `manual_review` |
+
+### 真正未完成的缺口（3 项）→ 全部修复于 2026-05-08
+
+---
+
+## 2026-05-08：Phase B/C 缺口修复 + Phase D 实施
+
+### B-1：稳定 issue_id ✅
+改造文件：`src/contract_risk_analysis/review/report_writer.py`
+
+- issue_id 从顺序编号改为内容派生：`ISSUE-{canonical_type[:12]}-{sha256(ctype|evidence[:80])[:8]}`
+- 新增碰撞保护：同一 run 内相同 hash 自动追加序号
+- 同一 canonical_type + 同一证据 → 永远产出同一个 issue_id
+
+### B-2：跨 canonical_type 归并 ✅
+改造文件：`src/contract_risk_analysis/review/adjudicate.py`
+
+- `_deduplicate()` 从单 pass 改为双 pass
+- Pass 1：同 canonical_type 内去重（ev_threshold=0.3）
+- Pass 2：跨 canonical_type 去重（ev_threshold=0.5，更保守）
+- 新增 `_should_merge()` 辅助函数
+
+### C-1：severity 规则裁决 ✅
+改造文件：
+- `src/contract_risk_analysis/review/adjudicate.py`：移除 `_normalize_severity` 调用（需 BN 数据）
+- `src/contract_risk_analysis/review/report_writer.py`：`_build_dossier()` 中新增三条规则
+  - Rule 1: BN P(high) > 0.6 AND LLM₁ 标 medium/low → 升级为 high
+  - Rule 2: BN P(high) < 0.1 AND LLM₁ 标 critical → 降级为 high
+  - Rule 3: critical 无 BN 覆盖 → 降级为 high
+
+### Phase D：两层输出 ✅
+改造文件：`backend/routers/review.py`
+
+- API 响应新增 `fact_sheet` 字段
+- 包含：risk_items（含 stable issue_id）、counterfactuals、signing_guardrails、manual_review_items、internal_conflicts
+- 零 LLM 参与，数据完全来自 dossier
+
+### 测试：69/69 全部通过
+
+### 验证项 V-2/V-3/V-4 离线测试 ✅
+改造文件：`tests/stability/test_report_stability.py`
+
+新增 3 个测试类（7 个测试方法）：
+- **TestMappingStability（V-3）**：22 组中英同义表述映射一致性 + 确定性验证 + 未知类型返回 None
+- **TestNarrativeGuardrail（V-2）**：检测 narrative 越权扩写 + 清洁 narrative 通过
+- **TestConflictEscalation（V-4）**：BN 矛盾触发 manual_review + critical 无 BN 覆盖降级验证
+
+修复：`canonicalize.py` 新增中文 YAML key → English canonical 反向映射（第二 pass）
+
+### 最终测试统计
+- **离线单元测试：76 passed**
+- **8 个稳定性专项测试全部通过**（离线）
+- **5 skipped**（需 API Key + 后端运行：V-1 重复运行稳定性 × 3 + narrative guardrail × 1 + 3-run × 1）
+- **0 failed**
+
+### Phase A-D 全部实施完成，方案文档完整闭环
 
 ### P0：BN反事实产出稳定性 ✅
 **根因分析：**
@@ -418,3 +685,112 @@ P0-7（社区文件）─────→ 独立并行
 | 可扩展性 | 8/15 | 10/15 | +2（HINTS 配置化） |
 | 社区就绪度 | 2/10 | 7/10 | +5（CI + 社区文件 + 英文 README） |
 | **加权总分** | **63** | **~76** | **+13** |
+
+---
+
+## 2026-05-08：Phase A 回归分析 — 报告-6 vs 报告-7 对比评估
+
+### 背景
+Phase A（LLM₂ 降级为受约束渲染器 + Dossier + canonicalization + adjudication）实施后，
+生成了报告-7。与 Phase A 前的报告-6（warning 模式下生成）进行对比，评估 Phase A 的实际效果。
+
+### 评估方法
+- 独立分析（六维度加权评分），形成自己的结论后再参考 DeepSeek 评价
+- 评分框架与 DeepSeek 一致：风险识别(25%) + 分析深度(20%) + 建议价值(20%) + 策略有效性(20%) + 结构逻辑(10%) + 有利条款保护(5%)
+
+### 独立评分结果
+
+| 报告 | 风险识别 | 分析深度 | 建议价值 | 策略有效性 | 结构逻辑 | 亮点保护 | **总分** |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 报告-6 (Phase A 前) | 7.5 | 9.0 | 9.0 | 9.3 | 9.0 | 9.5 | **8.71** |
+| 报告-7 (Phase A 后) | 7.0 | 7.5 | 5.0 | 6.5 | 8.5 | 6.0 | **6.70** |
+
+### DeepSeek 评分对比
+
+| 报告 | 独立评分 | DeepSeek 评分 | 差异 |
+|:---|:---:|:---:|:---|
+| 报告-6 | 8.71 | 未评分 | — |
+| 报告-7 | 6.70 | 8.15 | -1.45（我更低） |
+
+DeepSeek 与我完全一致地指出报告-7 的核心问题：**对「责任上限」条款的战略价值判断出现根本性偏差**。
+分歧在于严重程度——DeepSeek 给了 8.15（排名 5/7），我认为这个错误是致命级的（30% 责任上限的建议如果被客户采纳会导致灾难性后果）。
+
+### 核心发现：Phase A 的约束机制放大了上游错误
+
+**报告-6（Phase A 前）：** LLM₂ 有「最终判断权」，可以将 LLM₁ 误标的「责任上限缺失=风险」重新框定为「响应筹码」。
+**报告-7（Phase A 后）：** LLM₂ 被禁止改判，Dossier 锁定上游错误分类，LLM₂ 只能照本宣科。
+
+具体退化点：
+1. **责任上限判断**：报告-6 正确识别为买方优势/响应筹码 → 报告-7 错误定性为 🟠高/P1 风险、建议设 30% 上限
+2. **预付款严重度**：报告-6 标 🔴致命 → 报告-7 降为 🟠高
+3. **BN 基线漂移**：财务暴露 P(high) 28.4%→55.4%，条款失衡 31.4%→45.6%，整体 26.8%→39.9%
+4. **内部矛盾**：报告-7 第 5 章称责任上限为「响应筹码/等鱼上钩」，第 6 章却列为「可签署的必须条件」
+
+### 根因
+
+Phase A 的设计假设是「上游（LLM₁→canonicalize→adjudicate→BN）产出的事实是正确的，只需约束 LLM₂ 不乱改」。
+但实际上，**当前 Adjudication 层缺少立场感知的商业判断能力**——它无法区分「真正的风险」和「对当前立场有利的条款」。
+当上游产出错误事实时，约束机制会把这些错误锁死在最终报告中。
+
+### P0-P1 实施完成（2026-05-08）
+
+所有 P0+P1 任务已完成：
+
+| 任务 | 内容 | 状态 |
+|:---|:---|:--:|
+| P0-1 | Adjudication 层立场感知规则 | ✅ |
+| P0-2 | 修复 30% 责任上限危险建议 | ✅ |
+| P0-3 | Dossier 构建时检测内部矛盾 | ✅ |
+| P1-1 | Dossier 增加有利条款标记字段 | ✅ |
+| P1-2 | LLM₂ 增加纠错上报机制 | ✅ |
+| P1-3 | 完整立场感知商业判断规则（8 条款双向覆盖） | ✅ |
+
+**新增文件（1个）：**
+- `config/party_aware_rules.yaml`
+
+**改造文件（4个）：**
+- `src/contract_risk_analysis/review/adjudicate.py`：`_apply_party_aware_rules()` + review_party 参数
+- `src/contract_risk_analysis/review/report_writer.py`：C-1 保护 positive 项 + 内部矛盾检测 + favorable_terms 提取 + 渲染器备注机制 + 责任上限底线强化
+- `src/contract_risk_analysis/domain/free_review_schema.py`：`FavorableTerm` dataclass + `ReportDossier.favorable_terms`
+- `config/company_redlines.yaml`：责任上限规则拆分为买方/卖方独立规则
+- `backend/routers/review.py`：adjudicate() 传入 review_party
+
+**测试：18/18 通过（非 BN），0 failed**
+
+### P2 实施完成（2026-05-08）
+
+| 任务 | 内容 | 状态 |
+|:---|:---|:--:|
+| P2-1 | 以报告-2（DeepSeek 9.49 分）为标杆编码博弈模式 | ✅ |
+| P2-2 | 建立「已知正确判断」回归测试集（11 个测试） | ✅ |
+
+**P2-1 改动：**
+- `src/contract_risk_analysis/review/report_writer.py`：LLM₂ prompt 第五章（筹码策略）增强
+  - 筹码识别增加"必须预判对方攻击话术"要求（带示例）
+  - 三层防御增加"必须指明交换目标的具体条款和数字"
+  - 让步阶梯增加"每一步退让附带交换要求"
+  - 跨筹码联动规则（不得单向让步、交换比率必须明确）
+  - 策略结论与签署建议一致性检查
+
+**P2-2 改动：**
+- `tests/regression/__init__.py`（新文件）
+- `tests/regression/test_judgment_regression.py`（新文件，11 个测试）：
+  - `TestPartyAwareRulesBuyer`（4 tests）：liability_cap→positive, jurisdiction→favorable, termination→favorable, unknown type pass-through
+  - `TestPartyAwareRulesSeller`（1 test）：liability_cap seller stays critical
+  - `TestLiabilityCapFloor`（2 tests）：100% floor rule exists, unlimited rule seller-only
+  - `TestInternalConsistency`（2 tests）：favorable terms not in signing conditions, positive→favorable_terms extraction
+  - `TestPartyAwareConfigIntegrity`（2 tests）：all 6 buyer rules + 8 seller rules present with action/note fields
+
+### 最终测试统计
+- **87 passed**（76 原有 + 11 新增回归测试），**5 skipped**，**0 failed**
+
+### v2.11 P0-P2 全部完成总结
+
+| 阶段 | 任务数 | 新增文件 | 改造文件 |
+|:---|:---:|:---|:---|
+| P0 | 3 | `config/party_aware_rules.yaml` | `adjudicate.py`, `report_writer.py`, `company_redlines.yaml`, `backend/routers/review.py` |
+| P1 | 3 | — | `free_review_schema.py`, `report_writer.py`, `adjudicate.py`, `party_aware_rules.yaml` |
+| P2 | 2 | `tests/regression/test_judgment_regression.py` | `report_writer.py` |
+
+核心成果：裁决层现在能区分「真正的风险」和「对当前立场有利的条款」，
+防止了报告-7 那种把买方核心优势当成风险来修的致命错误。
