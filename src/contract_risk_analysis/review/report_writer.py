@@ -39,6 +39,94 @@ DEEPSEEK_MODEL = "deepseek-chat"
 
 from contract_risk_analysis.constants import DIMENSION_LABELS, RISK_LABELS
 
+# ═══════════════════════════════════════════════════════════════════
+#  v2.13-C: BN counterfactual interpretation guardrails
+# ═══════════════════════════════════════════════════════════════════
+
+BN_INTERPRETATION_RULES: dict[str, dict] = {
+    "liability_cap": {
+        "report_usage": "defensive_chip_only",
+        "buyer": (
+            "买方视角下，当前无责任上限是优势。BN反事实数据仅说明该条款的价值，"
+            "应作为「防守筹码说明」使用，**严禁**写成主动新增责任上限建议。"
+        ),
+        "seller": (
+            "卖方视角下，无责任上限是致命风险。BN数据可作为主动要求增加责任上限的量化依据。"
+        ),
+    },
+    "liability_cap_strength": {
+        "report_usage": "defensive_chip_only",
+        "buyer": (
+            "买方视角下，责任上限强度改善的反事实数据仅说明该条款的价值，"
+            "应作为「防守筹码说明」使用，**严禁**写成主动修改建议。"
+        ),
+        "seller": (
+            "卖方视角下，责任上限强度不足是重大风险。BN数据可作为主动要求加强责任上限的量化依据。"
+        ),
+    },
+    "damages_exposure": {
+        "report_usage": "defensive_chip_only",
+        "buyer": (
+            "买方视角下，未排除间接损失对买方影响有限（买方主要义务为付款，"
+            "逾期付款的间接损失极难被司法支持）。BN数据应作为「防守筹码说明」，"
+            "**严禁**写成主动排除间接损失建议。"
+        ),
+        "seller": (
+            "卖方视角下，未排除间接损失是重大风险（产品缺陷可能引发停产、商誉损失、"
+            "第三方索赔等）。BN数据可作为主动要求排除间接损失的量化依据。"
+        ),
+    },
+    "jurisdiction_fairness": {
+        "report_usage": "defensive_chip_only",
+        "buyer": (
+            "买方视角下，甲方住所地管辖是核心优势（大幅降低诉讼成本和执行难度）。"
+            "BN数据应作为「底线筹码说明」使用，**严禁**写成主动修改管辖地建议。"
+        ),
+        "seller": (
+            "卖方视角下，对方住所地管辖不利。BN数据可作为要求改为己方所在地或"
+            "中立仲裁机构的量化依据。"
+        ),
+    },
+    "termination_right_balance": {
+        "report_usage": "manual_review_note",
+        "buyer": (
+            "终止权利平衡性需结合具体商业背景判断。BN数据仅供参考，"
+            "报告中必须标注「建议人工复核」，不得自行下结论。"
+        ),
+        "seller": (
+            "终止权利平衡性需结合具体商业背景判断。BN数据仅供参考，"
+            "报告中必须标注「建议人工复核」，不得自行下结论。"
+        ),
+    },
+    "termination_clause_completeness": {
+        "report_usage": "manual_review_note",
+        "buyer": (
+            "终止条款完备性的BN数据需结合合同具体情况判断。"
+            "报告中必须标注「建议人工复核」。"
+        ),
+        "seller": (
+            "终止条款完备性的BN数据需结合合同具体情况判断。"
+            "报告中必须标注「建议人工复核」。"
+        ),
+    },
+}
+
+
+def _get_bn_report_usage(node_name: str, review_party: str) -> str:
+    """Classify a BN counterfactual's report usage based on interpretation rules."""
+    rule = BN_INTERPRETATION_RULES.get(node_name)
+    if rule is None:
+        return ""
+    return rule.get("report_usage", "")
+
+
+def _get_bn_interpretation_note(node_name: str, review_party: str) -> str:
+    """Get the party-aware interpretation note for a BN counterfactual."""
+    rule = BN_INTERPRETATION_RULES.get(node_name)
+    if rule is None:
+        return ""
+    return rule.get(review_party, "")
+
 # Standard report sections the LLM must produce
 REPORT_SECTIONS = [
     "## 一、执行摘要",
@@ -74,6 +162,507 @@ class PolishedReport:
     """Claims/probability numbers in the report that come from BN output."""
     llm_judgment_claims: list[str] = field(default_factory=list)
     """Claims in the report that are LLM₂'s independent legal judgments."""
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  v2.15: Multi-format report output
+# ═══════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class MultiFormatReports:
+    """v2.15: Multiple report formats generated from the same Dossier.
+
+    Each format serves a different audience and purpose.
+    All formats share the same frozen Dossier as their single source of truth.
+    """
+    dossier: ReportDossier
+
+    # v2.15-A: 1-2 page executive summary for management
+    executive_brief: str = ""
+
+    # v2.15-B: Full legal review (the existing combined report)
+    full_legal_review: str = ""
+
+    # v2.15-C: Negotiation playbook for business teams
+    negotiation_playbook: str = ""
+
+    # v2.15-D: Contract revision checklist (deterministic, no LLM)
+    revision_checklist: str = ""
+
+    # v2.15-E: BN/Methodology appendix (deterministic, no LLM)
+    bn_appendix: str = ""
+
+
+def _build_executive_brief_prompt(
+    dossier: ReportDossier,
+    free_output: FreeReviewOutput,
+    review_party: str = "buyer",
+) -> str:
+    """v2.15-A: Build prompt for 1-2 page executive summary."""
+    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
+
+    critical_items = [it for it in dossier.risk_items if it.severity == "critical"]
+    high_items = [it for it in dossier.risk_items if it.severity == "high"]
+
+    return f"""你是{party_label}的法务顾问，需要为管理层撰写一份**1-2页的合同审查摘要**。
+
+管理层不需要逐条款法律分析——他们需要快速判断：能不能签？卡在哪？必须改什么？
+
+## 报告事实清单（Dossier摘要）
+
+- 合同编号：{dossier.contract_id}
+- 审查立场：{dossier.review_party}
+- 致命风险数：{len(critical_items)}
+- 高风险数：{len(high_items)}
+- 有利条款数：{len(dossier.favorable_terms)}
+- 需人工复核项：{len(dossier.manual_review_items)}
+
+### 致命风险（一票否决级）
+{chr(10).join(f"- {it.risk_title}：{it.recommendation or '必须在签署前修改'}（证据：{it.evidence_text[:100]}）" for it in critical_items) if critical_items else '- （无致命风险）'}
+
+### 高风险项
+{chr(10).join(f"- {it.risk_title}（P{it.priority_rank}，{it.legal_direction or 'unknown'}）" for it in high_items[:5]) if high_items else '- （无高风险项）'}
+
+### 有利条款（必须守住）
+{chr(10).join(f"- {ft.term_name}（{ft.chip_type or '防守'}）" for ft in dossier.favorable_terms[:5]) if dossier.favorable_terms else '- （无特殊有利条款）'}
+
+### 签署底线
+**禁止签署的条件：**
+{chr(10).join(f"- {sf}" for sf in dossier.signing_forbidden) if dossier.signing_forbidden else '- （无）'}
+**可签署的条件：**
+{chr(10).join(f"- {sa}" for sa in dossier.signing_acceptable) if dossier.signing_acceptable else '- （无）'}
+
+---
+## 撰写要求
+
+请撰写一份管理层摘要，使用 Markdown 格式，包含以下章节：
+
+### 一、签署建议（一句话结论）
+明确给出：建议签署 / 有条件签署 / 不建议签署。一句话说清为什么。
+
+### 二、核心风险（最多3项）
+每项用2-3句话说明：什么风险、为什么致命、必须怎么改。使用业务语言，不引用法律条文。
+
+### 三、我方优势（最多3项）
+我方在合同中的关键有利条款，谈判中必须守住。
+
+### 四、谈判底线
+简明列出不可退让的条件，以及可接受的修改范围。
+
+### 五、决策建议
+1-2段话，给管理层的最终建议。
+
+**约束：**
+- 总长度控制在1-2页等价（约500-800字）
+- 使用业务语言，避免法律术语堆砌
+- 不要展开法律分析——那是法务详版的工作
+- 不要引用BN概率数字——这是给管理层的决策摘要
+- 严格遵守 Dossier 中的签署底线，不得降低标准
+
+直接输出 Markdown，不要前言或后记。"""
+
+
+def _build_negotiation_playbook_prompt(
+    dossier: ReportDossier,
+    free_output: FreeReviewOutput,
+    review_party: str = "buyer",
+) -> str:
+    """v2.15-C: Build prompt for negotiation playbook."""
+    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
+    counterparty = "乙方（卖方）" if review_party == "buyer" else "甲方（买方）"
+
+    # Collect all chips
+    chip_lines: list[str] = []
+    for item in dossier.risk_items:
+        ct = _chip_type(item.negotiation_chip)
+        if ct:
+            chip_lines.append(
+                f"- [{ct}] {item.risk_title}（{item.legal_direction or 'unknown'}）"
+                f"：{_inline_negotiation_chip(item.negotiation_chip)}"
+            )
+    for ft in dossier.favorable_terms:
+        if ft.chip_type:
+            chip_lines.append(
+                f"- [{ft.chip_type}] {ft.term_name}（{ft.legal_direction or 'favorable'}）"
+                f"：{ft.description[:120]}"
+            )
+
+    return f"""你是{party_label}的谈判顾问。你的任务是为业务团队撰写一份**可以直接带上谈判桌的作战手册**。
+
+合同审查已完成，以下是系统生成的筹码清单和风险数据。
+
+## 筹码清单
+
+{chr(10).join(chip_lines) if chip_lines else '（无已识别筹码）'}
+
+## 签署底线
+
+**禁止签署的条件：**
+{chr(10).join(f"- {sf}" for sf in dossier.signing_forbidden) if dossier.signing_forbidden else '- （无）'}
+
+**谈判底线：**
+{chr(10).join(f"- {bl}" for bl in dossier.negotiation_bottom_lines) if dossier.negotiation_bottom_lines else '- （无）'}
+
+## 撰写要求
+
+请撰写一份谈判作战手册，使用 Markdown 格式，包含以下章节：
+
+### 一、筹码总览
+
+用表格列出所有筹码：筹码名称 | 类型（底线/交换/响应）| 所属条款 | 筹码价值说明
+
+### 二、对手主攻方向预判
+
+站在{counterparty}律师的角度，预判对方在谈判桌上的核心攻击方向（3-5个）。
+对每个攻击方向，必须给出：
+- 对方律师具体会怎么说（给出话术示例）
+- 该攻击的实质威胁有多大（高/中/低）
+- 我方的应对策略
+
+**质量要求**：不得使用"对方可能要求修改"等泛泛表述。必须具体到条款号和百分比。
+
+### 三、底线筹码防御策略
+
+对每个底线筹码：
+1. 防守话术（如何论证该条款的合理性）
+2. 如对方极度坚持 → 用哪个交换筹码或响应筹码来换
+3. 底线：什么条件下才应考虑退出谈判
+
+### 四、交换筹码退让阶梯
+
+对每个交换筹码，给出三档阶梯：
+- 开盘目标（最理想的数字）
+- 可接受中间价
+- 底线（不得退过此线）
+每档附带对方需做出的对应让步。
+
+### 五、响应筹码交换方案
+
+对每个响应筹码：
+1. 等待纪律：绝不主动提出修改
+2. 接招姿态：对方提出时的话术
+3. 交换目标：明确列出可换取哪些对方让步，按优先级排序
+
+### 六、谈判路线图
+
+给出建议的谈判顺序和节奏：先谈什么、后谈什么、什么阶段亮出什么筹码。
+
+**约束：**
+- 这是给业务团队看的，不是给律师看的——使用商业语言
+- 每个策略必须有具体数字（百分比/金额/天数）
+- 不得使用"建议律师准备谈判策略""可考虑适度让步"等空话
+- 策略结论必须与签署底线一致
+
+直接输出 Markdown，不要前言或后记。"""
+
+
+def _build_revision_checklist(dossier: ReportDossier) -> str:
+    """v2.15-D: Build deterministic contract revision checklist from dossier.
+
+    No LLM needed — extracts recommendations directly from frozen risk items.
+    """
+    lines: list[str] = [
+        f"# 合同修订清单",
+        f"",
+        f"> 合同编号：{dossier.contract_id}",
+        f"> 审查立场：{dossier.review_party}",
+        f"> 生成方式：系统确定性生成（非LLM）",
+        f"",
+        f"本清单列出审查中识别的所有需修改条款，按优先级排列。",
+        f"**必须修改** = 签署前必须解决 | **建议修改** = 强烈建议 | **可谈判** = 可作交换筹码",
+        f"",
+    ]
+
+    # Sort: critical → high → medium → low
+    sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    sorted_items = sorted(
+        dossier.risk_items,
+        key=lambda it: (sev_order.get(it.severity, 99), it.priority_rank),
+    )
+
+    for item in sorted_items:
+        if item.severity == "positive":
+            continue
+
+        if item.severity in ("critical",) and item.priority_rank == 1:
+            must_label = "**⚠️ 必须修改（签署底线）**"
+        elif item.severity in ("critical", "high") and item.priority_rank <= 2:
+            must_label = "**建议修改**"
+        else:
+            must_label = "可谈判修改"
+
+        lines.append(f"## {item.issue_id}：{item.risk_title}")
+        lines.append(f"- 修改优先级：{must_label}")
+        lines.append(f"- 条款类别：{item.canonical_type or item.clause_type}")
+        lines.append(f"- 原文证据：「{item.evidence_text}」")
+        if item.recommendation:
+            lines.append(f"- 建议修改方向：{item.recommendation}")
+        if item.legal_basis:
+            lines.append(f"- 法律依据：{item.legal_basis}")
+        if item.negotiation_role:
+            role_labels = {
+                "must_fix": "必须在签署前修改",
+                "trade": "可作为交换筹码在谈判中让步",
+                "protect": "应坚守的有利条款（不建议修改）",
+                "respond": "等待对方提出后再交换",
+                "monitor": "关注即可，不需主动修改",
+            }
+            lines.append(f"- 谈判角色：{role_labels.get(item.negotiation_role, item.negotiation_role)}")
+        if item.manual_review:
+            lines.append(f"- ⚠️ 建议人工复核：{item.internal_conflict or '系统标记需人工复核'}")
+        lines.append("")
+
+    if dossier.favorable_terms:
+        lines.append("---")
+        lines.append("")
+        lines.append("## 有利条款（建议保留，不修改）")
+        lines.append("")
+        lines.append("以下条款对当前审查立场有利，**不建议主动提出修改**：")
+        lines.append("")
+        for ft in dossier.favorable_terms:
+            lines.append(f"- **{ft.term_name}**（{ft.chip_type or '防守型'}）")
+            if ft.description:
+                lines.append(f"  - {ft.description[:150]}")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+def _build_bn_appendix(dossier: ReportDossier) -> str:
+    """v2.15-E: Build deterministic BN/methodology appendix from dossier.
+
+    No LLM needed — all data comes from BN counterfactuals and annotations.
+    """
+    lines: list[str] = [
+        f"# BN/方法论附录",
+        f"",
+        f"> 合同编号：{dossier.contract_id}",
+        f"> 生成方式：系统确定性生成（非LLM）",
+        f"",
+        f"本附录记录本次审查中使用的贝叶斯网络推理数据和方法论，",
+        f"供技术团队追溯数字来源和验证推理逻辑。",
+        f"",
+        f"## 一、方法论概述",
+        f"",
+        f"- **推理引擎**：pgmpy BayesianNetwork，使用变量消除法（Variable Elimination）进行精确概率推理",
+        f"- **CPT参数来源**：CUAD数据集（510份合同）+ ContractNLI数据集统计校准",
+        f"- **证据层节点**：从LLM₁抽取的合同事实映射为BN证据节点状态",
+        f"- **反事实模拟**：逐一假设关键条款改善，重新运行推理，计算P(high)降幅",
+        f"",
+    ]
+
+    # BN summary
+    if dossier.bn_summary:
+        lines.append("## 二、BN推理摘要")
+        lines.append("")
+        lines.append(dossier.bn_summary)
+        lines.append("")
+
+    # Counterfactuals
+    if dossier.counterfactuals:
+        lines.append("## 三、反事实模拟详情")
+        lines.append("")
+        cf_sorted = sorted(dossier.counterfactuals, key=lambda c: c.delta_high_risk, reverse=True)
+        for cf in cf_sorted:
+            lines.append(f"### {cf.node_label}")
+            lines.append(f"- 当前状态：{cf.current_state}")
+            lines.append(f"- 假设改善至：{cf.proposed_state}")
+            lines.append(f"- 整体高风险概率变化：{cf.base_high_risk:.1%} → {cf.counterfactual_high_risk:.1%}（Δ {cf.delta_high_risk:+.1%}）")
+            if cf.dimension_deltas:
+                lines.append(f"- 维度级变化：")
+                for dd in cf.dimension_deltas:
+                    lines.append(f"  - {dd.dimension_label}：{dd.base_high:.1%} → {dd.counterfactual_high:.1%}（Δ {dd.delta:+.1%}）")
+            if cf.description:
+                lines.append(f"- 说明：{cf.description}")
+            if cf.derivation_chain:
+                lines.append(f"- 推导链：{cf.derivation_chain}")
+            lines.append("")
+
+    # Annotations
+    if dossier.bn_annotations:
+        lines.append("## 四、BN校验标注")
+        lines.append("")
+        by_type: dict[str, list] = {}
+        for a in dossier.bn_annotations:
+            by_type.setdefault(a.annotation_type, []).append(a)
+        for atype, annotations in sorted(by_type.items()):
+            type_labels = {
+                "missing_dimension": "⚠️ 未覆盖的维度",
+                "contradiction": "⚡ BN与LLM判断分歧",
+                "confidence_mismatch": "📊 置信度异常",
+                "causal_incoherence": "🔗 因果不一致",
+                "cross_dimension_risk": "🔴 乘数效应风险",
+                "gap_detected": "ℹ️ BN未覆盖的风险类型",
+            }
+            label = type_labels.get(atype, atype)
+            lines.append(f"### {label}")
+            for a in annotations:
+                prefix = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}.get(a.severity, "")
+                lines.append(f"- {prefix} {a.message}")
+            lines.append("")
+
+    # Joint risks
+    if dossier.joint_risks:
+        lines.append("## 五、跨维度联合风险（乘数效应）")
+        lines.append("")
+        for jr in dossier.joint_risks:
+            lines.append(f"- {jr}")
+        lines.append("")
+
+    # Limitations
+    lines.append("## 六、方法论局限")
+    lines.append("")
+    lines.append("1. **反事实模拟仅覆盖单一维度改善**：每项反事实仅改变一个条款状态，未考虑多条款联动改善的协同效应。")
+    lines.append("2. **CPT基于统计先验**：条件概率表（CPT）从公开数据集统计得出，可能无法完全反映本合同特定商业背景。")
+    lines.append("3. **证据层映射依赖LLM₁**：合同事实→BN节点的映射由LLM₁完成，存在映射遗漏或错误的风险。")
+    lines.append("4. **部分节点依赖先验概率**：合同文本中未涉及的风险维度，BN使用先验概率进行推理，准确性受限。")
+    lines.append("")
+
+    # Dossier-BN conflicts
+    if dossier.internal_conflicts:
+        lines.append("## 七、Dossier-BN冲突记录")
+        lines.append("")
+        lines.append("以下冲突已在系统层标记，建议人工复核：")
+        lines.append("")
+        for ic in dossier.internal_conflicts:
+            lines.append(f"- {ic}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_executive_brief(
+    dossier: ReportDossier,
+    free_output: FreeReviewOutput,
+    review_party: str = "buyer",
+) -> str:
+    """v2.15-A: Generate a 1-2 page executive summary for management."""
+    api_key, base_url, model = _load_polish_settings()
+    client = OpenAI(api_key=api_key, base_url=base_url)
+
+    prompt = _build_executive_brief_prompt(dossier, free_output, review_party)
+
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": _combined_system_prompt(review_party)
+                + "\n你现在的任务是撰写管理层摘要——简明、决策导向、使用商业语言。",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=4096,
+        temperature=0.2,
+    )
+
+    content = completion.choices[0].message.content
+    return _strip_think_tags(content) if content else ""
+
+
+def generate_negotiation_playbook(
+    dossier: ReportDossier,
+    free_output: FreeReviewOutput,
+    review_party: str = "buyer",
+) -> str:
+    """v2.15-C: Generate a negotiation playbook for business teams."""
+    api_key, base_url, model = _load_polish_settings()
+    client = OpenAI(api_key=api_key, base_url=base_url)
+
+    prompt = _build_negotiation_playbook_prompt(dossier, free_output, review_party)
+
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": _combined_system_prompt(review_party)
+                + "\n你现在的任务是撰写谈判作战手册——具体、量化、可直接上谈判桌。",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=8192,
+        temperature=0.3,
+    )
+
+    content = completion.choices[0].message.content
+    return _strip_think_tags(content) if content else ""
+
+
+def generate_multi_format_reports(
+    free_output: FreeReviewOutput,
+    consistency: ConsistencyReport | None = None,
+    review_party: str = "buyer",
+    dossier: ReportDossier | None = None,
+    *,
+    include_executive: bool = True,
+    include_full_review: bool = True,
+    include_playbook: bool = True,
+    include_checklist: bool = True,
+    include_appendix: bool = True,
+) -> MultiFormatReports:
+    """v2.15: Generate multiple report formats from the same Dossier.
+
+    This is the unified entry point for multi-format report generation.
+    Each format serves a different audience:
+    - Executive brief → management decision-makers
+    - Full legal review → legal team
+    - Negotiation playbook → business/negotiation team
+    - Revision checklist → contract drafting team
+    - BN appendix → technical/audit team
+
+    All formats share the same frozen Dossier as their single source of truth.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    if dossier is None:
+        dossier = _build_dossier(free_output, consistency, review_party)
+
+    reports = MultiFormatReports(dossier=dossier)
+
+    # v2.15-A: Executive brief (LLM, ~4K tokens)
+    if include_executive:
+        logger.info("Generating executive brief...")
+        try:
+            reports.executive_brief = generate_executive_brief(
+                dossier, free_output, review_party
+            )
+        except Exception as e:
+            logger.error("Failed to generate executive brief: %s", e)
+            reports.executive_brief = f"（生成失败：{e}）"
+
+    # v2.15-B: Full legal review (the existing combined report)
+    if include_full_review:
+        logger.info("Generating full legal review...")
+        try:
+            full = generate_combined_report(free_output, consistency, review_party, dossier=dossier)
+            reports.full_legal_review = full.narrative_report
+        except Exception as e:
+            logger.error("Failed to generate full legal review: %s", e)
+            reports.full_legal_review = f"（生成失败：{e}）"
+
+    # v2.15-C: Negotiation playbook (LLM, ~8K tokens)
+    if include_playbook:
+        logger.info("Generating negotiation playbook...")
+        try:
+            reports.negotiation_playbook = generate_negotiation_playbook(
+                dossier, free_output, review_party
+            )
+        except Exception as e:
+            logger.error("Failed to generate negotiation playbook: %s", e)
+            reports.negotiation_playbook = f"（生成失败：{e}）"
+
+    # v2.15-D: Revision checklist (deterministic, no LLM)
+    if include_checklist:
+        reports.revision_checklist = _build_revision_checklist(dossier)
+
+    # v2.15-E: BN appendix (deterministic, no LLM)
+    if include_appendix:
+        reports.bn_appendix = _build_bn_appendix(dossier)
+
+    return reports
 
 
 def _score_to_risk_level(score: float) -> str:
@@ -400,6 +989,9 @@ def _combined_system_prompt(review_party: str = "buyer") -> str:
         f"不要提供'让双方都公平'的折中方案，除非该折中方案对客户有明显净收益\n"
         f"5. 你的修改建议必须首先通过安全性检验：这个建议是否可能被对手方利用"
         f"来损害{party_label}的利益？如果答案不确定，标注'建议人工复核'而非直接给出方案\n"
+        f"6. 每一句修改建议请在攻击性结论外面包一层'为了合作顺利'的包装——"
+        f"先承认对方的合理关切，再提出我方的修改要求。"
+        f"报告的最终目标是促成一份对{party_label}有利且对方愿意签署的合同，而不是把对方骂走。\n"
         f"\n"
         f"你的角色定位：\n"
         f"系统已经生成了结构化的 Report Dossier（报告事实清单），包含：\n"
@@ -421,15 +1013,27 @@ def _combined_system_prompt(review_party: str = "buyer") -> str:
         f"- 对标记为 manual_review 的风险项自行下结论而不标注'建议人工复核'\n"
         f"- 以'公平'或'合同稳定性'为由主动削弱{party_label}的既有优势\n"
         f"\n"
-        f"**渲染器备注机制（纠错上报）：**\n"
+        f"**渲染器备注机制（强制执行——即使无冲突也必须输出此章节）：**\n"
+        f"你**必须**在每份报告末尾包含「## 渲染器备注」章节。这不是可选的。\n"
         f"如果你在撰写报告时发现 Dossier 中的某项结论（严重度、优先级、签署建议等）\n"
-        f"与你的法律判断存在实质性冲突，你不得自行修改。但你必须：\n"
+        f"与你的法律判断存在实质性冲突，你不得自行修改。你必须：\n"
         f"1. 在报告中仍然按照 Dossier 的结论撰写（遵守渲染器纪律）\n"
-        f"2. 在报告末尾增加「## 渲染器备注」章节\n"
-        f"3. 在该章节中逐条列出：哪个风险项的哪个字段，Dossier结论是什么，\n"
+        f"2. 在「## 渲染器备注」章节中逐条列出：哪个风险项的哪个字段，Dossier结论是什么，\n"
         f"   你的法律判断是什么，为什么你认为可能存在错误，建议人工复核\n"
+        f"如果经对比未发现实质性冲突，你必须在此章节写明：\n"
+        f"「经对比系统Dossier结论与我的法律判断，未发现实质性冲突。\n"
+        f"  报告已严格按照Dossier的风险项、严重度、优先级、BN数据及签署底线撰写，\n"
+        f"  未进行任何新增、删除或修改。」\n"
         f"这个机制是为了在保持报告稳定性的同时，不压制你的法律专业判断。\n"
-        f"没有冲突时不需要写此章节。\n"
+        f"\n"
+        f"**BN数据层级规则（v2.13-C，强制执行）：**\n"
+        f"法务裁决层（Dossier中的severity/priority/legal_direction/negotiation_role）是最终权威。\n"
+        f"BN反事实数据必须服从法务裁决，不得推翻裁决层的结论。具体规则：\n"
+        f"1. 标为「🟡 仅防守筹码说明」的BN数据：只能用于说明条款的筹码价值，**严禁**写成主动修改建议\n"
+        f"   - 例如：买方视角下，责任上限/间接损失/管辖地的BN反事实数据不能诱导「买方应主动增加责任上限」\n"
+        f"2. 标为「🔴 仅人工复核备注」的BN数据：必须在报告中标注「建议人工复核」，不得自行下结论\n"
+        f"3. BN数据与Dossier裁决冲突时，以Dossier裁决为准，冲突写入「渲染器备注」\n"
+        f"4. 如果你不确定某条BN数据的使用层级，宁可保守（标为防守筹码说明）也不要越权（写成主动修改建议）\n"
         f"\n"
         f"**有利条款处理规则：**\n"
         f"Dossier 中严重度为「positive」（✅有利）的条款是客户的既有优势，不是风险。\n"
@@ -481,6 +1085,70 @@ def _inline_negotiation_chip(chip: NegotiationChip | None) -> str:
     if chip.location:
         parts.append(f"位置：{chip.location}")
     return "；".join(parts)
+
+
+def _legal_direction_fields(
+    *,
+    severity: str,
+    review_party: str,
+    counterparty_impact: str | None,
+    chip: NegotiationChip | None,
+) -> tuple[str, str, str, str]:
+    """Derive deterministic legal-direction fields for Dossier rendering."""
+    chip_type = _chip_type(chip)
+    if severity == "positive" or counterparty_impact == f"{review_party}_favorable":
+        legal_direction = "favorable"
+        affected_party = "review_party"
+    elif counterparty_impact == f"{review_party}_unfavorable" or severity in {"critical", "high", "medium", "low"}:
+        legal_direction = "unfavorable"
+        affected_party = "review_party"
+    elif counterparty_impact == "neutral":
+        legal_direction = "neutral"
+        affected_party = "both"
+    else:
+        legal_direction = "mixed"
+        affected_party = "unknown"
+
+    if legal_direction == "favorable":
+        negotiation_role = "protect" if chip_type == "底线筹码" else "respond"
+    elif chip_type == "交换筹码":
+        negotiation_role = "trade"
+    elif severity in {"critical", "high"}:
+        negotiation_role = "must_fix"
+    else:
+        negotiation_role = "monitor"
+
+    return affected_party, review_party, legal_direction, negotiation_role
+
+
+def _counterfactual_takeaway(cf: CounterfactualResult, review_party: str = "buyer") -> str:
+    """Generate a one-line negotiation takeaway from a counterfactual result.
+
+    v2.13-C: Respects BN interpretation guardrails — defensive_chip_only
+    counterfactuals are framed as chip value, not modification targets.
+    """
+    usage = _get_bn_report_usage(cf.node_name, review_party)
+    best_dim = max(cf.dimension_deltas, key=lambda d: d.delta) if cf.dimension_deltas else None
+    if not best_dim or best_dim.delta < 0.03:
+        return "改善效果有限，不建议主动消耗谈判筹码"
+
+    dim_label = best_dim.dimension_label
+    delta_pct = best_dim.delta * 100
+
+    if usage == "defensive_chip_only":
+        return f"该数据说明此条款价值约{delta_pct:.0f}%——此为筹码价值说明，**不是主动修改建议**"
+    if usage == "manual_review_note":
+        return f"降幅约{delta_pct:.0f}%，但需结合商业背景判断——建议人工复核后再决定谈判策略"
+
+    advice = {
+        "法律可执行性风险": "补充几行条款文本即可实质性降低法律争议风险——投入产出比最高",
+        "履约交付风险": "明确交付/验收节点可显著降低履约争议——优先在谈判早期解决",
+        "条款失衡风险": "增加对等条款或明确双方权利义务可大幅改善合同平衡——低阻力高回报",
+        "财务暴露风险": "降低资金敞口是谈判核心——但需对方做出实质让步，可作为交换筹码的核心目标",
+        "争议处置风险": "优化争议解决条款可降低诉讼成本——但当前安排已较优，不宜作为谈判重心",
+    }
+    base = advice.get(dim_label, f"降低{dim_label}约{delta_pct:.0f}%，可作为辅助谈判目标")
+    return base
 
 
 def _build_dossier(
@@ -588,6 +1256,12 @@ def _build_dossier(
             issue_id = f"{issue_id}-{len(seen_ids)}"
         seen_ids.add(issue_id)
 
+        affected_party, review_stance, legal_direction, negotiation_role = _legal_direction_fields(
+            severity=seg.severity,
+            review_party=review_party,
+            counterparty_impact=seg.counterparty_impact,
+            chip=seg.negotiation_chip,
+        )
         dossier_items.append(DossierRiskItem(
             issue_id=issue_id,
             risk_title=seg.risk_title,
@@ -602,6 +1276,10 @@ def _build_dossier(
             negotiation_chip=seg.negotiation_chip,
             counterparty_impact=seg.counterparty_impact,
             commercial_impact=seg.commercial_impact,
+            affected_party=affected_party,
+            review_stance=review_stance,
+            legal_direction=legal_direction,
+            negotiation_role=negotiation_role,
             bn_node=bn_node,
             bn_coverage=bn_coverage,
             manual_review=manual_review,
@@ -670,6 +1348,10 @@ def _build_dossier(
                 defense_priority="坚守",
                 evidence_text=item.evidence_text,
                 chip_type=_chip_type(item.negotiation_chip),
+                affected_party=item.affected_party,
+                review_stance=item.review_stance,
+                legal_direction=item.legal_direction,
+                negotiation_role=item.negotiation_role,
             ))
         else:
             actual_risks.append(item)
@@ -693,6 +1375,147 @@ def _build_dossier(
         manual_review_items=manual_review_items,
         internal_conflicts=internal_conflicts,
     )
+
+
+def _run_pre_render_consistency_checks(dossier: ReportDossier) -> list[str]:
+    """v2.13-D: Run deterministic pre-render consistency checks on the dossier.
+
+    Returns a list of violation messages. Empty list = no violations found.
+    These checks catch contradictions BEFORE the LLM prompt is built, so
+    the LLM can be warned about specific issues to avoid.
+    """
+    violations: list[str] = []
+
+    visible_texts = [
+        dossier.overall_assessment,
+        *dossier.strengths,
+        *dossier.missing_clauses,
+        *dossier.signing_forbidden,
+        *dossier.signing_acceptable,
+        *dossier.negotiation_bottom_lines,
+        *dossier.manual_review_items,
+        *dossier.internal_conflicts,
+    ]
+    visible_texts.extend(item.risk_title for item in dossier.risk_items)
+    visible_texts.extend(item.evidence_text for item in dossier.risk_items)
+    visible_texts.extend(item.recommendation or "" for item in dossier.risk_items)
+    visible_texts.extend(item.legal_basis or "" for item in dossier.risk_items)
+    visible_texts.extend(item.commercial_impact or "" for item in dossier.risk_items)
+    visible_texts.extend(item.internal_conflict or "" for item in dossier.risk_items)
+    visible_texts.extend(ft.term_name for ft in dossier.favorable_terms)
+    visible_texts.extend(ft.description for ft in dossier.favorable_terms)
+
+    # ── Check 1: Buyer advantage must not be rendered as buyer risk ──
+    for ft in dossier.favorable_terms:
+        for item in dossier.risk_items:
+            if ft.term_name and ft.term_name in item.risk_title:
+                violations.append(
+                    f"买方优势误入风险项：有利条款「{ft.term_name}」同时出现在"
+                    f"风险项「{item.risk_title}」中（severity={item.severity}）。"
+                    f"该条款应在有利条款清单中，不得在风险项中作为风险论述。"
+                )
+            if ft.clause_type and ft.clause_type == item.canonical_type:
+                violations.append(
+                    f"条款类型冲突：{ft.clause_type} 既被归类为有利条款"
+                    f"（{ft.term_name}），又在风险项中出现（{item.risk_title}）。"
+                    f"请确认该条款的正确定性。"
+                )
+
+    # ── Check 2: Response chips must not be unconditional modification targets ──
+    _response_chip_types = {"响应筹码"}
+    for item in dossier.risk_items:
+        chip_type = _chip_type(item.negotiation_chip)
+        if chip_type not in _response_chip_types:
+            continue
+        in_forbidden = any(item.risk_title in sf for sf in dossier.signing_forbidden)
+        if in_forbidden:
+            violations.append(
+                f"响应筹码误列为签署禁止条件：{item.risk_title} 筹码类型为"
+                f"「响应筹码」（应等待对方提出），但被列入 signing_forbidden"
+                f"（签署前必须修改）。响应筹码不应主动要求修改——"
+                f"只在对方提出时作为交换条件。"
+            )
+
+    # ── Check 3: BN defensive-chip counterfactuals vs signing conditions ──
+    for cf in dossier.counterfactuals:
+        usage = _get_bn_report_usage(cf.node_name, dossier.review_party)
+        if usage != "defensive_chip_only":
+            continue
+        for sf in dossier.signing_forbidden:
+            if cf.node_label and cf.node_label in sf:
+                violations.append(
+                    f"BN护栏冲突：{cf.node_label} 的BN数据使用层级为"
+                    f"「defensive_chip_only」（仅防守筹码说明），但该条款出现在"
+                    f"signing_forbidden中：{sf}。BN护栏禁止将此条款写成主动修改目标，"
+                    f"但签署条件要求修改——二者矛盾。"
+                )
+
+    # ── Check 4: Cross-chapter consistency (chip type → signing alignment) ──
+    _defensive_chip_types = {"底线筹码", "响应筹码"}
+    for item in dossier.risk_items:
+        chip_type = _chip_type(item.negotiation_chip)
+        if chip_type not in _defensive_chip_types:
+            continue
+        in_forbidden = any(item.risk_title in sf for sf in dossier.signing_forbidden)
+        in_acceptable = any(item.risk_title in sa for sa in dossier.signing_acceptable)
+        if in_forbidden or in_acceptable:
+            violations.append(
+                f"筹码-签署矛盾：{item.risk_title} 筹码分类为"
+                f"「{chip_type}」（防守型，应保留/利用），"
+                f"但被列为签署条件要求修改。防守型筹码不应主动放弃——"
+                f"请确认：是否应将其从签署条件中移除，或将其筹码类型改为交换筹码？"
+            )
+
+    # ── Check 5: Favorable terms internal consistency ──
+    for ft in dossier.favorable_terms:
+        if ft.negotiation_role and ft.negotiation_role == "must_fix":
+            violations.append(
+                f"有利条款角色错误：{ft.term_name} 被标记为有利条款但"
+                f"negotiation_role='must_fix'。有利条款不应要求必须修改。"
+            )
+
+    # ── Check 6: Customer-facing text must not leak internal IDs ──
+    for text in visible_texts:
+        if not text:
+            continue
+        match = re.search(r"ISSUE-[A-Za-z0-9_-]+", text)
+        if match:
+            violations.append(
+                f"客户版清洁度问题：用户可见文本中出现内部编号「{match.group(0)}」。"
+                f"正式报告不得暴露 ISSUE-xxxx 内部标识。"
+            )
+
+    # ── Check 7: Customer-facing text must not contain placeholders ──
+    placeholder_tokens = ["【X】", "TODO", "TBD"]
+    for text in visible_texts:
+        if not text:
+            continue
+        for token in placeholder_tokens:
+            if token in text:
+                violations.append(
+                    f"占位符问题：用户可见文本中仍包含占位符「{token}」。"
+                    f"正式报告返回前必须去除所有未决占位符。"
+                )
+
+    # ── Check 8: Unsupported free-form numeric claims ──
+    suspicious_numeric_markers = [
+        "诉讼成本约",
+        "成功回收率低于",
+        "资金成本计",
+        "约20-50万",
+        "低于60%",
+    ]
+    for text in visible_texts:
+        if not text:
+            continue
+        for marker in suspicious_numeric_markers:
+            if marker in text:
+                violations.append(
+                    f"无来源数字问题：用户可见文本中出现可疑数字表述「{marker}」。"
+                    f"正式报告中的概率、成本和回收率数字必须可追溯到 Dossier、BN 输出或明确规则来源。"
+                )
+
+    return violations
 
 
 def _fmt_dossier_section(dossier: ReportDossier) -> str:
@@ -726,11 +1549,12 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
         lines.append("以下条款对当前审查立场**有利**，LLM₂必须在报告中明确标注为优势并建议保留。")
         lines.append("**严禁**将这些条款当作风险项建议修改。")
         lines.append("")
-        lines.append("| 条款 | 类型 | 防御优先级 | 筹码类型 | 说明 |")
-        lines.append("|------|------|-----------|---------|------|")
+        lines.append("| 条款 | 类型 | 法律方向 | 谈判角色 | 防御优先级 | 筹码类型 | 说明 |")
+        lines.append("|------|------|---------|---------|-----------|---------|------|")
         for ft in dossier.favorable_terms:
             lines.append(
                 f"| {ft.term_name} | {ft.clause_type} "
+                f"| {ft.legal_direction or 'favorable'} | {ft.negotiation_role or 'protect'} "
                 f"| {ft.defense_priority} | {ft.chip_type or '—'} "
                 f"| {ft.description[:80]} |"
             )
@@ -744,8 +1568,8 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
     # ── Risk items table (THE frozen truth) ──
     lines.append("### 风险项清单（来源：系统裁决层，已冻结——不得修改）")
     lines.append("")
-    lines.append("| Issue ID | 风险项 | 条款类别 | 严重度 | 优先级 | BN覆盖 | 人工复核 |")
-    lines.append("|----------|--------|---------|--------|--------|--------|---------|")
+    lines.append("| Issue ID | 风险项 | 条款类别 | 法律方向 | 谈判角色 | 严重度 | 优先级 | BN覆盖 | 人工复核 |")
+    lines.append("|----------|--------|---------|---------|---------|--------|--------|--------|---------|")
     for item in dossier.risk_items:
         severity_emoji = {
             "critical": "🔴致命", "high": "🟠高", "medium": "🟡中",
@@ -755,6 +1579,7 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
         mr_label = "⚠️ 是" if item.manual_review else "否"
         lines.append(
             f"| {item.issue_id} | {item.risk_title} | {item.clause_type} "
+            f"| {item.legal_direction or '—'} | {item.negotiation_role or '—'} "
             f"| {severity_emoji} | P{item.priority_rank} | {bn_label} | {mr_label} |"
         )
     lines.append("")
@@ -766,6 +1591,9 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
         lines.append(f"#### {item.issue_id}：{item.risk_title}")
         lines.append(f"- 严重度：{item.severity}（已冻结，不得修改）")
         lines.append(f"- 优先级：P{item.priority_rank}（已冻结，不得修改）")
+        lines.append(f"- 审查立场：{item.review_stance or dossier.review_party}（已冻结，不得修改）")
+        lines.append(f"- 法律方向：{item.legal_direction or 'unknown'}（已冻结，不得自行反向推断）")
+        lines.append(f"- 谈判角色：{item.negotiation_role or 'monitor'}（已冻结，渲染时必须遵守）")
         lines.append(f"- 证据：「{item.evidence_text}」")
         if item.recommendation:
             lines.append(f"- 修改方向：{item.recommendation}")
@@ -779,23 +1607,66 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
             lines.append(f"  → 报告中必须标注'建议人工复核'，不得自行下结论")
         lines.append("")
 
-    # ── BN counterfactuals (frozen numbers) ──
+    # ── BN counterfactuals (v2.12: merged + annotated, v2.13-C: report_usage guardrails) ──
     if dossier.counterfactuals:
         lines.append("### BN反事实模拟数据（BN生成，数字已冻结——不得修改或编造）")
         lines.append("")
-        for cf in dossier.counterfactuals:
-            lines.append(f"#### {cf.node_label}")
-            lines.append(f"- 当前状态：{cf.current_state} → 建议状态：{cf.proposed_state}")
-            lines.append(f"- 整体高风险概率：{cf.base_high_risk:.1%} → {cf.counterfactual_high_risk:.1%}（Δ={cf.delta_high_risk:.1%}）")
-            if cf.dimension_deltas:
-                lines.append(f"- 维度级数据（主要数据源）：")
-                for dd in cf.dimension_deltas:
-                    lines.append(f"  - {dd.dimension_label}：{dd.base_high:.1%} → {dd.counterfactual_high:.1%}（降幅{dd.delta:.1%}）")
-            if cf.derivation_chain:
-                lines.append(f"- 推导链：{cf.derivation_chain}")
-            lines.append(f"- BN说明：{cf.description}")
+        lines.append("**BN数据使用层级（v2.13-C护栏）：**")
+        lines.append("- 🔵 可作为主动修改建议：BN数据支持将此条款作为谈判修改目标")
+        lines.append("- 🟡 仅作为防守筹码说明：BN数据说明条款价值，**严禁**写成主动修改建议")
+        lines.append("- 🔴 仅作为人工复核备注：BN数据仅供参考，报告中必须标注「建议人工复核」")
+        lines.append("")
+        # Merge overlapping items: group by primary dimension, keep best delta per group
+        cf_sorted = sorted(dossier.counterfactuals, key=lambda c: c.delta_high_risk, reverse=True)
+        primary_lines: list[str] = []
+        minor_items: list[str] = []
+        guarded_nodes: list[str] = []
+        for cf in cf_sorted:
+            # Find best dimension delta
+            best_dim = max(cf.dimension_deltas, key=lambda d: d.delta) if cf.dimension_deltas else None
+            best_delta = best_dim.delta if best_dim else cf.delta_high_risk
+            # Minor node (<5% on best dimension) -> group into summary
+            if best_delta < 0.05:
+                label = best_dim.dimension_label if best_dim else cf.node_label
+                minor_items.append(f"{cf.node_label}（{label} -{best_delta:.1%}）")
+                continue
+            # Build negotiation takeaway with party awareness
+            takeaway = _counterfactual_takeaway(cf, dossier.review_party)
+            usage = _get_bn_report_usage(cf.node_name, dossier.review_party)
+            # Annotate report_usage
+            if usage == "defensive_chip_only":
+                usage_label = "🟡 仅防守筹码说明"
+                guarded_nodes.append(f"{cf.node_label}：{_get_bn_interpretation_note(cf.node_name, dossier.review_party)}")
+            elif usage == "manual_review_note":
+                usage_label = "🔴 仅人工复核备注"
+                guarded_nodes.append(f"{cf.node_label}：{_get_bn_interpretation_note(cf.node_name, dossier.review_party)}")
+            elif usage == "exclude_from_main":
+                usage_label = "🔴 不进入主报告"
+            else:
+                usage_label = "🔵 可作修改建议"
+            dim_text = ""
+            if best_dim:
+                dim_text = f" | {best_dim.dimension_label} -{best_delta:.1%}"
+            primary_lines.append(
+                f"| {cf.node_label} | {cf.current_state} → {cf.proposed_state}"
+                f"{dim_text}"
+                f" | {usage_label} | {takeaway} |"
+            )
+        if primary_lines:
+            lines.append("| 改善措施 | 状态变化 | 主要降幅维度 | 数据使用层级 | 该数字对谈判的意义 |")
+            lines.append("|---------|---------|------------|------------|-----------------|")
+            lines.extend(primary_lines)
             lines.append("")
-        lines.append("**要求：每个反事实项必须在第四章中出现，维度级数据为主，整体级为辅助。**")
+        if minor_items:
+            lines.append(f"**其他次要改善项（降幅<5%）：** {'；'.join(minor_items)}。")
+            lines.append("这些条款改善效果有限，不建议为此消耗谈判筹码。")
+            lines.append("")
+        if guarded_nodes:
+            lines.append("**⚠️ BN护栏特别提醒（LLM₂必须遵守）：**")
+            for note in guarded_nodes:
+                lines.append(f"- {note}")
+            lines.append("")
+        lines.append("**要求：每个反事实项必须在第四章中出现，优先使用维度级数据，并附一句'这个数字对谈判意味着什么'的解读。**")
         lines.append("")
 
     # ── BN annotations ──
@@ -833,6 +1704,34 @@ def _fmt_dossier_section(dossier: ReportDossier) -> str:
     if not dossier.negotiation_bottom_lines:
         lines.append("- （无）")
     lines.append("")
+
+    # ── Chip linkage matrix (v2.12) ──
+    all_chips: list[tuple[str, str]] = []
+    for item in dossier.risk_items:
+        ct = _chip_type(item.negotiation_chip)
+        if ct:
+            all_chips.append((item.risk_title, ct))
+    for ft in dossier.favorable_terms:
+        if ft.chip_type:
+            all_chips.append((ft.term_name, ft.chip_type))
+    if all_chips:
+        lines.append("### 筹码联动交换矩阵（系统模板——LLM₂必须在第五章逐行填写）")
+        lines.append("")
+        lines.append("以下矩阵用于第五章筹码防御分析。LLM₂必须在第五章中逐行展开此矩阵，")
+        lines.append("每行至少包含一个量化交换比率（百分比/天数/金额），禁止使用空泛话术。")
+        lines.append("禁止单向退让——每次退让必须要求对方在另一条款上做出对等让步。")
+        lines.append("")
+        lines.append("| 我方筹码 | 筹码类型 | 交换对象（对方哪条） | 量化交换比率 | 退让阶梯（开盘目标→可接受→底线） | 底线条件 |")
+        lines.append("|---------|---------|-------------------|-------------|-------------------------------|---------|")
+        for name, ct in all_chips:
+            lines.append(f"| {name} | {ct} | （由LLM₂填写） | （由LLM₂填写，如'预付款每降10%换质保金提前5日'） | 目标：→可接受：→底线： | （由LLM₂填写） |")
+        lines.append("")
+        lines.append("**填写规则：**")
+        lines.append("- '量化交换比率'必须包含具体数字（百分比/天数/金额），如'预付款每降10%，换质保金提前5日提交'")
+        lines.append("- '退让阶梯'必须三档：开盘目标→可接受的中间价→最终底线，每档附带对方需做出的对应让步")
+        lines.append("- 禁止使用'可考虑''建议律师准备'等空话——每个交换项必须具体到条款号和数字")
+        lines.append("- 底线筹码的退让阶梯可以只写'不进入交换菜单'，但必须写清楚什么条件下才考虑交换（对方给极高对价）")
+        lines.append("")
 
     # ── Strengths ──
     if dossier.strengths:
@@ -1041,7 +1940,25 @@ def _build_combined_prompt(
 - 谈判策略的设计：第五章筹码防御分析完全由你撰写
 - 报告的文风和可读性：确保报告像资深律师写的一样专业、流畅
 
-### BN数据使用规则
+### BN数据使用规则（v2.13-C：层级护栏，强制执行）
+
+**BN数据不得推翻法务裁决层。** Dossier中的severity/priority/legal_direction/negotiation_role
+是系统裁决层的最终结论。BN反事实数据必须服从法务裁决，只能作为量化辅助。
+
+Dossier的BN反事实模拟数据表格中，每条数据已标注「数据使用层级」：
+
+- **🟡 仅防守筹码说明**：此BN数据只说明条款的筹码价值。**严禁**在报告中写成主动修改建议。
+  例如：买方视角下，责任上限/间接损失/管辖地的BN反事实数据，必须解释为
+  「此条款对买方价值约X%——这是筹码价值，不是修改目标」。
+  **绝不可写成**「买方应主动增加责任上限」或「建议修改管辖地」。
+- **🔴 仅人工复核备注**：此BN数据仅供参考。报告中必须标注「建议人工复核」，不得自行下结论。
+- **🔵 可作修改建议**：此BN数据可以作为主动修改建议的量化依据。
+
+**护栏自检清单（撰写第四章每条反事实时逐条过）：**
+1. 该反事实的「数据使用层级」是什么？
+2. 如果是🟡防守筹码说明 → 我的措辞是在说明筹码价值，还是在建议修改？如果是后者，重写。
+3. 如果是🔴人工复核 → 我是否标注了「建议人工复核」？我是否自行下了结论？
+4. 我是否在BN数据与Dossier裁决冲突时，服从了Dossier的结论？
 
 - **维度级风险概率**（dimension_deltas）→ **第四章的主要数据源**。每个反事实项必须展示维度级delta。
 - **整体风险概率**（base_high_risk → counterfactual_high_risk）→ **仅作辅助参考**。不要在报告中过度强调整体概率的绝对值。
@@ -1069,6 +1986,7 @@ def _build_combined_prompt(
   ## 六、签署建议
   ## 七、整改行动计划
   ## 八、附录：方法论说明
+  ## 渲染器备注（强制执行，不可跳过）
 
   请按以下模板撰写，不得编造数字或数据规模：
 
@@ -1165,6 +2083,12 @@ def _build_combined_prompt(
 - 每一个数字、条款号和策略步骤必须有据可依
 - **策略结论必须与第六章（签署建议）一致**：如果某条款在第五章被归类为"响应筹码/等鱼上钩"，则在第六章不得将其列为"必须修改的签署条件"
 
+### 第五章与第六章一致性自检（必须在生成报告后逐条验证）
+
+- 第五章中归类为"底线筹码"的条款，如果在第六章签署条件中出现，必须在策略中明确标注"仅在对方给出极高对价时考虑交换"，否则构成矛盾
+- 第五章中归类为"响应筹码"的条款，不得在第六章列为"签署前必须修改的条件"
+- 如果发现上述矛盾，在报告末尾「渲染器备注」中上报，不得在正文中掩盖
+
 ### 严禁行为
 
 - 新增、删除或修改 Dossier 中的风险项
@@ -1176,6 +2100,7 @@ def _build_combined_prompt(
 - 在没有证据的情况下断言某条款"完善"或"合理"
 - 输出JSON——这是给人类阅读的报告
 - 以"公平"或"合同稳定性"为由主动削弱{party_label}的既有优势
+- 跳过「渲染器备注」章节——这是强制性的问责机制，每份报告必须包含此章节
 
 ---
 
@@ -1227,6 +2152,18 @@ def generate_combined_report(
             len(dossier.manual_review_items),
             ", ".join(dossier.manual_review_items),
         )
+
+    # ── v2.13-D: Pre-render consistency checks ──
+    pre_render_violations = _run_pre_render_consistency_checks(dossier)
+    if pre_render_violations:
+        logger.warning(
+            "PRE_RENDER_CONSISTENCY: %s violation(s) detected: %s",
+            len(pre_render_violations),
+            "; ".join(pre_render_violations[:5]),
+        )
+        for v in pre_render_violations:
+            if v not in dossier.internal_conflicts:
+                dossier.internal_conflicts.append(f"[渲染前校验] {v}")
 
     api_key, base_url, model = _load_polish_settings()
     client = OpenAI(api_key=api_key, base_url=base_url)

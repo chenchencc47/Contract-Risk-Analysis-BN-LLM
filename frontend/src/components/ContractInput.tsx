@@ -58,8 +58,12 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
       reader.readAsText(f);
       return;
     }
+    if (suffix === "doc") {
+      alert("暂不支持旧版 .doc 文件，请另存为 .docx 后上传");
+      return;
+    }
     // PDF/Word: upload to server for extraction
-    if (suffix === "pdf" || suffix === "docx" || suffix === "doc") {
+    if (suffix === "pdf" || suffix === "docx") {
       setUploading(true);
       try {
         const form = new FormData();
@@ -72,7 +76,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
         }
         const data = await res.json();
         setFile({ name: f.name, content: data.text });
-        setId(f.name.replace(/\.(pdf|docx|doc)$/i, "") || "contract-001");
+        setId(f.name.replace(/\.(pdf|docx)$/i, "") || "contract-001");
       } catch {
         alert("文件上传失败，请检查网络连接");
       } finally {
@@ -80,7 +84,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
       }
       return;
     }
-    alert("不支持的文件格式，支持 .pdf / .docx / .doc / .md / .txt");
+    alert("不支持的文件格式，支持 .pdf / .docx / .md / .txt；旧版 .doc 请另存为 .docx 后上传");
   }, []);
 
   const removeFile = () => {

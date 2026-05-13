@@ -1,0 +1,78 @@
+pattern_id: jurisdiction_by_party_stance
+pattern_name: 管辖地按审查立场判断
+version: 1
+status: candidate
+applies_to:
+  contract_types:
+    - 买卖合同
+    - 采购合同
+    - 销售合同
+    - 服务合同
+    - 租赁合同
+  review_stances:
+    - buyer
+    - seller
+    - lessor
+    - lessee
+    - service_provider
+    - customer
+purpose: >
+  管辖条款本身不是绝对公平或不公平，关键要看管辖地是否便利当前审查方。报告应把己方所在地或己方便利法院识别为优势/底线筹码，把对方所在地识别为争议处置成本风险。
+
+fact_conditions:
+  all:
+    - dispute_resolution_forum_specified: true
+    - forum_party_location_known: true
+    - review_stance_known: true
+
+stance_expectations:
+  forum_at_review_party_location:
+    expected_direction: favorable
+    expected_classification:
+      - advantage
+      - bottom_line_chip
+    expected_reasoning: 己方所在地管辖降低诉讼成本、证据组织成本和异地维权难度。
+    expected_recommendations:
+      - 原则上保留
+      - 如对方强烈要求修改，应换取重大实体条款让步
+  forum_at_counterparty_location:
+    expected_direction: unfavorable
+    expected_classification:
+      - dispute_resolution_risk
+      - negotiation_item
+    expected_reasoning: 对方所在地管辖提高己方维权成本和应诉成本，应争取修改或作为交换筹码。
+    expected_recommendations:
+      - 争取改为己方所在地或中立地
+      - 至少明确具体法院或仲裁机构
+  forum_unclear:
+    expected_direction: uncertain
+    expected_classification:
+      - legal_enforceability_risk
+      - needs_clarification
+    expected_reasoning: 管辖安排不明确会增加争议解决不确定性。
+
+must_not:
+  - 不得脱离审查立场，把“甲方所在地”或“乙方所在地”一律写成公平或不公平。
+  - 不得在己方所在地管辖已存在时主动建议改成中立地，除非用户要求平衡审查。
+
+evidence_signals:
+  keywords:
+    - 管辖
+    - 人民法院
+    - 仲裁
+    - 甲方住所地
+    - 乙方所在地
+    - 合同履行地
+  structured_fields:
+    - review_stance
+    - forum_party
+    - forum_location
+
+source_cases:
+  - sales_purchase_contract_001
+  - sales_contract_001
+
+promotion_requirements:
+  to_production_rule:
+    - Dossier 能解析争议解决条款及管辖地归属
+    - party-aware 裁决能识别当前审查方与管辖地关系

@@ -158,6 +158,76 @@ def test_main_passes_allowed_priority_to_report_render(monkeypatch, capsys) -> N
     assert captured["allowed_priorities"] == {"P0"}
 
 
+def test_main_scores_golden_case(tmp_path: Path, capsys) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text(
+        """
+case_id: demo_case
+must_find:
+  - id: prepayment
+    expected: 识别预付款
+    evidence_keywords: ["80%", "预付款"]
+must_not:
+  - id: wrong_cap
+    forbidden: 不得主动增加责任上限
+    wrong_patterns: ["主动增加责任上限"]
+should_find_advantages: []
+        """.strip(),
+        encoding="utf-8",
+    )
+    report_path = tmp_path / "report.md"
+    report_path.write_text("本报告识别80%预付款风险。", encoding="utf-8")
+
+    cli.main([
+        "--score-golden-case",
+        str(case_path),
+        "--report",
+        str(report_path),
+    ])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["case_id"] == "demo_case"
+    assert payload["score"] == 100.0
+    assert payload["summary"]["must_find"] == "1/1"
+    assert payload["summary"]["must_not"] == "1/1"
+
+
+def test_main_lists_golden_patterns(tmp_path: Path, capsys) -> None:
+    patterns_dir = tmp_path / "patterns"
+    patterns_dir.mkdir()
+    (patterns_dir / "demo.yaml").write_text(
+        """
+pattern_id: demo_pattern
+pattern_name: 示例模式
+status: candidate
+source_cases: [demo_case]
+applies_to:
+  contract_types: [买卖合同]
+  review_stances: [buyer]
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    cli.main([
+        "--list-golden-patterns",
+        "--golden-patterns-dir",
+        str(patterns_dir),
+    ])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["patterns"][0]["pattern_id"] == "demo_pattern"
+    assert payload["patterns"][0]["pattern_name"] == "示例模式"
+
+
+def test_main_score_golden_case_requires_report() -> None:
+    try:
+        cli.main(["--score-golden-case", "case.yaml"])
+    except SystemExit as exc:
+        assert str(exc) == "--score-golden-case requires --report"
+    else:
+        raise AssertionError("Expected SystemExit")
+
+
 def test_main_can_print_debug_output(monkeypatch, capsys) -> None:
     monkeypatch.setattr(
         cli,

@@ -1,0 +1,77 @@
+pattern_id: high_prepayment_without_security
+pattern_name: 高额预付款且无有效担保
+version: 1
+status: candidate
+applies_to:
+  contract_types:
+    - 买卖合同
+    - 采购合同
+    - 销售合同
+    - 设备采购合同
+  review_stances:
+    - buyer
+    - seller
+purpose: >
+  识别付款比例明显前置、且付款前缺少履约保函/预付款保函/等额担保的结构性资金风险。
+  该 pattern 不要求具体比例固定为80%，而是根据合同类型、金额和担保情况触发。
+
+fact_conditions:
+  any:
+    - prepayment_ratio_gte: 50
+    - pre_delivery_payment_ratio_gte: 70
+  all:
+    - security_before_payment: false
+    - payment_before_substantial_delivery: true
+
+stance_expectations:
+  buyer:
+    expected_direction: unfavorable
+    expected_classification:
+      - high_risk
+      - critical_risk
+      - must_fix
+    expected_reasoning: 买方在收到合格货物或服务成果前承担大额资金敞口，且缺少可直接兑付的担保。
+    expected_recommendations:
+      - 降低预付款比例
+      - 采用分阶段付款
+      - 要求预付款保函或履约保函
+      - 将付款节点绑定交付/验收
+  seller:
+    expected_direction: favorable_but_fragile
+    expected_classification:
+      - advantage
+      - bottom_line_chip
+      - negotiation_chip
+    expected_reasoning: 高比例前置回款保护卖方现金流，但可能被买方攻击为过度倾斜，需要准备商业合理性和替代担保方案。
+    expected_recommendations:
+      - 保留前置回款优势
+      - 如需让步，应换取责任上限、验收时限或风险转移等条件
+      - 可用保函或分批发货机制降低买方顾虑
+
+must_not:
+  - 新合同未出现高额前置付款时，不得套用该 pattern。
+  - 买方视角下，不得将无担保高额预付款淡化为普通付款安排。
+  - 卖方视角下，不得将高额前置回款简单定性为卖方风险而主动放弃。
+
+evidence_signals:
+  keywords:
+    - 预付款
+    - 发货前支付
+    - 合同签订后
+    - 履约保函
+    - 预付款保函
+    - 分阶段付款
+  numeric_fields:
+    - prepayment_ratio
+    - pre_delivery_payment_ratio
+    - contract_amount
+
+source_cases:
+  - sales_purchase_contract_001
+  - sales_contract_001
+
+promotion_requirements:
+  to_production_rule:
+    - 至少覆盖2个不同合同样本
+    - 能从结构化付款节点中计算 prepayment_ratio 或 pre_delivery_payment_ratio
+    - 能识别付款前是否存在有效担保

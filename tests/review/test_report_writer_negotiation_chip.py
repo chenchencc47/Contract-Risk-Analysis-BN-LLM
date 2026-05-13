@@ -38,6 +38,9 @@ def test_positive_item_maps_structured_chip_to_favorable_term() -> None:
 
     assert len(dossier.favorable_terms) == 1
     assert dossier.favorable_terms[0].chip_type == "响应筹码"
+    assert dossier.favorable_terms[0].review_stance == "buyer"
+    assert dossier.favorable_terms[0].legal_direction == "favorable"
+    assert dossier.favorable_terms[0].negotiation_role == "respond"
 
 
 def test_formatters_render_structured_chip_fields_not_object_repr() -> None:
@@ -97,6 +100,9 @@ def test_formatters_render_structured_chip_fields_not_object_repr() -> None:
         )
     )
 
+    assert "| ISSUE-test-001 | 预付款比例过高 | payment_structure | — | — | 🟠高 | P2 | — | 否 |" in dossier_text
+    assert "- 法律方向：unknown（已冻结，不得自行反向推断）" in dossier_text
+    assert "- 谈判角色：monitor（已冻结，渲染时必须遵守）" in dossier_text
     assert "筹码类型：交换筹码" in dossier_text
     assert "筹码理由：对方极度想保留该安排" in dossier_text
     assert "筹码策略：可作为换取付款节点后移的交换条件" in dossier_text
@@ -106,6 +112,37 @@ def test_formatters_render_structured_chip_fields_not_object_repr() -> None:
     assert "理由：对方极度想保留该安排" in llm_text
     assert "策略：可作为换取付款节点后移的交换条件" in llm_text
     assert "NegotiationChip(" not in llm_text
+
+
+def test_dossier_risk_item_gets_legal_direction_fields() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[
+            RiskSegment(
+                clause_type="payment",
+                risk_title="预付款比例过高",
+                risk_description="对买方不利",
+                evidence_text="合同签订后支付50%首付款",
+                confidence=0.91,
+                severity="high",
+                canonical_type="payment_structure",
+                counterparty_impact="buyer_unfavorable",
+                negotiation_chip=NegotiationChip(chip_type="底线筹码"),
+            )
+        ],
+        missing_clauses=[],
+        strengths=[],
+    )
+
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    assert len(dossier.risk_items) == 1
+    item = dossier.risk_items[0]
+    assert item.affected_party == "review_party"
+    assert item.review_stance == "buyer"
+    assert item.legal_direction == "unfavorable"
+    assert item.negotiation_role == "must_fix"
 
 
 def test_defensive_chip_consistency_uses_chip_type_field() -> None:

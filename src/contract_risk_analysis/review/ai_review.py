@@ -498,6 +498,9 @@ def _build_chip_instruction(review_party: str, party_label: str) -> str:
         f"① **底线筹码** — 对{party_label}有利且对方强烈想改的条款。一旦失去，"
         f"{party_label}的系统性优势将永久受损。策略原则：寸步不让，不列入交换菜单。"
         + examples
+        + "对每个筹码，请评估其与本合同中其他条款的博弈关联——"
+        "是否存在用此筹码换取其他条款让步的联动空间？"
+        "如有，在 strategy 字段中简要提及交换方向和条件。\n"
     )
 
 

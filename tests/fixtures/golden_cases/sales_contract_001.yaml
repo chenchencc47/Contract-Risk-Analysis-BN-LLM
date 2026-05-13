@@ -1,0 +1,170 @@
+case_id: sales_contract_001
+case_name: 瓷砖销售合同 AI 生成样本
+contract_type: 销售合同
+source_type: ai_generated_contract
+review_stance: seller
+source_files:
+  contract: 合同检测报告/销售合同/销售合同.md
+  project_reports_dir: 合同检测报告/销售合同
+  external_reviews:
+    - 合同检测报告/销售合同/deepseek网页评价.md
+notes: >
+  合同原件为 AI 生成的瓷砖购销合同。该样本适合作为卖方视角 golden case，
+  用来验证系统能否把高比例发货前回款、本地管辖、承运人交付后风险转移识别为卖方优势，
+  同时识别质保金受验收控制、责任上限缺失、间接损失未排除、解除权和验收机制不平衡等卖方风险。
+
+must_find:
+  - id: seller_90_percent_payment_before_delivery
+    expected: 必须识别卖方在发货前可收取90%货款，付款结构强保护卖方现金流和回款安全。
+    severity_min: advantage
+    evidence_keywords:
+      - 预付款
+      - 30%
+      - 发货款
+      - 60%
+      - 通知发货前支付
+    acceptable_labels:
+      - 优势条款
+      - 底线筹码
+      - 卖方优势
+      - favorable_to_seller
+
+  - id: warranty_payment_after_acceptance_risk
+    expected: 必须识别10%质保金在验收合格后30日内支付，支付条件受买方验收影响，可能被拖延或争议化。
+    severity_min: medium
+    evidence_keywords:
+      - 质保金
+      - 10%
+      - 验收合格后30日内支付
+      - 验收合格
+    acceptable_labels:
+      - 风险
+      - 交换筹码
+      - P2
+      - P3
+
+  - id: no_liability_cap_seller_risk
+    expected: 必须识别卖方责任上限缺失，可能导致赔偿暴露超出合同金额。
+    severity_min: high
+    evidence_keywords:
+      - 责任上限
+      - 赔偿
+      - 直接损失
+      - 未排除
+    acceptable_labels:
+      - 高风险
+      - 卖方风险
+      - must_fix
+      - response_chip
+
+  - id: indirect_loss_not_excluded_seller_risk
+    expected: 必须识别未明确排除间接损失或赔偿范围不够清晰，对卖方存在扩大赔偿风险。
+    severity_min: medium
+    evidence_keywords:
+      - 间接损失
+      - 赔偿范围
+      - 直接损失
+      - 未排除
+
+  - id: buyer_termination_stronger_than_seller
+    expected: 必须识别买方在乙方逾期超过15日时可解除并要求退款及10%违约金，而卖方对买方逾期付款主要只有暂停发货，解除/救济不对等。
+    severity_min: medium
+    evidence_keywords:
+      - 逾期超过15日
+      - 甲方有权解除合同
+      - 退还已付款项
+      - 乙方有权暂停发货
+
+  - id: acceptance_objection_ambiguity
+    expected: 应识别验收与内在质量异议规则不够客观，内在质量需在铺贴使用前提出且需质检报告，容易发生争议。
+    severity_min: medium
+    evidence_keywords:
+      - 48小时内
+      - 外观验收
+      - 内在质量异议
+      - 铺贴使用前
+      - 质检机构报告
+
+  - id: carrier_delivery_risk_transfer
+    expected: 必须识别货物交付承运人后运输风险由甲方承担，这是卖方优势，但也需注意代办运输场景表述清晰度。
+    severity_min: advantage
+    evidence_keywords:
+      - 交付承运人后
+      - 运输途中风险由甲方承担
+      - 甲方自提
+      - 代办运输
+
+  - id: seller_forum_advantage
+    expected: 必须识别乙方所在地法院管辖对卖方有利。
+    severity_min: advantage
+    evidence_keywords:
+      - 乙方所在地人民法院
+      - 佛山市南海区人民法院
+      - 争议解决
+
+must_not:
+  - id: payment_structure_wrongly_as_seller_risk
+    forbidden: 卖方视角下，不得把90%发货前回款简单定性为卖方风险或主动让渡目标。
+    expected_direction: 90%发货前回款应首先识别为卖方优势/底线筹码，同时可提示其法律脆弱性或谈判压力。
+
+  - id: ignore_warranty_payment_control
+    forbidden: 不得忽略质保金支付受买方验收合格控制的问题。
+    expected_direction: 应说明卖方需明确验收标准、时限、视为验收或异议程序，防止尾款拖延。
+
+  - id: ignore_seller_liability_exposure
+    forbidden: 不得忽略卖方责任上限缺失和赔偿范围不清导致的超额赔偿暴露。
+    expected_direction: 应建议设置合理责任上限、排除间接损失或明确赔偿范围。
+
+  - id: ignore_termination_imbalance
+    forbidden: 不得忽略买方解除权强、卖方逾期收款救济弱的不平衡。
+    expected_direction: 应建议增加卖方解除权、停供权、费用补偿或更强逾期付款救济。
+
+  - id: treat_ai_generated_as_real_world_precedent
+    forbidden: 不得把该 AI 生成合同当作真实市场合同样本来推导行业惯例。
+    expected_direction: 可作为规则测试样本，但涉及行业惯例或商业可接受性时应标注需要人工复核。
+
+should_find_advantages:
+  - id: seller_payment_advantage
+    expected: 发货前收取90%货款对卖方现金流和履约风险控制有利。
+    evidence_keywords:
+      - 30%
+      - 60%
+      - 发货前支付
+
+  - id: seller_jurisdiction_advantage
+    expected: 乙方所在地法院管辖降低卖方争议处理成本。
+    evidence_keywords:
+      - 乙方所在地人民法院
+      - 佛山市南海区人民法院
+
+  - id: early_risk_transfer_advantage
+    expected: 承运人交付后风险由甲方承担，对卖方有利。
+    evidence_keywords:
+      - 交付承运人后
+      - 运输途中风险由甲方承担
+
+  - id: quality_standard_framework_advantage
+    expected: 合同明确国标、优等品、合格证和质检报告，基础质量标准较完整。
+    evidence_keywords:
+      - GB/T 4100-2015
+      - 优等品
+      - 产品合格证
+      - 质量检验报告
+
+  - id: direct_loss_language_advantage
+    expected: 产品质量不符条款仅写赔偿直接损失，可作为卖方限制赔偿范围的有利文本基础。
+    evidence_keywords:
+      - 赔偿直接损失
+
+needs_review:
+  - id: ninety_percent_payment_legal_fragility
+    question: 90%发货前回款是否可能被买方攻击为过度倾斜或格式条款，需要结合真实交易背景判断。
+
+  - id: batch_delivery_payment_mechanism
+    question: 分批发货场景下是否应设置分批付款、分批验收和分批风险转移机制，当前合同未充分细化。
+
+  - id: carrier_delivery_agency_transport
+    question: 甲方自提或委托乙方代办运输时，承运人选择、保险、破损举证和风险转移是否足够清晰。
+
+  - id: ai_generated_contract_limit
+    question: 该合同为 AI 生成样本，条款完整性和行业真实性需要后续真实销售合同样本校准。

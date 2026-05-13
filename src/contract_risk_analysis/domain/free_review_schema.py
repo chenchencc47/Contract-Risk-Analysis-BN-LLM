@@ -191,6 +191,15 @@ class CounterfactualResult:
     derivation_chain: str = ""
     """Traceable derivation: 条款状态X→Y | CPT来源 | pgmpy VE推理 → δ=-43.3%"""
 
+    # ── BN interpretation guardrail (v2.13-C) ──
+    report_usage: str = ""
+    """How this counterfactual should be used in the report:
+    'proactive_suggestion' — can be used as modification suggestion
+    'defensive_chip_only' — only as defensive chip explanation, NOT as modification target
+    'manual_review_note' — only as manual review note, not in main report body
+    'exclude_from_main' — should not enter the main report
+    '' — unclassified, default behavior"""
+
 
 @dataclass(frozen=True)
 class DimensionDelta:
@@ -275,6 +284,16 @@ class DossierRiskItem:
     negotiation_chip: NegotiationChip | None = None
     counterparty_impact: str | None = None
     commercial_impact: str | None = None
+
+    # ── Legal direction for the current review stance ──
+    affected_party: str | None = None
+    """Which side the issue affects under the current stance: review_party | counterparty | both | unknown."""
+    review_stance: str | None = None
+    """Frozen copy of ReportDossier.review_party for item-level rendering."""
+    legal_direction: str | None = None
+    """favorable | unfavorable | neutral | mixed — legal direction for the review party."""
+    negotiation_role: str | None = None
+    """must_fix | protect | trade | respond | monitor — how LLM₂ should frame this item."""
 
     # ── BN linkage ──
     bn_node: str | None = None
@@ -373,3 +392,12 @@ class FavorableTerm:
 
     chip_type: str = ""
     """Negotiation chip classification: '底线筹码' | '响应筹码' | '交换筹码'."""
+
+    affected_party: str | None = None
+    """Which side the favorable term affects: review_party | counterparty | both | unknown."""
+    review_stance: str | None = None
+    """Frozen copy of ReportDossier.review_party for item-level rendering."""
+    legal_direction: str | None = None
+    """Always favorable for true favorable terms, unless manually overridden."""
+    negotiation_role: str | None = None
+    """protect | respond | trade — how LLM₂ should frame this favorable term."""

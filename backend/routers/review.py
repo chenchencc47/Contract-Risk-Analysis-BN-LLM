@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time as _time
 from dataclasses import asdict
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Request
@@ -30,6 +31,7 @@ from contract_risk_analysis.evidence.rules import run_validation_rules
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+BACKEND_STARTED_AT = datetime.now(UTC).isoformat()
 
 
 def _score_to_level(score: float) -> str:
@@ -275,6 +277,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         "consistency": {
             "annotations": [asdict(a) for a in consistency.annotations],
             "counterfactuals": [asdict(c) for c in consistency.counterfactuals],
+            "counterfactuals_count": len(consistency.counterfactuals),
             "bn_summary": consistency.bn_summary,
             "rule_matches": [asdict(m) for m in rule_matches],
         },
@@ -369,6 +372,35 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
             "node_states": legacy_evidence.node_states,
             "triggered_findings": legacy_evidence.triggered_findings,
         }
+
+    # ── v2.15: Deterministic multi-format reports (no LLM cost) ──
+    try:
+        from contract_risk_analysis.review.report_writer import (
+            _build_revision_checklist,
+            _build_bn_appendix,
+        )
+        response["revision_checklist"] = _build_revision_checklist(dossier)
+        response["bn_appendix"] = _build_bn_appendix(dossier)
+    except Exception as fmt_exc:
+        logger.warning("Multi-format generation skipped: %s", fmt_exc)
+
+    # ── v2.16: Auto-score against golden cases ──
+    try:
+        from contract_risk_analysis.evaluation.golden_score import auto_score_report_text
+        report_text = polished.narrative_report if polished else ""
+        if report_text:
+            golden_score = auto_score_report_text(report_text)
+            if golden_score:
+                response["golden_score"] = golden_score
+    except Exception as score_exc:
+        logger.warning("Golden scoring skipped: %s", score_exc)
+
+    response["runtime_metadata"] = {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "backend_started_at": BACKEND_STARTED_AT,
+        "generation_mode": response["generation_mode"],
+        "golden_scoring_enabled": bool(response.get("golden_score")),
+    }
 
     return JSONResponse(response)
 

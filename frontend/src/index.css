@@ -61,3 +61,355 @@ body {
   }
   @page { margin: 2cm; size: A4; }
 }
+
+.report-document {
+  color: #1D2129;
+  background:
+    linear-gradient(180deg, rgba(250, 247, 243, 0.88) 0%, rgba(255, 255, 255, 1) 220px),
+    #FFFFFF;
+  box-shadow:
+    0 10px 30px rgba(61, 47, 36, 0.06),
+    0 1px 2px rgba(61, 47, 36, 0.04);
+}
+
+.report-document > :first-child {
+  margin-top: 0 !important;
+}
+
+.report-document > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.report-document .report-title {
+  margin-top: 0 !important;
+  margin-bottom: 1.25rem !important;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #D8C8B8;
+  font-size: clamp(1.75rem, 2.4vw, 2.2rem) !important;
+  line-height: 1.28 !important;
+  letter-spacing: 0.01em;
+  color: #2C2416 !important;
+}
+
+.report-document .report-h1 {
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  padding-left: 0.85rem;
+  border-left: 4px solid #8B6F5C;
+  font-size: clamp(1.2rem, 1.8vw, 1.45rem) !important;
+  line-height: 1.4 !important;
+  color: #2C2416 !important;
+  background: linear-gradient(90deg, rgba(245, 240, 235, 0.9), rgba(245, 240, 235, 0));
+}
+
+.report-document .report-h2 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+  font-size: 1.02rem !important;
+  line-height: 1.45 !important;
+  color: #5F4B3B !important;
+  position: relative;
+}
+
+.report-document .report-h2::before {
+  content: "";
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-right: 0.5rem;
+  border-radius: 999px;
+  background: #B08B70;
+  vertical-align: middle;
+}
+
+.report-document .report-h3 {
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.95rem !important;
+  color: #725A47 !important;
+}
+
+.report-document .report-risk-section {
+  margin: 1.4rem 0;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid #ECE4DC;
+  border-radius: 14px;
+  background: #FFFDFA;
+}
+
+.report-document .report-risk-title {
+  margin-top: 0 !important;
+  margin-bottom: 0.9rem !important;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+}
+
+.report-document .report-risk-critical {
+  border-color: #F2C3BC;
+  background: linear-gradient(180deg, rgba(255, 245, 244, 0.95), #FFFDFA);
+}
+
+.report-document .report-risk-critical .report-risk-title {
+  background: #FFF1EF;
+  color: #B42318 !important;
+  border-left: 4px solid #D92D20;
+}
+
+.report-document .report-risk-high {
+  border-color: #F3D3AA;
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.95), #FFFDFA);
+}
+
+.report-document .report-risk-high .report-risk-title {
+  background: #FFF7ED;
+  color: #C2410C !important;
+  border-left: 4px solid #EA580C;
+}
+
+.report-document .report-risk-medium {
+  border-color: #EADBA8;
+  background: linear-gradient(180deg, rgba(255, 252, 242, 0.96), #FFFDFA);
+}
+
+.report-document .report-risk-medium .report-risk-title {
+  background: #FFFBEA;
+  color: #A16207 !important;
+  border-left: 4px solid #CA8A04;
+}
+
+.report-document .report-risk-default .report-risk-title {
+  background: #F7F4EF;
+  color: #6B5E53 !important;
+  border-left: 4px solid #B8A899;
+}
+
+.report-document .report-key-conclusion {
+  margin: 1rem 0 1.1rem !important;
+  padding: 0.95rem 1rem;
+  border: 1px solid #D9EAD6;
+  border-left: 4px solid #5B8C5A;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #F6FBF5, #FBFDFB);
+  color: #244229 !important;
+  font-weight: 600;
+}
+
+.report-document .report-metric {
+  color: #7A3F00;
+  font-weight: 700;
+}
+
+.report-document .report-bottom-line-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #FFF1EF;
+  color: #B42318 !important;
+  border: 1px solid #F0C2BD;
+  font-weight: 700;
+}
+
+.report-document ul,
+.report-document ol {
+  margin-top: 0.7rem !important;
+  margin-bottom: 1rem !important;
+  padding-left: 1.25rem !important;
+}
+
+.report-document li {
+  margin: 0.42rem 0 !important;
+  line-height: 1.72 !important;
+}
+
+.report-document li > p {
+  margin: 0.2rem 0 !important;
+}
+
+.report-document .report-clause-original,
+.report-document .report-callout-block {
+  list-style: none;
+  margin-left: -0.2rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+}
+
+.report-document .report-clause-original {
+  border: 1px solid #E8E2DB;
+  background: #FAF8F5;
+}
+
+.report-document .report-callout-block {
+  border: 1px solid #E7E1DA;
+  background: #FCFBF9;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.report-document .report-callout-modify {
+  border-left: 4px solid #2F6FED;
+  background: linear-gradient(90deg, rgba(239, 245, 255, 0.92), rgba(252, 251, 249, 1));
+}
+
+.report-document .report-callout-legal {
+  border-left: 4px solid #7C5CFA;
+  background: linear-gradient(90deg, rgba(245, 242, 255, 0.95), rgba(252, 251, 249, 1));
+}
+
+.report-document .report-callout-chip {
+  border-left: 4px solid #0F766E;
+  background: linear-gradient(90deg, rgba(240, 253, 250, 0.96), rgba(252, 251, 249, 1));
+}
+
+.report-document .report-callout-opponent {
+  border-left: 4px solid #B45309;
+  background: linear-gradient(90deg, rgba(255, 247, 237, 0.96), rgba(252, 251, 249, 1));
+}
+
+.report-document li strong:first-child {
+  color: #3B2F24;
+}
+
+.report-document blockquote {
+  margin: 1rem 0 !important;
+  padding: 0.9rem 1rem !important;
+  border-left: 4px solid #B8A899 !important;
+  background: #F8F5F1;
+  color: #5F5248 !important;
+  border-radius: 0 10px 10px 0;
+}
+
+.report-document blockquote p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.report-document .report-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1rem 0 1.2rem;
+  border: 1px solid #E8E2DB;
+  border-radius: 12px;
+  background: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(61, 47, 36, 0.04);
+}
+
+.report-document table {
+  width: 100%;
+  min-width: 720px;
+  margin: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.report-document thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #F7F3EE !important;
+  color: #4A3C30 !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+.report-document th,
+.report-document td {
+  padding: 0.75rem 0.85rem !important;
+  border-bottom: 1px solid #EEE7DF;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.report-document tbody tr:nth-child(even) td {
+  background: #FCFAF8;
+}
+
+.report-document tbody tr:hover td {
+  background: #F9F5F0;
+}
+
+.report-document .report-cell-first {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #4B3A2B;
+}
+
+.report-document .report-cell-numeric {
+  white-space: nowrap;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #6A4A2A;
+}
+
+.report-document .report-cell-text {
+  color: #1D2129;
+}
+
+.report-document .report-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.report-document .report-table-scroll::-webkit-scrollbar-track {
+  background: #F3EEE8;
+  border-radius: 999px;
+}
+
+.report-document .report-table-scroll::-webkit-scrollbar-thumb {
+  background: #CBBBAA;
+  border-radius: 999px;
+}
+
+.report-document p {
+  word-break: break-word;
+}
+
+.report-document hr {
+  margin: 1.6rem 0;
+  border-color: #ECE4DC;
+}
+
+@media (max-width: 768px) {
+  .report-document {
+    padding: 1rem !important;
+  }
+
+  .report-document .report-title {
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.8rem;
+    font-size: 1.45rem !important;
+  }
+
+  .report-document .report-h1 {
+    margin-top: 1.4rem !important;
+    padding-left: 0.65rem;
+    font-size: 1.08rem !important;
+  }
+
+  .report-document .report-h2 {
+    font-size: 0.96rem !important;
+  }
+
+  .report-document .report-risk-section {
+    padding: 0.85rem 0.8rem 0.9rem;
+    border-radius: 12px;
+  }
+
+  .report-document .report-risk-title {
+    padding: 0.58rem 0.72rem;
+    font-size: 0.94rem !important;
+  }
+
+  .report-document .report-key-conclusion,
+  .report-document .report-clause-original,
+  .report-document .report-callout-block,
+  .report-document blockquote {
+    padding: 0.78rem 0.82rem !important;
+  }
+
+  .report-document th,
+  .report-document td {
+    padding: 0.68rem 0.72rem !important;
+  }
+}

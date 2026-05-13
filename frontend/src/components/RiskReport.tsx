@@ -8,11 +8,163 @@ import { ExportButtons } from "./ExportButtons";
 import { useState, useMemo } from "react";
 import { marked } from "marked";
 
+const ISSUE_ID_INLINE_PATTERN = /[（(]\s*ISSUE-[A-Za-z0-9_-]+\s*[)）]/g;
+const ISSUE_ID_PREFIX_PATTERN = /\bISSUE-[A-Za-z0-9_-]+\b\s*[：:]?\s*/g;
+const ISSUE_ID_LABEL_PATTERN = /\b(?:风险ID|Issue ID|IssueID)\b\s*[：:]?\s*/gi;
+
+function stripInternalIds(text: string): string {
+  return text
+    .replace(ISSUE_ID_INLINE_PATTERN, "")
+    .replace(ISSUE_ID_PREFIX_PATTERN, "")
+    .replace(ISSUE_ID_LABEL_PATTERN, "");
+}
+
+function stripInternalIdsFromDocument(doc: Document): void {
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let currentNode = walker.nextNode();
+
+  while (currentNode) {
+    textNodes.push(currentNode as Text);
+    currentNode = walker.nextNode();
+  }
+
+  textNodes.forEach((node) => {
+    const original = node.textContent ?? "";
+    const cleaned = stripInternalIds(original);
+    if (cleaned !== original) {
+      node.textContent = cleaned;
+    }
+  });
+}
+
+function removeEmptyLeadingColumns(doc: Document): void {
+  Array.from(doc.querySelectorAll("table")).forEach((table) => {
+    const rows = Array.from(table.querySelectorAll("tr"));
+    const firstCells = rows
+      .map((row) => row.children.item(0) as HTMLTableCellElement | null)
+      .filter((cell): cell is HTMLTableCellElement => cell !== null);
+
+    if (firstCells.length > 0 && firstCells.every((cell) => !(cell.textContent?.trim()))) {
+      firstCells.forEach((cell) => cell.remove());
+    }
+  });
+}
+
+export function enhanceReportHtml(markdown: string): string {
+  const rawHtml = marked.parse(markdown) as string;
+  if (typeof window === "undefined") return rawHtml;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawHtml, "text/html");
+  stripInternalIdsFromDocument(doc);
+  removeEmptyLeadingColumns(doc);
+
+  Array.from(doc.querySelectorAll("h2")).forEach((heading, index) => {
+    heading.classList.add(index === 0 ? "report-title" : "report-h1");
+  });
+
+  Array.from(doc.querySelectorAll("h3")).forEach((heading) => {
+    const text = heading.textContent?.trim() ?? "";
+    if (/^风险\d+/.test(text)) {
+      heading.classList.add("report-risk-title");
+      heading.setAttribute(
+        "data-risk-level",
+        text.includes("P1") ? "critical" : text.includes("P2") ? "high" : text.includes("P3") ? "medium" : "default",
+      );
+    } else {
+      heading.classList.add("report-h2");
+    }
+  });
+
+  Array.from(doc.querySelectorAll("h4")).forEach((heading) => {
+    heading.classList.add("report-h3");
+  });
+
+  Array.from(doc.querySelectorAll("p")).forEach((paragraph) => {
+    const text = paragraph.textContent?.trim() ?? "";
+    if (text.includes("核心建议是：")) {
+      paragraph.classList.add("report-key-conclusion");
+    }
+  });
+
+  Array.from(doc.querySelectorAll("strong")).forEach((strong) => {
+    const text = strong.textContent?.trim() ?? "";
+    if (/\d/.test(text) || text.includes("%") || text.includes("倍") || text.includes("万元")) {
+      strong.classList.add("report-metric");
+    }
+    if (text.includes("底线，不可退让")) {
+      strong.classList.add("report-bottom-line-tag");
+    }
+  });
+
+  Array.from(doc.querySelectorAll("li")).forEach((item) => {
+    const label = item.querySelector("strong")?.textContent?.trim() ?? "";
+    if (label.startsWith("条款原文")) {
+      item.classList.add("report-clause-original");
+    }
+    if (label.startsWith("修改方案")) {
+      item.classList.add("report-callout-block", "report-callout-modify");
+    }
+    if (label.startsWith("法律依据")) {
+      item.classList.add("report-callout-block", "report-callout-legal");
+    }
+    if (label.startsWith("筹码分析")) {
+      item.classList.add("report-callout-block", "report-callout-chip");
+    }
+    if (label.startsWith("对手预判")) {
+      item.classList.add("report-callout-block", "report-callout-opponent");
+    }
+  });
+
+  Array.from(doc.querySelectorAll("table")).forEach((table) => {
+    const wrapper = doc.createElement("div");
+    wrapper.className = "report-table-scroll";
+    table.parentNode?.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+
+    Array.from(table.querySelectorAll("th, td")).forEach((cell) => {
+      const tableCell = cell as HTMLTableCellElement;
+      const text = tableCell.textContent?.trim() ?? "";
+      if (tableCell.cellIndex === 0) {
+        tableCell.classList.add("report-cell-first");
+      } else if (/\d/.test(text) || /^P\d/.test(text) || /^[🔴🟠🟡✅]/.test(text)) {
+        tableCell.classList.add("report-cell-numeric");
+      } else {
+        tableCell.classList.add("report-cell-text");
+      }
+    });
+  });
+
+  Array.from(doc.querySelectorAll("h3.report-risk-title")).forEach((heading) => {
+    const wrapper = doc.createElement("section");
+    const level = heading.getAttribute("data-risk-level") ?? "default";
+    wrapper.className = `report-risk-section report-risk-${level}`;
+    heading.parentNode?.insertBefore(wrapper, heading);
+
+    let current: ChildNode | null = heading;
+    while (current) {
+      const next: ChildNode | null = current.nextSibling;
+      wrapper.appendChild(current);
+      if (next && next.nodeType === Node.ELEMENT_NODE) {
+        const nextElement = next as Element;
+        if (nextElement.tagName === "H2" || nextElement.tagName === "H3") {
+          break;
+        }
+      }
+      current = next;
+    }
+  });
+
+  return doc.body.innerHTML;
+}
+
 interface Props {
   data: ReviewResponse;
 }
 
 type ViewMode = "dashboard" | "document";
+type DocFormat = "report" | "checklist" | "appendix";
 
 function RoutingBadge({ data }: { data: ReviewResponse }) {
   const routing = data.debug?.routing;
@@ -36,7 +188,6 @@ export function RiskReport({ data }: Props) {
 
   // v2 has flat fields, v1 has nested polished
   const narrativeReport = polished?.narrative_report || data.narrative_report || "";
-  const execSummary = polished?.executive_summary || data.executive_summary || "";
   const signingAdvice = polished?.signing_advice || data.signing_advice || "";
   const actionPlan = polished?.action_plan || data.action_plan || [];
   const crossNotes = polished?.cross_dimension_notes || data.cross_dimension_notes || [];
@@ -45,16 +196,27 @@ export function RiskReport({ data }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>(
     narrativeReport ? "document" : "dashboard"
   );
+  const [docFormat, setDocFormat] = useState<DocFormat>("report");
+
+  const hasChecklist = !!data.revision_checklist;
+  const hasAppendix = !!data.bn_appendix;
+  const hasMultiFormat = hasChecklist || hasAppendix;
 
   const overallScore = report?.dimension_scores
     ? Object.values(report.dimension_scores).reduce((a, b) => a + b, 0) /
       Math.max(Object.values(report.dimension_scores).length, 1)
     : 0.5;
 
+  const currentDocMarkdown = docFormat === "checklist"
+    ? (data.revision_checklist || "")
+    : docFormat === "appendix"
+    ? (data.bn_appendix || "")
+    : narrativeReport;
+
   const reportHtml = useMemo(() => {
-    if (!narrativeReport) return "";
-    return marked.parse(narrativeReport) as string;
-  }, [narrativeReport]);
+    if (!currentDocMarkdown) return "";
+    return enhanceReportHtml(currentDocMarkdown);
+  }, [currentDocMarkdown]);
 
   const hasReport = !!narrativeReport;
   const hasDashboard = !!report && !isV2;
@@ -111,6 +273,29 @@ export function RiskReport({ data }: Props) {
                   {signingAdvice && (<><span className="text-[#C4B8AC] mx-1">|</span><span className="text-[#7B8B6F] font-medium">{signingAdvice.slice(0, 40)}{signingAdvice.length > 40 ? "…" : ""}</span></>)}
                 </>
               )}
+              {data.golden_score && (
+                <>
+                  <span className="text-[#C4B8AC] mx-1">|</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    data.golden_score.score >= 80 ? "bg-green-50 text-green-700" :
+                    data.golden_score.score >= 60 ? "bg-yellow-50 text-yellow-700" :
+                    "bg-red-50 text-red-700"
+                  }`} title={`${data.golden_score.score_label}: ${data.golden_score.case_label}\nmust_find: ${data.golden_score.must_find_passed}/${data.golden_score.must_find_total}\nmust_not: ${data.golden_score.must_not_passed}/${data.golden_score.must_not_total}\n${data.golden_score.regression_note}`}>
+                    🏅 回归 {data.golden_score.score.toFixed(0)}分
+                  </span>
+                </>
+              )}
+              {data.runtime_metadata && (
+                <>
+                  <span className="text-[#C4B8AC] mx-1">|</span>
+                  <span
+                    className="text-[#9B8E83]"
+                    title={`后端启动: ${new Date(data.runtime_metadata.backend_started_at).toLocaleString()}\n生成模式: ${data.runtime_metadata.generation_mode}\n回归评分: ${data.runtime_metadata.golden_scoring_enabled ? "已启用" : "未启用"}`}
+                  >
+                    生成于 {new Date(data.runtime_metadata.generated_at).toLocaleString()}
+                  </span>
+                </>
+              )}
               {hasReport && (<><span className="text-[#C4B8AC] mx-1">|</span><span className="text-[#7B8B6F] font-medium">AI 报告已生成</span></>)}
             </div>
 
@@ -131,18 +316,35 @@ export function RiskReport({ data }: Props) {
       {/* Document View */}
       {viewMode === "document" && hasReport && (
         <div className="animate-fade-in">
-          <div className="flex justify-end mb-4 gap-2">
-            <ExportButtons contractId={data.contract_id} markdown={narrativeReport} />
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+            {hasMultiFormat && (
+              <div className="flex gap-1 bg-[#F5F0EB] rounded-lg p-0.5">
+                <button onClick={() => setDocFormat("report")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${docFormat === "report" ? "bg-white text-[#8B6F5C] shadow-sm" : "text-[#9B8E83] hover:text-[#6B5E53]"}`}>
+                  📄 审查报告
+                </button>
+                {hasChecklist && (
+                  <button onClick={() => setDocFormat("checklist")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${docFormat === "checklist" ? "bg-white text-[#8B6F5C] shadow-sm" : "text-[#9B8E83] hover:text-[#6B5E53]"}`}>
+                    📋 修订清单
+                  </button>
+                )}
+                {hasAppendix && (
+                  <button onClick={() => setDocFormat("appendix")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${docFormat === "appendix" ? "bg-white text-[#8B6F5C] shadow-sm" : "text-[#9B8E83] hover:text-[#6B5E53]"}`}>
+                    🔬 BN附录
+                  </button>
+                )}
+              </div>
+            )}
+            <div className={`${hasMultiFormat ? "" : "ml-auto"} flex gap-2`}>
+              <ExportButtons contractId={data.contract_id} markdown={currentDocMarkdown} />
+            </div>
           </div>
-          <article className="bg-white border border-[#E8E2DB] rounded-xl p-8 md:p-12 shadow-sm max-w-none
-            prose prose-stone prose-headings:font-serif prose-headings:text-[#2C2416] prose-headings:font-semibold
-            prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-[#E8E2DB]
-            prose-p:text-[#3D3226] prose-p:leading-relaxed prose-p:text-[15px] prose-strong:text-[#2C2416]
-            prose-table:text-sm prose-th:bg-[#F5F0EB] prose-th:text-[#6B5E53] prose-th:font-medium prose-th:px-3 prose-th:py-2
-            prose-td:px-3 prose-td:py-2 prose-td:border-b prose-td:border-[#F5F0EB] prose-td:text-[#3D3226]
-            prose-blockquote:border-l-[3px] prose-blockquote:border-[#8B6F5C] prose-blockquote:bg-[#FAF8F5]
-            prose-li:text-[#3D3226] prose-code:bg-[#F5F0EB] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-            prose-code:text-xs prose-code:font-mono prose-hr:border-[#E8E2DB]"
+          <article className="report-document bg-white border border-[#E8E2DB] rounded-xl p-6 md:p-10 shadow-sm max-w-none
+            prose prose-stone
+            prose-headings:font-sans prose-headings:font-bold
+            prose-p:text-[#1D2129] prose-p:leading-[1.6] prose-p:text-[14px]
+            prose-li:text-[#1D2129] prose-li:text-[14px]
+            prose-code:bg-[#F2F3F5] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+            prose-code:text-xs prose-code:font-mono prose-a:text-[#165DFF] prose-a:underline"
             dangerouslySetInnerHTML={{ __html: reportHtml }} />
         </div>
       )}

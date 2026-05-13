@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { marked } from "marked";
+import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { ContractInput } from "./components/ContractInput";
-import { RiskReport } from "./components/RiskReport";
+import { RiskReport, enhanceReportHtml } from "./components/RiskReport";
 import { SandboxPanel } from "./components/SandboxPanel";
 import { ReportHistory } from "./components/ReportHistory";
 import { RedlineManager } from "./components/RedlineManager";
@@ -292,17 +291,20 @@ function HistoryDetail({
   const [html, setHtml] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  useState(() => {
+  useEffect(() => {
+    setLoading(true);
     fetch(`/api/reports/${reportId}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.report_content_md) {
-          setHtml(marked.parse(data.report_content_md) as string);
+          setHtml(enhanceReportHtml(data.report_content_md));
+        } else {
+          setHtml("");
         }
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  });
+  }, [reportId]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 pb-20 animate-fade-in">
@@ -319,26 +321,13 @@ function HistoryDetail({
         <div className="text-center text-[#9B8E83] py-12">加载中...</div>
       ) : (
         <article
-          className="bg-white border border-[#E8E2DB] rounded-xl p-8 md:p-12
-                     shadow-sm max-w-none
-                     prose prose-stone prose-headings:font-serif
-                     prose-headings:text-[#2C2416] prose-headings:font-semibold
-                     prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
-                     prose-h2:pb-2 prose-h2:border-b prose-h2:border-[#E8E2DB]
-                     prose-p:text-[#3D3226] prose-p:leading-relaxed prose-p:text-[15px]
-                     prose-strong:text-[#2C2416]
-                     prose-table:text-sm prose-table:border-collapse
-                     prose-th:bg-[#F5F0EB] prose-th:text-[#6B5E53] prose-th:font-medium
-                     prose-th:px-3 prose-th:py-2 prose-th:text-xs prose-th:text-left
-                     prose-td:px-3 prose-td:py-2 prose-td:border-b prose-td:border-[#F5F0EB]
-                     prose-td:text-[#3D3226]
-                     prose-blockquote:border-l-[3px] prose-blockquote:border-[#8B6F5C]
-                     prose-blockquote:bg-[#FAF8F5] prose-blockquote:py-2 prose-blockquote:px-4
-                     prose-blockquote:text-[#6B5E53]
-                     prose-li:text-[#3D3226] prose-li:leading-relaxed
-                     prose-code:bg-[#F5F0EB] prose-code:px-1.5 prose-code:py-0.5
-                     prose-code:rounded prose-code:text-xs prose-code:font-mono
-                     prose-hr:border-[#E8E2DB]"
+          className="report-document bg-white border border-[#E8E2DB] rounded-xl p-6 md:p-10 shadow-sm max-w-none
+                     prose prose-stone
+                     prose-headings:font-sans prose-headings:font-bold
+                     prose-p:text-[#1D2129] prose-p:leading-[1.6] prose-p:text-[14px]
+                     prose-li:text-[#1D2129] prose-li:text-[14px]
+                     prose-code:bg-[#F2F3F5] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                     prose-code:text-xs prose-code:font-mono prose-a:text-[#165DFF] prose-a:underline"
           dangerouslySetInnerHTML={{ __html: html }}
         />
       )}

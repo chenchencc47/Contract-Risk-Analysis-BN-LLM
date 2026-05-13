@@ -1,0 +1,75 @@
+pattern_id: deposit_after_prepayment_inversion
+pattern_name: 付款担保或质保金提交节点倒挂
+version: 1
+status: candidate
+applies_to:
+  contract_types:
+    - 买卖合同
+    - 采购合同
+    - 销售合同
+    - 设备采购合同
+  review_stances:
+    - buyer
+    - seller
+purpose: >
+  识别担保、质保金、保证金或保函的提交时间晚于主要付款节点，导致担保不能覆盖前期资金敞口的结构性问题。
+
+fact_conditions:
+  all:
+    - has_large_payment_before_security: true
+    - security_or_deposit_exists: true
+    - security_submission_after_major_payment: true
+  optional:
+    - security_amount_lt_exposure: true
+
+stance_expectations:
+  buyer:
+    expected_direction: unfavorable
+    expected_classification:
+      - high_risk
+      - structural_risk
+      - must_fix
+    expected_reasoning: 买方先支付大额款项，但担保在付款之后才提交，无法保障前期资金安全。
+    expected_recommendations:
+      - 要求付款前提交履约保函或预付款保函
+      - 将质保金/保证金提交节点提前
+      - 降低付款比例或改为分阶段付款
+  seller:
+    expected_direction: context_dependent
+    expected_classification:
+      - advantage_if_receiving_payment
+      - risk_if_payment_retained_by_buyer
+      - exchange_chip
+    expected_reasoning: 如果卖方先收款后交担保，对卖方现金流有利但可能被买方强烈攻击；如果卖方尾款受买方验收控制，则需防止买方拖延支付。
+    expected_recommendations:
+      - 明确担保形式、金额和释放条件
+      - 明确验收时限和视为验收规则
+      - 让担保让步换取责任上限或验收机制确定性
+
+must_not:
+  - 不得只看到存在质保金就认为付款结构安全，必须检查提交时间和覆盖范围。
+  - 不得把担保倒挂拆散成普通付款问题而失去结构性风险定位。
+
+evidence_signals:
+  keywords:
+    - 质量保证金
+    - 质保金
+    - 保证金
+    - 保函
+    - 支付剩余款项前
+    - 验收合格后
+    - 预付款
+  ordering_fields:
+    - payment_schedule
+    - security_submission_time
+    - security_release_time
+
+source_cases:
+  - sales_purchase_contract_001
+  - sales_contract_001
+
+promotion_requirements:
+  to_production_rule:
+    - 能解析付款节点顺序
+    - 能判断担保提交时间是否早于被担保风险
+    - 能区分买方资金担保与卖方尾款控制风险

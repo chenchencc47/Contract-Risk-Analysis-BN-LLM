@@ -20,8 +20,10 @@ async def api_upload(file: UploadFile = FastAPIFile(...)):
 
     filename = file.filename
     suffix = Path(filename).suffix.lower()
-    if suffix not in (".pdf", ".docx", ".doc", ".txt", ".md"):
-        return JSONResponse({"error": f"不支持的文件格式: {suffix}，支持 .pdf / .docx / .txt"}, status_code=400)
+    if suffix == ".doc":
+        return JSONResponse({"error": "暂不支持旧版 .doc 文件，请另存为 .docx 后上传"}, status_code=400)
+    if suffix not in (".pdf", ".docx", ".txt", ".md"):
+        return JSONResponse({"error": f"不支持的文件格式: {suffix}，支持 .pdf / .docx / .txt / .md"}, status_code=400)
 
     try:
         content = await file.read()

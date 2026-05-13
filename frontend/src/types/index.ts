@@ -102,6 +102,7 @@ export interface ConsistencyAnnotation {
 export interface ConsistencyData {
   annotations: ConsistencyAnnotation[];
   counterfactuals: CounterfactualResult[];
+  counterfactuals_count?: number;
   bn_summary: string;
 }
 
@@ -119,11 +120,17 @@ export interface CounterfactualResult {
 export interface ReviewResponse {
   generation_mode: string;
   contract_id: string;
+  review_party?: string;
   findings_count?: number;
   node_observations?: NodeObservation[];
   evidence_summary?: EvidenceSummary;
   report: ReviewReport;
   polished: PolishedReport | null;
+  narrative_report?: string;
+  executive_summary?: string;
+  signing_advice?: string;
+  action_plan?: string[];
+  cross_dimension_notes?: string[];
   free_review?: {
     segments_count: number;
     missing_clauses: string[];
@@ -132,6 +139,40 @@ export interface ReviewResponse {
     risk_segments: FreeReviewSegment[];
   };
   consistency?: ConsistencyData;
+  /** v2.15: Deterministic multi-format reports */
+  revision_checklist?: string;
+  bn_appendix?: string;
+  /** v2.16: Auto golden case scoring */
+  golden_score?: {
+    score_kind: string;
+    score_label: string;
+    regression_note: string;
+    case_id: string;
+    case_label: string;
+    score: number;
+    must_find_total: number;
+    must_find_passed: number;
+    must_not_total: number;
+    must_not_passed: number;
+    should_total: number;
+    should_passed: number;
+    must_find_missed: string[];
+    must_not_violated: string[];
+    advantages_found: string[];
+  };
+  runtime_metadata?: {
+    generated_at: string;
+    backend_started_at: string;
+    generation_mode: string;
+    golden_scoring_enabled: boolean;
+  };
+  debug?: {
+    routing?: {
+      primary_type: string;
+      confidence: number;
+      selected_nodes: string[];
+    };
+  };
 }
 
 export type RequestState = "idle" | "loading" | "success" | "error";

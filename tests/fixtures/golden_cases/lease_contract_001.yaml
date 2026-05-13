@@ -1,0 +1,124 @@
+case_id: lease_contract_001
+case_name: 房屋租赁合同真实样本
+contract_type: 租赁合同
+source_type: real_world_online_contract
+review_stance: lessor
+source_files:
+  contract: 合同检测报告/租赁合同/租赁合同.pdf
+  project_reports_dir: 合同检测报告/租赁合同
+  external_reviews:
+    - 合同检测报告/租赁合同/deepseek网页评价.md
+notes: >
+  合同原件为用户从网上找到的真实房屋租赁合同。该样本适合作为出租方视角 golden case，
+  用来验证系统能否识别付款与履约保证金顺序倒挂、解除权条款的法律脆弱性、违约金双重处罚、
+  管辖地与交付验收流程问题，同时避免把无责任上限单向误读为纯优势。
+
+must_find:
+  - id: rent_before_deposit_inversion
+    expected: 必须识别乙方先在合同签订后7个工作日内支付全年租金约1223万元，而履约保证金100万元仅约定合同签订后支付，付款与担保顺序倒挂。
+    severity_min: high
+    evidence_keywords:
+      - 7个工作日
+      - 12,231,893
+      - 履约保证金
+      - 1000000
+      - 保证金
+    acceptable_labels:
+      - 高风险
+      - 付款顺序
+      - 倒挂
+      - 签约底线
+
+  - id: unilateral_termination_fragility
+    expected: 必须识别甲方可提前六个月收回房屋且双方互不承担违约责任，虽然对出租方有利，但可能因过度限制承租方经营稳定性而引发显失公平或格式条款争议。
+    severity_min: medium
+    evidence_keywords:
+      - 提前六个月
+      - 收回房屋
+      - 互不承担违约责任
+      - 解除
+    acceptable_labels:
+      - 中风险
+      - 响应筹码
+      - 法律脆弱性
+
+  - id: penalty_and_deposit_double_punishment
+    expected: 应识别迟延付款每日万分之五滞纳金与不退还履约保证金可能构成双重处罚，存在被司法调减风险。
+    severity_min: medium
+    evidence_keywords:
+      - 日万分之五
+      - 不退还
+      - 合同履行保证金
+      - 违约金
+
+  - id: delivery_acceptance_process_missing
+    expected: 应识别房屋交付、起租验收、退租交接标准不够明确，容易产生默示接受、房屋瑕疵、租金起算或退租恢复争议。
+    severity_min: medium
+    evidence_keywords:
+      - 房屋交付
+      - 交还
+      - 租赁标的
+      - 验收
+
+  - id: venue_not_lessor_home
+    expected: 应识别争议管辖为租赁标的所在地人民法院，若甲方不在当地，会增加出租方维权成本，不如甲方所在地有利。
+    severity_min: medium
+    evidence_keywords:
+      - 租赁标的所在地
+      - 人民法院
+      - 争议
+
+  - id: possible_related_party_context
+    expected: 应提示甲乙双方名称均含“博尼时尚”，存在疑似关联方交易背景，需人工复核是否应从外部对抗谈判转为关联交易合规、定价公允和内部审批审查。
+    severity_min: needs_review
+    evidence_keywords:
+      - 浙江博尼时尚控股集团
+      - 义乌博尼时尚服饰
+      - 关联
+
+must_not:
+  - id: treat_unlimited_lessor_liability_as_pure_advantage
+    forbidden: 不得将甲方对房屋瑕疵或修缮义务导致的人身财产损失无责任上限简单定性为出租方纯优势或超级筹码，而不提示其对甲方也是潜在无限赔偿暴露。
+    expected_direction: 应说明无责任上限在本样本中是双刃剑；对乙方可构成谈判攻击点，对甲方也需评估重大事故赔偿风险。
+
+  - id: ignore_related_party_possibility
+    forbidden: 不得完全忽略甲乙双方可能为关联方这一商业背景信号。
+    expected_direction: 应至少列入人工复核或商业背景确认项。
+
+  - id: overstate_one_sided_terms_as_stable_advantages
+    forbidden: 不得把任意解除权、责任下移、无条件配合等攻击性条款全部当作稳定优势，而不提示显失公平、格式条款或司法调减风险。
+    expected_direction: 优势条款应同时评估可执行性和谈判脆弱性。
+
+should_find_advantages:
+  - id: annual_rent_prepaid_advantage
+    expected: 乙方需预付全年租金，对出租方现金流有利。
+    evidence_keywords:
+      - 全部年租金
+      - 12,231,893
+      - 7个工作日
+
+  - id: tenant_operational_obligations_advantage
+    expected: 乙方承担证照办理、水电杂费、安全经营和设备损坏赔偿等义务，对出租方有利。
+    evidence_keywords:
+      - 证照
+      - 水费
+      - 电费
+      - 安全
+      - 赔偿责任
+
+  - id: sublease_control_advantage
+    expected: 分租或转租需经甲方书面同意，有利于出租方控制房屋使用主体。
+    evidence_keywords:
+      - 分租
+      - 转租
+      - 书面同意
+
+needs_review:
+  - id: related_party_transaction
+    question: 甲乙双方是否为关联公司；若是，应补充关联交易定价、公允性、内部审批、税务和审计风险评估。
+
+  - id: acceptable_termination_balance
+    question: 甲方提前收回房屋的合理理由、补偿标准和通知期应如何设置，需要结合资产管理目的和承租方装修投入判断。
+
+  - id: liability_cap_for_property_damage
+    question: 甲方房屋修缮或产权瑕疵导致乙方损失时是否应设置责任上限或排除间接损失，需要结合出租方风险偏好判断。

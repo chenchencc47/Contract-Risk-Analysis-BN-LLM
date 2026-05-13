@@ -25,9 +25,6 @@ export function IssueReportList({ issues }: Props) {
         >
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#F5F0EB]">
             <h4 className="font-serif text-[#2C2416]">
-              <span className="text-[#9B8E83] text-xs font-sans mr-2">
-                {issue.issue_id}
-              </span>
               {issue.title}
             </h4>
             <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full

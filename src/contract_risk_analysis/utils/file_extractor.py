@@ -8,7 +8,7 @@ from pathlib import Path
 def extract_text(file_path: str, filename: str = "") -> tuple[str, str]:
     """Extract text from a file. Returns (text, error_message).
 
-    Supported formats: .pdf, .docx, .doc, .txt, .md
+    Supported formats: .pdf, .docx, .txt, .md
     """
     path = Path(file_path)
     suffix = path.suffix.lower()

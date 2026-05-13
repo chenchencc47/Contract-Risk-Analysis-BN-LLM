@@ -254,6 +254,139 @@ def _apply_party_aware_rules(
     return segments
 
 
+def _detect_payment_security_inversion(
+    segments: list[RiskSegment],
+    review_party: str = "buyer",
+) -> list[RiskSegment]:
+    """v2.14: Detect structural payment-security inversion patterns.
+
+    Looks for the combination: high prepayment + delayed/small security deposit.
+    When both exist, this creates a "付款担保结构倒挂" — the buyer pays most
+    of the contract value upfront but holds minimal security.
+
+    This cross-item structural risk is more severe than either item alone.
+    """
+    if review_party != "buyer":
+        return segments  # Seller view: high prepayment is advantage, not risk
+
+    # ── Find payment-related segments with high prepayment ──
+    payment_segments: list[RiskSegment] = []
+    for seg in segments:
+        ctype = seg.canonical_type or seg.clause_type
+        if ctype == "payment_structure":
+            payment_segments.append(seg)
+
+    if not payment_segments:
+        return segments
+
+    # ── Check if any payment segment mentions high prepayment ──
+    has_high_prepayment = False
+    prepayment_evidence: str = ""
+    high_prepayment_signals = [
+        "预付款",
+        "预付",
+        "首付款",
+        "签订后支付",
+        "签约后支付",
+        "支付合同总价",
+        "高比例",
+        "%作为预付款",
+        "%作为首付款",
+    ]
+    for pseg in payment_segments:
+        combined = f"{pseg.risk_title} {pseg.risk_description} {pseg.evidence_text}"
+        if any(kw in combined for kw in high_prepayment_signals):
+            has_high_prepayment = True
+            prepayment_evidence = pseg.evidence_text
+            break
+
+    if not has_high_prepayment:
+        return segments
+
+    # ── Find warranty/deposit segments ──
+    deposit_segments: list[RiskSegment] = []
+    for seg in segments:
+        ctype = seg.canonical_type or seg.clause_type
+        combined = f"{seg.risk_title} {seg.risk_description} {seg.evidence_text}"
+        if any(kw in combined for kw in [
+            "质保金", "保证金", "质量保证金", "履约保证金",
+        ]):
+            deposit_segments.append(seg)
+
+    # ── Check for deposit-after-prepayment inversion ──
+    has_inversion = False
+    inversion_detail: str = ""
+    for dseg in deposit_segments:
+        combined = f"{dseg.risk_title} {dseg.risk_description} {dseg.evidence_text}"
+        if any(kw in combined for kw in [
+            "支付剩余款项前", "验收合格后", "质保期满", "提交",
+        ]):
+            has_inversion = True
+            inversion_detail = (
+                f"质保金/保证金提交节点（{dseg.risk_title}）晚于预付款支付节点，"
+                f"形成「先付大额预付款、后收小额保证金」的担保结构倒挂。"
+                f"证据：{dseg.evidence_text[:120]}"
+            )
+            break
+
+    if not has_inversion:
+        return segments
+
+    # ── Create or enhance the structural inversion risk item ──
+    # Check if we already have a segment describing this structural risk
+    existing_idx: int | None = None
+    for i, seg in enumerate(segments):
+        combined = f"{seg.risk_title} {seg.risk_description}"
+        if "倒挂" in combined or "担保结构" in combined or "付款担保" in combined:
+            existing_idx = i
+            break
+
+    if existing_idx is not None:
+        # Enhance existing
+        existing = segments[existing_idx]
+        if "【结构性风险检测】" not in (existing.risk_description or ""):
+            existing.risk_description = (
+                f"{existing.risk_description}\n\n"
+                f"【结构性风险检测 — v2.14 付款担保结构倒挂】{inversion_detail}"
+            )
+        if existing.severity not in ("critical", "high"):
+            existing.severity = "high"
+        if existing.priority_rank is None or existing.priority_rank > 1:
+            existing.priority_rank = 1
+    else:
+        # Create new structural risk segment
+        structural_seg = RiskSegment(
+            clause_type="payment_security_structure",
+            risk_title="付款担保结构倒挂",
+            risk_description=(
+                f"【结构性风险检测 — v2.14】本合同存在「付款担保结构倒挂」："
+                f"买方在未收到任何履约担保的情况下支付高额预付款，"
+                f"而质保金/保证金的提交节点远晚于预付款——"
+                f"买方资金敞口与持有的担保金额严重不匹配。"
+                f"{inversion_detail}"
+            ),
+            evidence_text=prepayment_evidence,
+            confidence=0.90,
+            severity="critical",
+            canonical_type="payment_security_structure",
+            counterparty_impact="buyer_unfavorable",
+            recommendation=(
+                "优先要求：(1) 降低预付款比例至30%以下并绑定履约保函；"
+                "(2) 质保金/保证金提交节点提前至预付款支付前或同期；"
+                "(3) 如对方坚持高预付款，要求等额银行保函/履约保函覆盖预付款敞口"
+            ),
+            suggested_bn_nodes=["payment_structure", "financial_exposure"],
+            priority_rank=1,
+            commercial_impact=(
+                "买方大额资金先付后无有效担保，形成巨大的资金敞口。"
+                "一旦卖方违约，买方既失去了资金又无足够担保覆盖损失。"
+            ),
+        )
+        segments.append(structural_seg)
+
+    return segments
+
+
 def adjudicate(
     free_output: FreeReviewOutput,
     review_party: str = "buyer",
@@ -263,6 +396,7 @@ def adjudicate(
     1. Deduplicate risk segments (Pass 1: same canonical_type, Pass 2: cross-type)
     2. Enforce priority rules
     3. Apply party-aware rules (buyer/seller perspective)
+    4. (v2.14) Detect structural patterns: payment-security inversion
 
     All operations are deterministic. Returns the adjudicated FreeReviewOutput
     with modified risk_segments (in-place).
@@ -281,6 +415,11 @@ def adjudicate(
 
     # Step 3: Apply party-aware rules
     free_output.risk_segments = _apply_party_aware_rules(
+        free_output.risk_segments, review_party
+    )
+
+    # Step 4 (v2.14): Detect structural payment-security inversion
+    free_output.risk_segments = _detect_payment_security_inversion(
         free_output.risk_segments, review_party
     )
 

@@ -40,6 +40,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Remove a pending node entry")
     parser.add_argument("--feedback-summary", action="store_true",
                         help="Show aggregated BN feedback accuracy per node")
+    parser.add_argument("--score-golden-case", type=str, default=None, metavar="YAML",
+                        help="Score a Markdown report against a golden case YAML")
+    parser.add_argument("--report", type=str, default=None, metavar="MD",
+                        help="Markdown report path for --score-golden-case")
+    parser.add_argument("--list-golden-patterns", action="store_true",
+                        help="List golden pattern metadata as JSON")
+    parser.add_argument("--golden-patterns-dir", type=str, default="tests/fixtures/golden_patterns",
+                        help="Directory containing golden pattern YAML files")
     return parser.parse_args(argv)
 
 
@@ -67,6 +75,25 @@ def _print_debug_payload(
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+
+    # ── Golden case scoring: --score-golden-case ──
+    if args.score_golden_case:
+        if not args.report:
+            raise SystemExit("--score-golden-case requires --report")
+        from contract_risk_analysis.evaluation.golden_score import score_report_against_case
+        score = score_report_against_case(args.score_golden_case, args.report)
+        print(json.dumps(score.to_dict(), ensure_ascii=False, indent=2))
+        return
+
+    # ── Golden patterns: --list-golden-patterns ──
+    if args.list_golden_patterns:
+        from contract_risk_analysis.evaluation.golden_score import (
+            load_golden_patterns,
+            summarize_patterns,
+        )
+        rows = summarize_patterns(load_golden_patterns(args.golden_patterns_dir))
+        print(json.dumps({"patterns": rows}, ensure_ascii=False, indent=2))
+        return
 
     # ── Node discovery: --discover-nodes ──
     if args.discover_nodes:
