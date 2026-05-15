@@ -379,3 +379,43 @@ def test_consistency_checks_flag_freeform_numeric_estimates() -> None:
 
     violations = _run_pre_render_consistency_checks(dossier)
     assert any("无来源数字" in msg for msg in violations)
+
+
+def test_combined_prompt_includes_chapter_4_terminology_ban() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "第四章用语规范" in prompt
+    assert "P(high)" in prompt  # the banned term must appear in the ban table
+    assert "高风险概率" in prompt  # the replacement must appear
+    assert "条款改善效果预估" in prompt
+    assert "风险改善量化评估" in prompt
+    assert "法律分析判断" in prompt
+
+
+def test_combined_prompt_includes_signing_guardrail_number_discipline() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "签署底线数字纪律（强制执行）" in prompt
+    assert "严禁" in prompt
+    assert "自行补写 Dossier 中未出现的具体数字" in prompt
+    assert "方向+条件的形式" in prompt
+    assert "每一段攻击话术必须至少引用当前合同的一个具体条款号和一个本合同独有的百分比或金额" in prompt
+    assert "第五章数字自检" in prompt

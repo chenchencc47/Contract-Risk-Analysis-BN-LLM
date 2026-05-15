@@ -1238,6 +1238,126 @@ class TestPaymentSecurityInversion:
 # ═══════════════════════════════════════════════════════════════════
 
 
+def test_stance_stability_buyer_key_clauses() -> None:
+    """Golden stance: liability_cap/jurisdiction/damages_exposure are buyer ADVANTAGES, not risks.
+
+    Any future change that flips these to unfavorable for buyer is a regression.
+    This test directly encodes the #1 finding from six external evaluations:
+    the '无责任上限' stance is the watershed between good and bad reports.
+    """
+    from contract_risk_analysis.domain.free_review_schema import FreeReviewOutput, RiskSegment
+    from contract_risk_analysis.review.adjudicate import adjudicate
+
+    free_output = FreeReviewOutput(
+        contract_id="stance-stability-test",
+        overall_assessment="test",
+        risk_segments=[
+            RiskSegment(
+                clause_type="liability_cap",
+                risk_title="无责任上限",
+                risk_description="合同未设置乙方赔偿责任上限。",
+                evidence_text="合同未约定责任上限条款。",
+                confidence=0.90,
+                severity="high",
+                canonical_type="liability_cap",
+            ),
+            RiskSegment(
+                clause_type="jurisdiction",
+                risk_title="管辖地在甲方住所地",
+                risk_description="争议由甲方所在地法院管辖。",
+                evidence_text="第十三条：双方均可向甲方住所地有管辖权的人民法院提起诉讼。",
+                confidence=0.88,
+                severity="medium",
+                canonical_type="jurisdiction",
+            ),
+            RiskSegment(
+                clause_type="damages",
+                risk_title="未排除间接损失",
+                risk_description="合同未明确排除间接损失。",
+                evidence_text="合同未约定排除间接损失。",
+                confidence=0.85,
+                severity="medium",
+                canonical_type="damages_exposure",
+            ),
+        ],
+        missing_clauses=[],
+        strengths=[],
+    )
+
+    result = adjudicate(free_output, review_party="buyer")
+
+    for seg in result.risk_segments:
+        if seg.canonical_type == "liability_cap":
+            assert seg.severity == "positive", (
+                f"STANCE REGRESSION: liability_cap for buyer must be 'positive' (favorable), "
+                f"got '{seg.severity}'. Unfavorable stance on this clause is the #1 error "
+                f"identified by six external evaluations."
+            )
+        elif seg.canonical_type == "jurisdiction":
+            assert seg.counterparty_impact == "buyer_favorable", (
+                f"STANCE REGRESSION: jurisdiction for buyer must be buyer_favorable, "
+                f"got '{seg.counterparty_impact}'"
+            )
+        elif seg.canonical_type == "damages_exposure":
+            assert seg.counterparty_impact == "buyer_favorable", (
+                f"STANCE REGRESSION: damages_exposure for buyer must be buyer_favorable, "
+                f"got '{seg.counterparty_impact}'"
+            )
+
+
+def test_redline_appendix_contains_original_vs_recommendation() -> None:
+    from contract_risk_analysis.domain.free_review_schema import DossierRiskItem, ReportDossier
+    from contract_risk_analysis.review.report_writer import _build_redline_appendix
+
+    dossier = ReportDossier(
+        contract_id="test-redline",
+        review_party="buyer",
+        risk_items=[
+            DossierRiskItem(
+                issue_id="ISSUE-001",
+                risk_title="预付款比例过高",
+                clause_type="payment",
+                canonical_type="payment_structure",
+                severity="critical",
+                priority_rank=1,
+                evidence_text="甲方于本合同签订后10日内支付80%预付款。",
+                recommendation="将预付款比例降至与当前交易风险相匹配的更低比例。",
+                confidence=0.9,
+            ),
+        ],
+        counterfactuals=[],
+        bn_annotations=[],
+        joint_risks=[],
+        bn_summary="",
+        overall_assessment="",
+        strengths=[],
+        missing_clauses=[],
+        signing_forbidden=[],
+        signing_acceptable=[],
+        negotiation_bottom_lines=[],
+        favorable_terms=[],
+        manual_review_items=[],
+        internal_conflicts=[],
+    )
+
+    appendix = _build_redline_appendix(dossier)
+    assert "条款修订对照表" in appendix
+    assert "预付款比例过高" in appendix
+    assert "80%预付款" in appendix
+    assert "与当前交易风险相匹配" in appendix
+
+
+def test_classify_missing_clause_priority_tiers_correctly() -> None:
+    from contract_risk_analysis.review.report_writer import _classify_missing_clause_priority
+
+    assert _classify_missing_clause_priority("保密条款") == "P0"
+    assert _classify_missing_clause_priority("知识产权归属条款") == "P0"
+    assert _classify_missing_clause_priority("不可抗力条款") == "P1"
+    assert _classify_missing_clause_priority("保险条款") == "P1"
+    assert _classify_missing_clause_priority("不招揽员工条款") == "P2"
+    assert _classify_missing_clause_priority("竞业禁止条款") == "P2"
+
+
 def test_payment_security_structure_recommendation_stays_generic() -> None:
     from contract_risk_analysis.domain.free_review_schema import FreeReviewOutput, RiskSegment
     from contract_risk_analysis.review.adjudicate import adjudicate

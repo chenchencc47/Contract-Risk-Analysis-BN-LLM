@@ -10,6 +10,7 @@ from contract_risk_analysis.review.adjudicate import adjudicate
 from contract_risk_analysis.review.ai_review import (
     AIReviewSettings,
     _completion_to_payload,
+    _detect_asset_type_context,
     _free_review_prompt,
     _parse_free_review_payload,
     _parse_review_result_payload,
@@ -393,3 +394,36 @@ def test_free_review_prompt_includes_generalization_guardrails() -> None:
     assert "禁止照搬其他报告中的固定比例、固定天数、固定金额、固定地名" in prompt
     assert "只能输出适用于当前合同文本的结构性判断" in prompt
     assert "不得把外部评价结论当作标准答案回写进本次审查" in prompt
+    assert "攻击预判纪律（强制执行）" in prompt
+    assert "不得套用'三板斧''显失公平''行业惯例'等无差别攻击模板" in prompt
+
+
+def test_detect_asset_type_context_returns_hint_for_equipment_contract() -> None:
+    text = "甲方采购量子点光谱水质检测仪设备，合同总价1535万元。"
+    result = _detect_asset_type_context(text)
+    assert "标准工业设备" in result
+    assert "标的物属性提示" in result
+
+
+def test_detect_asset_type_context_returns_hint_for_custom_contract() -> None:
+    text = "乙方按甲方需求定制开发非标自动化系统集成，含软件开发和按需设计。"
+    result = _detect_asset_type_context(text)
+    assert "定制化" in result
+
+
+def test_detect_asset_type_context_returns_empty_for_unknown() -> None:
+    text = "双方就合作事宜达成如下协议。"
+    result = _detect_asset_type_context(text)
+    assert result == ""
+
+
+def test_free_review_prompt_includes_asset_type_context_for_equipment() -> None:
+    prompt = _free_review_prompt(
+        "甲方采购量子点光谱水质检测仪设备，合同总价1535万元。"
+        "第九条第2款：甲方于本合同签订后10日内向乙方支付合同金额的80%作为预付款。",
+        "equip-001",
+        None,
+        "buyer",
+    )
+    assert "标的物属性提示" in prompt
+    assert "标准工业设备" in prompt

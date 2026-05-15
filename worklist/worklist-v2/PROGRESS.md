@@ -1,17 +1,134 @@
 # 实施进度记录（v2）
 
-> 最后更新：2026-05-15（谈判阈值硬编码修复闭环）
+> 最后更新：2026-05-15（阶段 C 启动：基于六方评测的后续质量提升）
 
 ---
 
 ## 当前状态
 
-- **当前主线**：报告泛化实施限制固化 ✅ 已完成（LLM₁/LLM₂/规则层/成品lint/谈判阈值去硬编码）
-- **当前计划文件**：`docs/superpowers/plans/2026-05-14-report-generalization-guardrails.md`
-- **当前进展**：全部五项子任务已完成。Dossier 层不再夹带固定 30%/10%/10-15%；LLM₂ prompt 不再强制要求”必须给数字”；party_aware_rules 的 20% 也已方向化。客户版清洁度护栏成立。聚焦回归 80 passed。
-- **下次继续入口**：后续如果仍需进一步控制 LLM 自发的谈判数字，走”条款分类→行业参数映射”的结构性方案，不做一次性硬编码过滤。
+- **当前主线**：阶段 C：基于六方评测的后续质量提升（进行中，P0-3 执行中）
+- **当前计划文件**：`docs/superpowers/plans/2026-05-15-post-evaluation-improvement.md`
+- **当前进展**：WORKLIST 和 PROGRESS 已更新，P0 三项待启动。上一阶段（报告泛化护栏固化）已闭环，Dossier 固定阈值净化器已上线，聚焦回归 80 passed。
+- **下次继续入口**：P0-3（BN 术语去学术化）→ P0-1（签署底线去硬编码）→ P0-2（攻击预判去模板化）→ P1 三项
 
 ---
+
+## 2026-05-15：阶段 C 启动 — P0-3 BN 术语去学术化（已完成）
+
+### 最新进展
+
+| # | 事项 | 文件 | 状态 |
+|---|------|------|:--:|
+| 1 | 更新 WORKLIST.md 切换至阶段 C 主线 | `worklist/worklist-v2/WORKLIST.md` | ✅ |
+| 2 | 更新 PROGRESS.md 记录新阶段开始 | `worklist/worklist-v2/PROGRESS.md` | ✅ |
+| 3 | P0-3：LLM₂ prompt 第四章用语规范——新增禁用术语替换表，示例格式改为商业语言 | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 4 | P0-3：REPORT_SECTIONS 常量与章节模板标题同步更新 | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 5 | P0-3：新增 `test_combined_prompt_includes_chapter_4_terminology_ban` | `tests/review/test_report_writer_negotiation_chip.py` | ✅ |
+| 6 | 聚焦回归 63 passed；真实样本验证待 P0 三项全完后统一跑 | — | ⏳ |
+
+### 测试记录
+
+```text
+tests/review/test_report_writer_negotiation_chip.py + tests/regression/test_judgment_regression.py: 63 passed in 3.00s
+```
+
+### 下次继续入口
+
+P0-3 已完成。进入 P0-1（签署底线数字去硬编码）。
+
+---
+
+## 2026-05-15：阶段 C — P0-1 签署底线数字去硬编码（已完成）
+
+### 最新进展
+
+| # | 事项 | 文件 | 状态 |
+|---|------|------|:--:|
+| 1 | P0-3 BN 术语去学术化已完成 | 同上表 | ✅ |
+| 2 | P0-1：LLM₂ prompt 第六章新增"签署底线数字纪律"——严禁在签署建议中自行补写 Dossier 未出现的数字 | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 3 | P0-1：新增 `test_combined_prompt_includes_signing_guardrail_number_discipline` | `tests/review/test_report_writer_negotiation_chip.py` | ✅ |
+| 4 | 聚焦测试 14 passed | 测试记录见下 | ✅ |
+
+### 测试记录
+
+```text
+tests/review/test_report_writer_negotiation_chip.py: 14 passed in 2.20s
+```
+
+### 说明
+
+Dossier 层的 signing 文本已通过 `_rewrite_unsourced_payment_thresholds()` 在上阶段间接净化。本条新增的 prompt 约束针对 LLM₂ 在第六章自发生成数字的行为。
+
+### 下次继续入口
+
+P0-1 已完成。进入 P0-2（攻击预判去模板化）。
+
+---
+
+## 2026-05-15：阶段 C — P2 低优先级三项（已完成）
+
+### 最新进展
+
+| # | 事项 | 文件 | 状态 |
+|---|------|------|:--:|
+| 1 | P2-1：新增 `test_stance_stability_buyer_key_clauses` 立场稳定性回归——锁定 liability_cap/jurisdiction/damages_exposure 对买方必须为 favorable | `tests/regression/test_judgment_regression.py` | ✅ |
+| 2 | P2-2：新增 `_build_redline_appendix()` 确定性生成原条款 vs 修改建议双栏对照表 | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 3 | P2-2：新增 `test_redline_appendix_contains_original_vs_recommendation` | `tests/regression/test_judgment_regression.py` | ✅ |
+| 4 | P2-3：新建标准化评测 prompt 模板，记录五份外部评价参数和历史评测数据 | `合同检测报告/评价prompt/标准化评测prompt模板.md` | ✅ |
+| 5 | 聚焦回归 89 passed | 测试记录见下 | ✅ |
+
+### 测试记录
+
+```text
+tests/review/test_ai_review.py: 22 passed
+tests/review/test_report_writer_negotiation_chip.py: 15 passed
+tests/regression/test_judgment_regression.py: 52 passed
+Focus全部: 89 passed in 4.59s
+```
+
+### P0+P1+P2 总计
+
+| 阶段 | 数量 | 改动文件 | 新建文件 | 测试增量 |
+|:---:|:---:|:---:|:---:|:---:|
+| P0 | 3 项 | 3 | 0 | +3 |
+| P1 | 3 项 | 3 | 2 | +9 |
+| P2 | 3 项 | 3 | 1 | +2 |
+| **合计** | **9 项** | **6** | **3** | **+14** |
+
+### 当前状态
+
+方案 `2026-05-15-post-evaluation-improvement.md` 所列 9 项改进全部实施完成。
+聚焦回归 89 passed。WORKLIST 和 PROGRESS 同步更新。
+
+## 2026-05-15：真实样本端到端验证（已完成）
+
+### 验证结果
+
+| 检验项 | 结果 | 说明 |
+|--------|:--:|------|
+| P0-3：第四章无学术术语 | ✅ | P(high)/维度级/BN模拟效果/反事实分析 均 x0 |
+| P0-1：第六章无固定阈值 | ✅ | 30%/20%以下/10%以上 均 x0 |
+| P0-2：第五章攻击话术 | ✅ | 条款号引用 x21，合同数字引用 x15 |
+| P1-1：资产类型检测 | 🛠️→✅ | 修复 OCR 字符间空格 + 改为最佳匹配算法，正确识别"标准工业设备" |
+| P1-3：缺失条款分层 | ✅ | Dossier 层 P0/P1/P2 三级分层展示正常 |
+| 客户版清洁度 | ✅ | ISSUE-/DeepSeek/渲染器备注/TODO/TBD 均 x0 |
+| 报告八章结构 | ✅ | 全部存在 |
+| 聚焦回归 | ✅ | 89 passed |
+
+### 修复项
+
+P1-1 资产类型检测在真实 PDF（OCR 风格带字符间空格）上初始返回空。
+修复：增加 CJK 字符间空格折叠 + 改用最佳匹配评分算法替代首次命中。
+
+### 下次继续入口
+
+```text
+方案文档所列 9 项改进全部实施并验证完成。聚焦回归 89 passed。
+下一阶段新主线待定。
+```
+
+---
+
 
 ## 2026-05-15：谈判阈值去硬编码闭环（已完成）
 

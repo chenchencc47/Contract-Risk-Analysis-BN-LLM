@@ -1,0 +1,84 @@
+# Contract-type-aware parameter ranges for negotiation guidance.
+# These parameters inform the LLM about reasonable negotiation benchmarks
+# based on the asset type (standard equipment, custom equipment, bulk commodity, light service).
+#
+# Each asset type has a "context" string injected into the LLM prompt to frame
+# what constitutes a reasonable prepayment, warranty, penalty range, etc.
+# for that type of transaction.
+#
+# NOTE: These are DIRECTIONAL GUIDES, not fixed thresholds.
+# The LLM must still reason from the specific contract's actual numbers.
+
+standard_equipment:
+  label: "标准工业设备"
+  keywords:
+    - "设备"
+    - "仪器"
+    - "检测仪"
+    - "光谱"
+    - "传感器"
+    - "监测"
+    - "硬件"
+    - "仪器仪表"
+  context: |
+    **标的物属性提示（仅供法务判断参考，不得写死为固定阈值）：**
+    本合同标的物为标准工业设备/仪器，非高度定制化产品。此类交易的行业惯例：
+    - 预付款通常占总价的 20%-40%，过高比例（如 70% 以上）在无等额担保时属于结构性风险
+    - 质保期通常为 1-3 年（从终验起算），质保金通常为 5%-10%
+    - 违约金在无具体损失证明时，法院倾向于调减至实际损失的 1-1.3 倍
+
+custom_equipment:
+  label: "定制化设备/系统集成"
+  keywords:
+    - "定制开发"
+    - "非标"
+    - "系统集成"
+    - "软件开发"
+    - "系统开发"
+    - "按需设计"
+    - "委托开发"
+    - "技术开发"
+  context: |
+    **标的物属性提示（仅供法务判断参考，不得写死为固定阈值）：**
+    本合同标的物涉及定制化开发/系统集成，卖方前期投入较大。此类交易的行业惯例：
+    - 预付款 30%-50% 属合理范围（因卖方需前期投入设计/备料），但超过 50% 仍须有履约担保
+    - 知识产权归属和验收标准是核心问题，必须在审查中重点关注
+    - 质保期建议从终验起算，覆盖至少一个完整运行周期
+
+bulk_commodity:
+  label: "大宗商品/原材料"
+  keywords:
+    - "原材料"
+    - "钢材"
+    - "水泥"
+    - "化工"
+    - "大宗"
+    - "矿产"
+    - "农产品"
+    - "能源"
+    - "煤炭"
+  context: |
+    **标的物属性提示（仅供法务判断参考，不得写死为固定阈值）：**
+    本合同标的物为大宗商品/原材料，价格波动和交付风险是核心问题。此类交易的行业惯例：
+    - 预付款通常为 10%-30%，价格调整机制和金检条款比预付款比例更重要
+    - 质量异议期短（通常 7-15 天），需明确检验标准和第三方检测机构
+    - 违约金通常与延迟交付的实际损失挂钩
+
+light_service:
+  label: "轻资产服务/咨询服务"
+  keywords:
+    - "服务"
+    - "咨询"
+    - "外包"
+    - "维护"
+    - "运营"
+    - "培训"
+    - "支持"
+    - "SaaS"
+    - "软件即服务"
+  context: |
+    **标的物属性提示（仅供法务判断参考，不得写死为固定阈值）：**
+    本合同标的物为轻资产服务类，交付物主要是人力/技术输出而非实物。此类交易的行业惯例：
+    - 付款通常与服务里程碑挂钩（如按月/按阶段），大额预付款不常见
+    - SLA（服务水平协议）、保密和知识产权归属是核心条款
+    - 违约金上限通常约定为合同总价的 100%，间接损失排除常见

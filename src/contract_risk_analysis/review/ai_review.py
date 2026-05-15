@@ -21,6 +21,7 @@ ENV_PATH = PROJECT_ROOT / ".env"
 BN_CONFIG_PATH = PROJECT_ROOT / "config" / "bayesian_network_v2.json"
 CONTRACT_TYPE_ROUTING_PATH = PROJECT_ROOT / "config" / "contract_type_routing.yaml"
 COMPANY_REDLINES_PATH = PROJECT_ROOT / "config" / "company_redlines.yaml"
+CONTRACT_TYPE_PARAMS_PATH = PROJECT_ROOT / "config" / "contract_type_parameters.yaml"
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,40 @@ class ContractTypeRoutingResult:
 def load_contract_type_routing_config() -> dict:
     with open(CONTRACT_TYPE_ROUTING_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def _detect_asset_type_context(contract_text: str) -> str:
+    """Detect asset type from contract text and return the corresponding context hint.
+
+    Returns an empty string if no asset type is detected.
+    Handles OCR-style text with spaces between Chinese characters by normalizing.
+    """
+    if not CONTRACT_TYPE_PARAMS_PATH.exists():
+        return ""
+    with open(CONTRACT_TYPE_PARAMS_PATH, encoding="utf-8") as f:
+        params = yaml.safe_load(f) or {}
+
+    # Normalize: collapse spaces between CJK characters (common OCR artifact)
+    import re as _re
+    normalized = _re.sub(r'(?<=[一-鿿])\s+(?=[一-鿿])', '', contract_text)
+    text_lower = normalized.lower()
+
+    # Score each asset type by keyword match count, pick the best match
+    best_type = ""
+    best_score = 0
+    for asset_type in ("custom_equipment", "bulk_commodity", "light_service", "standard_equipment"):
+        cfg = params.get(asset_type, {})
+        keywords = cfg.get("keywords", [])
+        if not keywords:
+            continue
+        score = sum(1 for kw in keywords if kw.lower() in text_lower)
+        if score > best_score:
+            best_score = score
+            best_type = asset_type
+
+    if best_type and best_score > 0:
+        return params.get(best_type, {}).get("context", "")
+    return ""
 
 
 def load_company_redlines(matched_types: list[str] | None = None) -> tuple[list[dict], list[dict]]:
@@ -517,6 +552,7 @@ def _free_review_prompt(
     hard_rules, reasoning_hints = load_company_redlines(routing.matched_types)
     redlines_section = _format_redlines_section(hard_rules, reasoning_hints)
     chip_instruction = _build_chip_instruction(review_party, party_label)
+    asset_context = _detect_asset_type_context(contract_text)
 
     return (
         f"你是{party_label}的代理律师/商业谈判顾问，需要对以下合同进行全面、深入"
@@ -548,6 +584,9 @@ def _free_review_prompt(
         "11. **对手预判**：对每个高风险项，预测对方律师可能从哪些角度发起攻击："
         "法律角度（如'显失公平'、'违反强制性规定'）、商业角度（如'行业惯例并非如此'、"
         "'影响合作意愿'）、策略角度（如'用次要条款换取对我方不利的修改'）。"
+        "**攻击预判纪律（强制执行）：** 每个攻击向量的描述必须引用当前合同的至少一个具体条款号"
+        "和至少一个本合同独有的百分比/金额/天数（如'80%预付款''第9条第2款''1,228万元'等），"
+        "不得套用'三板斧''显失公平''行业惯例'等无差别攻击模板。"
         "结果填入 counterparty_attack_vector 字段。\n"
         "12. **优先级排序**：对每个风险项按谈判紧迫性和严重性给出 1-5 级优先级"
         "（填入 priority_rank 字段）："
@@ -595,6 +634,7 @@ def _free_review_prompt(
         "- overall_strategic_assessment: （可选）整体战略评估，包括核心筹码概括、力量对比和建议谈判姿态\n\n"
         f"{checklist}\n\n"
         f"{redlines_section}\n"
+        f"{asset_context}\n"
         "## 重要提醒\n"
         "- 不要输出总体风险结论（由后续环节处理）\n"
         "- 如果文本无法支持某项，不要臆造\n"

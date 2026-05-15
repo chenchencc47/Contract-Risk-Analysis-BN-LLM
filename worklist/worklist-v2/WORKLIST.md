@@ -1,6 +1,6 @@
 # BN-Contract-Risk-Analysis 工作清单（v2）
 
-> 最后更新：2026-05-14（切换到“报告泛化实施限制固化”待启动主线）
+> 最后更新：2026-05-15（切换至”基于六方评测的后续质量提升”主线）
 
 ---
 
@@ -14,37 +14,42 @@
 
 ## 当前总目标
 
-围绕买方合同审查报告主线，把系统从“当前样本上效果较好”继续推进到“真正适配不同合同、客户版清洁、规则不硬编码、数字可追溯”的状态。
+在 v21（v2.13 基线）基础上，针对六份外部评价共同指出的改进方向，完成一系列可落地、可验证的质量提升。核心原则：不做过度拟合单份合同的优化，不做不可复现的手工修改。
 
 当前主线状态：
 
 ```text
-阶段 B 后续：报告泛化实施限制固化（待启动）
-→ 先把“不能硬编码/不能写死样本答案/不能引用外部评价回灌系统”固化进源码与测试
-→ 再补客户版清洁度与无来源数字 lint
-→ 最后用真实样本重跑验证，但在收到开始指令前不实施
+阶段 C：基于六方评测的后续质量提升（进行中）
+→ P0：立即执行（BN 术语去学术化 / 签署底线去硬编码 / 攻击预判去模板化）
+→ P1：中期规划（合同类型感知 / 策略-分析数字一致性校验 / 缺失条款分层）
+→ P2：低优先级（立场稳定性检测 / Redline 对照表 / 评价 prompt 标准化）
 ```
 
-当前已完成计划：
-- `docs/superpowers/plans/2026-05-14-v15-report-optimization.md`
-- `docs/superpowers/plans/2026-05-14-report-fact-accuracy-and-customer-output-hardening.md`
-- `docs/superpowers/plans/2026-05-14-report-generalization-guardrails.md`
+当前对应计划文件：
+- `docs/superpowers/plans/2026-05-15-post-evaluation-improvement.md`
 
-当前待实施项（等待开始指令）：
-1. **P0：固化 LLM₁ 泛化提示纪律**
-   - 在 `src/contract_risk_analysis/review/ai_review.py` 中加入去硬编码与外评隔离约束
-   - 在 `tests/review/test_ai_review.py` 中加入对应回归测试
-2. **P0：固化 LLM₂ 去硬编码与客户版清洁约束**
-   - 在 `src/contract_risk_analysis/review/report_writer.py` 中加入禁止样本模板回灌的组合提示约束
-   - 在 `tests/review/test_report_writer_negotiation_chip.py` 中补充对应断言
-3. **P1：收紧规则层推荐措辞**
-   - 保持 `src/contract_risk_analysis/review/adjudicate.py` 中推荐为结构性泛化表述
-   - 用 `tests/regression/test_judgment_regression.py` 防止回退到样本化答案
-4. **P1：增加成品级 lint**
-   - 拦截外部评价痕迹、内部标记、占位符与无来源数字估算
-5. **P2：真实样本重跑与验收**
-   - 用买卖合同 PDF 重跑新版本报告
-   - 只验证不覆盖旧版，并确认客户版清洁度与泛化限制成立
+当前待实施项：
+
+**P0（立即执行）：**
+1. **P0-3：BN 术语去学术化**
+   - 在 `_build_combined_prompt()` 第四章指令中增加术语替换约束
+   - 更新对应测试断言
+2. **P0-1：签署底线数字去硬编码**
+   - 对 `signing_forbidden`/`signing_acceptable` 文本应用净化
+   - 新增回归测试
+3. **P0-2：攻击预判去模板化**
+   - LLM₁/LLM₂ prompt 增加合同特有引用约束
+   - pre-render check 增加跨版本模板化检测
+
+**P1（中期规划）：**
+4. **P1-1：合同类型感知差异化分析**
+5. **P1-2：策略区-Dossier 数字一致性校验**
+6. **P1-3：缺失条款优先级分层**
+
+**P2（低优先级）：**
+7. **P2-1：立场稳定性自动检测**
+8. **P2-2：Redline 条款对照表**
+9. **P2-3：评价 prompt 标准化**
 
 ---
 

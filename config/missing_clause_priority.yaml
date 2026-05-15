@@ -1,0 +1,72 @@
+# Missing clause priority classification.
+# When LLM₁ identifies missing clauses, they are classified into P0/P1/P2 tiers
+# based on keyword matching against the clause type names.
+#
+# P0: Must be added before signing (deal-breaker)
+# P1: Strongly recommended (high value, low resistance)
+# P2: Negotiable (nice to have, can be traded)
+
+P0:
+  keywords:
+    - "知识产权"
+    - "intellectual_property"
+    - "专利"
+    - "商标"
+    - "著作权"
+    - "保密"
+    - "confidentiality"
+    - "数据保护"
+    - "data_protection"
+    - "隐私"
+    - "privacy"
+    - "适用法律"
+    - "governing_law"
+    - "管辖"
+    - "送达地址"
+    - "notice"
+  description: "签署底线——必须在签署前补充"
+
+P1:
+  keywords:
+    - "不可抗力"
+    - "force_majeure"
+    - "保险"
+    - "insurance"
+    - "终止"
+    - "termination"
+    - "解除"
+    - "质保"
+    - "warranty"
+    - "验收"
+    - "交付"
+    - "付款"
+    - "违约"
+    - "damages"
+    - "责任"
+    - "liability"
+    - "争议解决"
+    - "dispute"
+    - "审计"
+    - "audit"
+  description: "强烈建议——在谈判中积极争取补充"
+
+P2:
+  keywords:
+    - "不招揽"
+    - "non_solicitation"
+    - "竞业"
+    - "non_compete"
+    - "排他"
+    - "exclusivity"
+    - "最惠国"
+    - "most_favored"
+    - "控制权变更"
+    - "change_of_control"
+    - "转让"
+    - "assignment"
+    - "培训"
+    - "training"
+    - "支持"
+    - "support"
+    - "SLA"
+  description: "可谈判——视对方接受程度决定是否加入"
