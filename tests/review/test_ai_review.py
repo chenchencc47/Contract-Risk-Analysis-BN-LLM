@@ -10,6 +10,7 @@ from contract_risk_analysis.review.adjudicate import adjudicate
 from contract_risk_analysis.review.ai_review import (
     AIReviewSettings,
     _completion_to_payload,
+    _free_review_prompt,
     _parse_free_review_payload,
     _parse_review_result_payload,
     free_review_contract_text,
@@ -257,7 +258,7 @@ def test_adjudicate_assigns_structured_chip_from_party_rule() -> None:
     assert chip.reason == (
         "无责任上限对买方是核心优势。乙方违约时（如交付不合格产品），甲方可追索全部损失，无上限封顶。"
         "这是谈判中的超级筹码——对方必然恐惧于此——绝不主动提出修改。如对方要求增加责任上限，"
-        "只能作为换取预付款大幅降低（至20%）的交换条件。"
+        "只能作为换取对方同步降低核心付款风险、补强担保措施或后移风险节点的交换条件。"
     )
 
 
@@ -333,3 +334,62 @@ def test_free_review_raises_after_second_invalid_json(monkeypatch: pytest.Monkey
         free_review_contract_text("合同文本", "c1")
 
     assert client.calls == 2
+
+
+def test_free_review_prompt_includes_numeric_discipline_rules() -> None:
+    prompt = _free_review_prompt(
+        "甲方于合同签订后10日内支付80%预付款。",
+        "sales-001",
+        None,
+        "buyer",
+    )
+
+    assert "7. **数字纪律**：所有百分比、金额、天数都必须能直接追溯到合同原文。" in prompt
+    assert "只有当合同原文明确出现合同总价、价税合计或其他可作为总额基准的金额时，才允许把百分比换算成金额" in prompt
+    assert "若总价未明确，只能保留百分比/天数，不得自行写出“约X元”“预计损失X元”“每下降10%=X元”等金额化表述。" in prompt
+    assert "合同总价未明确，暂不进行金额测算" in prompt
+    assert "数字只能来自合同原文；不得为了增强说服力补写无来源金额、比例或天数" in prompt
+
+
+
+def test_free_review_prompt_requires_dual_sided_analysis_for_deemed_delivery_clause() -> None:
+    prompt = _free_review_prompt(
+        "甲方经初验签字后视为乙方已交付，且外观验收不免除内在质量责任。",
+        "sales-005",
+        None,
+        "buyer",
+    )
+
+    assert "对‘视为交付/签字即交付/逾期未提异议视为合格’类条款，必须同时判断" in prompt
+    assert "是否提前触发交付完成或风险转移解释" in prompt
+    assert "合同中是否仍保留质量责任、拒收、退换货或终验保护" in prompt
+
+
+def test_free_review_prompt_includes_legal_basis_and_payment_hierarchy_rules() -> None:
+    prompt = _free_review_prompt(
+        "甲方于合同签订后10日内支付80%预付款，乙方在支付尾款前提交质保金。",
+        "sales-006",
+        None,
+        "buyer",
+    )
+
+    assert "**法律依据纪律**：只有当法条与该风险点直接匹配时，才填写 legal_basis" in prompt
+    assert "禁止为了显得专业而机械套用法条" in prompt
+    assert "禁止机械套用与风险点不直接对应的定金罚则或其他法条" in prompt
+    assert "应优先识别为一个主风险（付款担保结构失衡/资金结构倒挂）" in prompt
+    assert "再将质保不足写成补充性子风险" in prompt
+    assert "己方只能在获得对应保护条件或其他关键让步时，才做有限退让" in prompt
+
+
+def test_free_review_prompt_includes_generalization_guardrails() -> None:
+    prompt = _free_review_prompt(
+        "甲方于合同签订后10日内支付80%预付款。",
+        "sales-007",
+        None,
+        "buyer",
+    )
+
+    assert "**泛化约束**" in prompt
+    assert "禁止照搬其他报告中的固定比例、固定天数、固定金额、固定地名" in prompt
+    assert "只能输出适用于当前合同文本的结构性判断" in prompt
+    assert "不得把外部评价结论当作标准答案回写进本次审查" in prompt

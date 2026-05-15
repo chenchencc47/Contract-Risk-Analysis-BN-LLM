@@ -2,9 +2,11 @@ from contract_risk_analysis.domain.free_review_schema import (
     DossierRiskItem,
     FreeReviewOutput,
     NegotiationChip,
+    QuantitativeContext,
     RiskSegment,
 )
 from contract_risk_analysis.review.report_writer import (
+    _build_combined_prompt,
     _build_dossier,
     _fmt_dossier_section,
     _fmt_llm_analysis,
@@ -173,3 +175,207 @@ def test_defensive_chip_consistency_uses_chip_type_field() -> None:
 
     assert len(dossier.manual_review_items) == 1
     assert any("筹码分类为「底线筹码」" in msg for msg in dossier.internal_conflicts)
+
+
+def test_build_dossier_preserves_quantitative_context() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    quantitative_context = QuantitativeContext(
+        contract_amount=15_350_000,
+        amount_source_text="合同总价为人民币1535万元",
+        quantification_allowed=True,
+        exchange_rate_hints=["每降低10个百分点≈人民币1,535,000元"],
+    )
+
+    dossier = _build_dossier(
+        free_output,
+        None,
+        "buyer",
+        quantitative_context=quantitative_context,
+    )
+
+    assert dossier.quantitative_context is not None
+    assert dossier.quantitative_context.contract_amount == 15_350_000
+    assert dossier.quantitative_context.exchange_rate_hints == [
+        "每降低10个百分点≈人民币1,535,000元"
+    ]
+
+
+def test_dossier_section_renders_quantitative_context() -> None:
+    quantitative_context = QuantitativeContext(
+        contract_amount=15_350_000,
+        amount_source_text="合同总价为人民币1535万元",
+        quantification_allowed=True,
+        exchange_rate_hints=["每降低10个百分点≈人民币1,535,000元"],
+    )
+    dossier_text = _fmt_dossier_section(
+        type("StubDossier", (), {
+            "contract_id": "test-contract",
+            "review_party": "buyer",
+            "risk_items": [],
+            "favorable_terms": [],
+            "counterfactuals": [],
+            "manual_review_items": [],
+            "internal_conflicts": [],
+            "overall_assessment": "overall",
+            "bn_annotations": [],
+            "joint_risks": [],
+            "signing_forbidden": [],
+            "signing_acceptable": [],
+            "negotiation_bottom_lines": [],
+            "strengths": [],
+            "missing_clauses": [],
+            "quantitative_context": quantitative_context,
+        })()
+    )
+
+    assert "### 定量锚点（系统确定性抽取——第三/四/五章涉及金额时必须遵守）" in dossier_text
+    assert "- 合同总价：人民币15,350,000元（来源：合同总价为人民币1535万元）" in dossier_text
+    assert "- 金额换算许可：是" in dossier_text
+    assert "每降低10个百分点≈人民币1,535,000元" in dossier_text
+
+
+def test_combined_prompt_forbids_amount_conversion_without_total_price() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    quantitative_context = QuantitativeContext(
+        contract_amount=None,
+        quantification_allowed=False,
+        warnings=["缺少合同总价，禁止把百分比换算成金额"],
+    )
+    dossier = _build_dossier(
+        free_output,
+        None,
+        "buyer",
+        quantitative_context=quantitative_context,
+    )
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "金额换算许可：否" in prompt
+    assert "缺少合同总价，禁止把百分比换算成金额" in prompt
+    assert "第三/四/五章只允许写百分比/天数，不得补写任何金额" in prompt
+    assert "合同总价未识别，暂不进行金额换算" in prompt
+
+
+
+def test_combined_prompt_keeps_internal_renderer_notes_out_of_customer_required_sections() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "## 渲染器备注（强制执行，不可跳过）" not in prompt
+    assert "客户版报告不得暴露内部编号、渲染器问责或系统自检过程" in prompt
+
+
+def test_combined_prompt_includes_report_17_consistency_repairs() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "每个攻击方向的小标题必须直接概括其后正文真正攻击的对象和诉求" in prompt
+    assert "禁止复用其他报告里的固定攻击标签" in prompt
+    assert "如果正文主要攻击管辖、责任上限、验收或付款结构，标题必须如实反映该对象" in prompt
+    assert "如果第六章对某付款/风险条款设置了“在缺少某项保护条件时不得超过X%/不得接受某节点”的签署底线" in prompt
+    assert "必须同步写明使该退让成立的保护前提" in prompt
+    assert "按本合同实际数字/节点填写" in prompt
+    assert "更低比例、更晚风险转移、更强担保或更明确标准" in prompt
+    assert "所有BN百分比都表示高风险概率改善幅度或比较结果" in prompt
+    assert "直接金钱估值、收益金额或可兑现对价" in prompt
+    assert "必须写成“主问题+补充子问题”的层次结构" in prompt
+
+
+def test_combined_prompt_includes_non_hardcoding_guardrails() -> None:
+    free_output = FreeReviewOutput(
+        contract_id="test-contract",
+        overall_assessment="overall",
+        risk_segments=[],
+        missing_clauses=[],
+        strengths=[],
+    )
+    dossier = _build_dossier(free_output, None, "buyer")
+
+    prompt = _build_combined_prompt(free_output, None, dossier, "buyer")
+
+    assert "禁止把某一份合同中的固定比例、固定金额、固定期限、固定城市或固定行业惯例写成通用答案" in prompt
+    assert "所有具体数字、期限、金额、地点、节点都只能按本合同实际数字/节点填写" in prompt
+    assert "不得照搬其他报告中的现成退让阶梯、三板斧标签或固定攻击标题" in prompt
+    assert "客户版不得出现 ISSUE-、渲染器备注、内部一致性警告、TODO、TBD" in prompt
+
+
+def test_consistency_checks_flag_external_eval_mentions_in_customer_text() -> None:
+    from contract_risk_analysis.domain.free_review_schema import ReportDossier
+    from contract_risk_analysis.review.report_writer import _run_pre_render_consistency_checks
+
+    dossier = ReportDossier(
+        contract_id="test",
+        review_party="buyer",
+        risk_items=[],
+        counterfactuals=[],
+        bn_annotations=[],
+        joint_risks=[],
+        bn_summary="",
+        overall_assessment="参考 DeepSeek 评价，本合同风险偏高。",
+        strengths=[],
+        missing_clauses=[],
+        signing_forbidden=[],
+        signing_acceptable=[],
+        negotiation_bottom_lines=[],
+        favorable_terms=[],
+        manual_review_items=[],
+        internal_conflicts=[],
+    )
+
+    violations = _run_pre_render_consistency_checks(dossier)
+    assert any("外部评价" in msg for msg in violations)
+
+
+def test_consistency_checks_flag_freeform_numeric_estimates() -> None:
+    from contract_risk_analysis.domain.free_review_schema import ReportDossier
+    from contract_risk_analysis.review.report_writer import _run_pre_render_consistency_checks
+
+    dossier = ReportDossier(
+        contract_id="test",
+        review_party="buyer",
+        risk_items=[],
+        counterfactuals=[],
+        bn_annotations=[],
+        joint_risks=[],
+        bn_summary="",
+        overall_assessment="追回预付款的诉讼成本约20-50万元，成功回收率低于60%。",
+        strengths=[],
+        missing_clauses=[],
+        signing_forbidden=[],
+        signing_acceptable=[],
+        negotiation_bottom_lines=[],
+        favorable_terms=[],
+        manual_review_items=[],
+        internal_conflicts=[],
+    )
+
+    violations = _run_pre_render_consistency_checks(dossier)
+    assert any("无来源数字" in msg for msg in violations)

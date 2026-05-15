@@ -371,9 +371,9 @@ def _detect_payment_security_inversion(
             canonical_type="payment_security_structure",
             counterparty_impact="buyer_unfavorable",
             recommendation=(
-                "优先要求：(1) 降低预付款比例至30%以下并绑定履约保函；"
-                "(2) 质保金/保证金提交节点提前至预付款支付前或同期；"
-                "(3) 如对方坚持高预付款，要求等额银行保函/履约保函覆盖预付款敞口"
+                "优先要求：(1) 显著降低前置付款比例或将付款拆分至与交付/验收节点挂钩；"
+                "(2) 将质保金/保证金提交节点提前至前置付款前或同期；"
+                "(3) 如对方坚持高额前置付款，要求提供与该付款风险相匹配的有效担保或其他等价保护措施覆盖资金敞口"
             ),
             suggested_bn_nodes=["payment_structure", "financial_exposure"],
             priority_rank=1,

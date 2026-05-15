@@ -509,6 +509,9 @@ class TestBnInterpretationGuardrails:
         assert "不是主动修改建议" in takeaway, (
             f"Defensive chip takeaway must warn against proactive modification, got: {takeaway}"
         )
+        assert "不是金钱估值" in takeaway, (
+            f"Defensive chip takeaway must clarify BN percentages are not money valuation, got: {takeaway}"
+        )
 
     def test_counterfactual_takeaway_manual_review(self):
         """_counterfactual_takeaway with manual_review_note must flag for human review."""
@@ -540,6 +543,9 @@ class TestBnInterpretationGuardrails:
         takeaway = _counterfactual_takeaway(cf, "buyer")
         assert "人工复核" in takeaway, (
             f"Manual review takeaway must flag for human review, got: {takeaway}"
+        )
+        assert "高风险概率改善幅度约10个百分点" in takeaway, (
+            f"Manual review takeaway must describe BN delta as probability improvement, got: {takeaway}"
         )
 
     def test_dossier_section_includes_report_usage_column(self):
@@ -873,6 +879,138 @@ class TestPreRenderConsistencyChecks:
         violations = _run_pre_render_consistency_checks(dossier)
         assert any("20-50万" in v or "60%" in v for v in violations)
 
+    def test_amount_claim_without_total_price_detected(self):
+        """Money claims should be blocked when dossier lacks total-price support."""
+        from contract_risk_analysis.domain.free_review_schema import QuantitativeContext, ReportDossier
+        from contract_risk_analysis.review.report_writer import (
+            _run_pre_render_consistency_checks,
+        )
+
+        dossier = ReportDossier(
+            contract_id="test",
+            review_party="buyer",
+            risk_items=[],
+            counterfactuals=[],
+            bn_annotations=[],
+            joint_risks=[],
+            bn_summary="",
+            overall_assessment="若对方违约，预计我方将承担50万元额外损失。",
+            strengths=[],
+            missing_clauses=[],
+            signing_forbidden=[],
+            signing_acceptable=[],
+            negotiation_bottom_lines=[],
+            favorable_terms=[],
+            quantitative_context=QuantitativeContext(
+                contract_amount=None,
+                quantification_allowed=False,
+                warnings=["缺少合同总价，禁止把百分比换算成金额"],
+            ),
+        )
+
+        violations = _run_pre_render_consistency_checks(dossier)
+        assert any("50万元" in v for v in violations)
+
+    def test_supported_quantitative_anchor_not_flagged(self):
+        """Amounts already present in dossier quantitative anchors should pass."""
+        from contract_risk_analysis.domain.free_review_schema import QuantitativeAnchor, QuantitativeContext, ReportDossier
+        from contract_risk_analysis.review.report_writer import (
+            _run_pre_render_consistency_checks,
+        )
+
+        dossier = ReportDossier(
+            contract_id="test",
+            review_party="buyer",
+            risk_items=[],
+            counterfactuals=[],
+            bn_annotations=[],
+            joint_risks=[],
+            bn_summary="",
+            overall_assessment="合同总价为人民币1535万元。",
+            strengths=["每降低10个百分点≈人民币1,535,000元，可作为付款结构谈判参考。"],
+            missing_clauses=[],
+            signing_forbidden=[],
+            signing_acceptable=[],
+            negotiation_bottom_lines=[],
+            favorable_terms=[],
+            quantitative_context=QuantitativeContext(
+                contract_amount=15_350_000,
+                amount_source_text="合同总价为人民币1535万元",
+                quantification_allowed=True,
+                payment_anchors=[
+                    QuantitativeAnchor(
+                        label="预付款比例过高",
+                        percentage=80,
+                        amount=12_280_000,
+                        source_text="甲方于合同签订后10日内支付合同金额的80%作为预付款。",
+                        formula="人民币15,350,000元 × 80%",
+                    )
+                ],
+                exchange_rate_hints=["每降低10个百分点≈人民币1,535,000元"],
+            ),
+        )
+
+        violations = _run_pre_render_consistency_checks(dossier)
+        assert len(violations) == 0, violations
+
+    def test_pre_render_consistency_checks_tolerate_non_string_visible_items(self):
+        """Manual-review structured items should not crash text checks."""
+        from contract_risk_analysis.domain.free_review_schema import ReportDossier
+        from contract_risk_analysis.review.report_writer import (
+            _run_pre_render_consistency_checks,
+        )
+
+        dossier = ReportDossier(
+            contract_id="test",
+            review_party="buyer",
+            risk_items=[],
+            counterfactuals=[],
+            bn_annotations=[],
+            joint_risks=[],
+            bn_summary="",
+            overall_assessment="总体判断正常。",
+            strengths=[],
+            missing_clauses=[],
+            signing_forbidden=[],
+            signing_acceptable=[],
+            negotiation_bottom_lines=[],
+            manual_review_items=[{"issue_id": "ISSUE-123", "reason": "需要人工复核"}],
+            internal_conflicts=[],
+            favorable_terms=[],
+        )
+
+        violations = _run_pre_render_consistency_checks(dossier)
+        assert isinstance(violations, list)
+
+    def test_pre_render_consistency_ignores_internal_ids_in_internal_fields(self):
+        from contract_risk_analysis.domain.free_review_schema import ReportDossier
+        from contract_risk_analysis.review.report_writer import (
+            _run_pre_render_consistency_checks,
+        )
+
+        dossier = ReportDossier(
+            contract_id="test",
+            review_party="buyer",
+            risk_items=[],
+            counterfactuals=[],
+            bn_annotations=[],
+            joint_risks=[],
+            bn_summary="",
+            overall_assessment="summary",
+            strengths=[],
+            missing_clauses=[],
+            signing_forbidden=[],
+            signing_acceptable=[],
+            negotiation_bottom_lines=[],
+            favorable_terms=[],
+            manual_review_items=["ISSUE-termination-abc123"],
+            internal_conflicts=["ISSUE-termination-abc123 条款存在内部冲突"],
+            quantitative_context=None,
+        )
+
+        violations = _run_pre_render_consistency_checks(dossier)
+        assert not any("客户版清洁度问题" in v for v in violations)
+
 
 # ═══════════════════════════════════════════════════════════════════
 # Test 10: Structural pattern detection — payment-security inversion (v2.14)
@@ -1100,6 +1238,101 @@ class TestPaymentSecurityInversion:
 # ═══════════════════════════════════════════════════════════════════
 
 
+def test_payment_security_structure_recommendation_stays_generic() -> None:
+    from contract_risk_analysis.domain.free_review_schema import FreeReviewOutput, RiskSegment
+    from contract_risk_analysis.review.adjudicate import adjudicate
+
+    free_output = FreeReviewOutput(
+        contract_id="generic-contract",
+        overall_assessment="overall",
+        risk_segments=[
+            RiskSegment(
+                clause_type="payment",
+                risk_title="预付款比例过高",
+                risk_description="签约后即支付高比例预付款。",
+                evidence_text="签约后5日内支付合同总价60%作为预付款。",
+                confidence=0.90,
+                severity="high",
+                canonical_type="payment_structure",
+            ),
+            RiskSegment(
+                clause_type="payment",
+                risk_title="质保金提交过晚",
+                risk_description="保证金在尾款前才提交。",
+                evidence_text="乙方应于支付剩余款项前提交质量保证金。",
+                confidence=0.88,
+                severity="medium",
+                canonical_type="payment",
+            ),
+        ],
+        missing_clauses=[],
+        strengths=[],
+    )
+
+    result = adjudicate(free_output, review_party="buyer")
+    structural = next(
+        seg for seg in result.risk_segments if seg.canonical_type == "payment_security_structure"
+    )
+
+    assert "显著降低前置付款比例" in structural.recommendation
+    assert "覆盖资金敞口" in structural.recommendation
+    assert "30%" not in structural.recommendation
+    assert "10%" not in structural.recommendation
+
+
+def test_dossier_payment_guardrails_do_not_invent_fixed_thresholds() -> None:
+    from contract_risk_analysis.domain.free_review_schema import FreeReviewOutput, RiskSegment
+    from contract_risk_analysis.review.quantification import build_quantitative_context
+    from contract_risk_analysis.review.report_writer import _build_dossier
+
+    contract_text = (
+        "第九条第2款：甲方于本合同签订后10日内向乙方支付合同金额的80%作为预付款。"
+        "第九条第3款：支付剩余款项前，乙方应向甲方提供担保金额为合同金额5%的质量保证金。"
+    )
+    free_output = FreeReviewOutput(
+        contract_id="generic-contract",
+        overall_assessment="overall",
+        risk_segments=[
+            RiskSegment(
+                clause_type="payment",
+                risk_title="预付款比例过高且担保滞后",
+                risk_description="签约后即支付高比例预付款。",
+                evidence_text="甲方于本合同签订后10日内向乙方支付合同金额的80%作为预付款。支付剩余款项前，乙方应向甲方提供担保金额为合同金额5%的质量保证金。",
+                confidence=0.90,
+                severity="critical",
+                canonical_type="payment_security_structure",
+                recommendation="建议将预付款比例降至不超过30%，并将质量保证金比例提高至10%-15%。",
+                priority_rank=1,
+                counterparty_impact="buyer_unfavorable",
+            ),
+        ],
+        missing_clauses=[],
+        strengths=[],
+    )
+
+    quantitative_context = build_quantitative_context(contract_text, free_output)
+    dossier = _build_dossier(
+        free_output,
+        None,
+        "buyer",
+        quantitative_context=quantitative_context,
+    )
+
+    visible_guardrails = [
+        *dossier.signing_forbidden,
+        *dossier.signing_acceptable,
+        *dossier.negotiation_bottom_lines,
+        *(item.recommendation or "" for item in dossier.risk_items),
+    ]
+    merged = "\n".join(visible_guardrails)
+
+    assert "30%" not in merged
+    assert "10%" not in merged
+    assert "15%" not in merged
+    assert "与当前交易风险相匹配的更低比例" in merged
+    assert "与当前资金敞口相匹配的更充分担保水平" in merged
+
+
 class TestMultiFormatReports:
     """Verify deterministic report formats are generated correctly."""
 
@@ -1125,7 +1358,7 @@ class TestMultiFormatReports:
                     priority_rank=1,
                     evidence_text="甲方于本合同签订后10日内向乙方支付合同金额的80%作为预付款",
                     confidence=0.90,
-                    recommendation="降低预付款比例至30%以下，并增加等额履约保函",
+                    recommendation="显著降低前置付款比例，并补强与资金敞口相匹配的有效担保措施",
                     legal_basis="民法典第525条",
                     legal_direction="unfavorable",
                     negotiation_role="must_fix",
@@ -1158,7 +1391,7 @@ class TestMultiFormatReports:
                     base_high_risk=0.55,
                     counterfactual_high_risk=0.30,
                     delta_high_risk=0.25,
-                    description="将预付款降至30%并增加履约保函",
+                    description="降低前置付款比例并补强与资金敞口相匹配的担保措施",
                     dimension_deltas=[
                         DimensionDelta(
                             dimension_key="financial_exposure_risk",
@@ -1175,10 +1408,10 @@ class TestMultiFormatReports:
             bn_summary="BN校验完成，未发现重大矛盾。",
             overall_assessment="本合同存在重大付款安全风险，建议在签署前修改核心条款。",
             strengths=["甲方住所地法院管辖"],
-            missing_clauses=["未约定履约保函"],
-            signing_forbidden=["预付款比例过高：必须降至30%以下并增加等额履约保函"],
-            signing_acceptable=["质保金提交节点提前至预付款支付前"],
-            negotiation_bottom_lines=["预付款不得高于30%"],
+            missing_clauses=["未约定有效付款担保"],
+            signing_forbidden=["预付款比例过高：必须降低前置付款风险并补强与资金敞口相匹配的付款保护"],
+            signing_acceptable=["质保金提交节点提前至前置付款前或同期"],
+            negotiation_bottom_lines=["前置付款比例与担保强度必须匹配，且不得出现先付大额款项后收弱担保的结构"],
             favorable_terms=[],
         )
 
@@ -1193,7 +1426,7 @@ class TestMultiFormatReports:
         assert "ISSUE-001" in checklist
         assert "预付款比例过高" in checklist
         assert "必须修改" in checklist or "签署底线" in checklist
-        assert "降低预付款" in checklist
+        assert "前置付款" in checklist or "付款保护" in checklist
 
     def test_revision_checklist_includes_favorable_terms_section(self):
         """Revision checklist should have a section listing favorable terms NOT to modify."""
