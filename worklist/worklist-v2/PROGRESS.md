@@ -1,15 +1,39 @@
 # 实施进度记录（v2）
 
-> 最后更新：2026-05-18（阶段 E-3 完成：租赁合同专项红线规则）
+> 最后更新：2026-05-18（阶段 E 完成：BN自适应可信度分层 + 跨合同类型证据收口，全部验证通过）
 
 ---
 
 ## 当前状态
 
-- **当前主线**：阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口（进行中，E-1/E-2/E-3 已完成）
+- **当前主线**：阶段 E 已全部完成并验证通过。E-1/E-2/E-3 三项改动均经实际合同跑通验证。
 - **当前计划文件**：`docs/superpowers/specs/2026-05-18-bn-adaptive-confidence-design.md`
-- **当前进展**：E-1（bn_confidence）、E-2（路由修复）、E-3（租赁红线）均已完成。系统合同类型覆盖从 3 种扩展到 7 种，每种均有关联 BN 节点和专属红线规则。聚焦回归 67 passed。
-- **下次继续入口**：E-4（轻量合同报告框架自适应简化）或直接跑一轮完整验证
+- **下次继续入口**：E-4（轻量合同报告框架自适应简化）或 阶段 F（数据集扩充与 CPT 校准）
+
+---
+
+## 2026-05-18：阶段 E 验证总结
+
+### 验证矩阵
+
+| 验证目标 | 合同 | 结果 |
+|---------|------|:--:|
+| E-2 路由修复 | 技术开发合同 | ✅ source_code_escrow, license_grant, IP归属全部触发，26节点 |
+| E-1 bn_confidence=low | 服务合同 | ✅ joint_risks=2对, BN数字表格=0 |
+| E-3 无回归 | 聚焦测试 | ✅ 67 passed |
+
+### 阶段 E 完工总结
+
+| 编号 | 改动 | 涉及文件 | 效果 |
+|:--:|------|---------|------|
+| E-1 | bn_confidence 分层 | `contract_type_parameters.yaml`, `consistency_validator.py`, `report_writer.py`, `ai_review.py`, `review.py`, `dual.py` | 服务合同BN数字表格→0，报告诚实告知量化模型校准不足 |
+| E-2 | 路由链路修复 | `contract_type_routing.yaml` | 合同类型从3种→7种，技术开发合同触发源码托管/IP归属等11个专属节点 |
+| E-3 | 租赁红线规则 | `company_redlines.yaml` | 新增押金退还/腾房违约金/配合融资/装修权属/维修责任等6条hard rules + 4条hints |
+| — | 新增租赁数据集 | `dataset/ALeaseBert/` | 租赁合同BERT标注数据集，可后续用于CPT校准 |
+
+### 下次继续入口
+
+→ E-4（轻量合同报告框架自适应）或 阶段 F（用 ALeaseBert 数据集跑租赁合同 CPT 校准，将 bn_confidence 翻为 high）
 
 ---
 
