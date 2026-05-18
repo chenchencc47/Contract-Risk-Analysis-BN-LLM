@@ -1,15 +1,41 @@
 # 实施进度记录（v2）
 
-> 最后更新：2026-05-18（阶段 E-1 完成：BN自适应可信度分层 + 维度对配置化）
+> 最后更新：2026-05-18（阶段 E-2 完成：contract_type_routing 链路排查 + 四种合同类型路由补充）
 
 ---
 
 ## 当前状态
 
-- **当前主线**：阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口（进行中，E-1 已完成）
+- **当前主线**：阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口（进行中，E-1/E-2 已完成）
 - **当前计划文件**：`docs/superpowers/specs/2026-05-18-bn-adaptive-confidence-design.md`
-- **当前进展**：E-1 全部 7 个子任务完成。bn_confidence 分层机制上线，维度对从代码移入配置，聚焦回归 67 passed。报告在不同合同类型下会自动调整 BN 数据展示深度。
-- **下次继续入口**：E-2（contract_type_routing 链路排查 — 源码托管/SLA 等节点未触发）
+- **当前进展**：E-1（bn_confidence 分层）和 E-2（路由链路修复）均已完成。技术开发合同现在会触发源码托管/许可证/IP归属等节点，服务合同会触发终止权/保密/竞业等节点。聚焦回归 67 passed。
+- **下次继续入口**：E-3（`company_redlines.yaml` 补充租赁合同专项红线规则）
+
+---
+
+## 2026-05-18：阶段 E-2 — contract_type_routing 链路排查 + 四种合同类型路由补充（已完成）
+
+### 根因
+
+`contract_type_routing.yaml` 的 `contract_types` 段原来只有销售/采购/煤炭三种类型。技术开发合同和服务合同没有匹配入口，导致 LLM₁ 的系统性审查清单中不会出现 `cuad_source_code_escrow`、`cuad_license_grant`、`cuad_ip_ownership_assignment` 等节点。
+
+另外 `fallback.low_confidence_threshold = 0.6` 过高——技术开发合同 13 个关键词需匹配 8 个才过线，实际合理匹配（如 7/13=53.8%）被拒绝。
+
+### 修复
+
+| # | 事项 | 状态 |
+|---|------|:--:|
+| 新增技术开发合同路由 (11 节点: source_code_escrow, license_grant, IP ownership 等) | ✅ |
+| 新增服务合同路由 (9 节点: termination_for_convenience, confidentiality, non_solicit 等) | ✅ |
+| 新增租赁合同路由 (8 节点: risk_transfer_point, warranty, insurance 等) | ✅ |
+| 新增保密协议路由 (8 节点: confidentiality, non_compete, anti_assignment 等) | ✅ |
+| `low_confidence_threshold` 0.6 → 0.25 | ✅ |
+| 修复 YAML 注释中全角冒号导致的解析错误 | ✅ |
+| 验证：五种测试文本均正确匹配并加载对应节点 | ✅ |
+
+### 下次继续入口
+
+→ E-3：company_redlines.yaml 补充租赁合同专项红线规则
 
 ---
 
