@@ -100,3 +100,67 @@
     - id: supply_guarantee_reasoning
       label: 供货保障条款需含违约救济
       description: 供货保障条款不能仅写"尽力供货"，需含断供时的替代采购权利和差价补偿
+
+租赁合同:
+  hard_rules:
+    - id: deposit_return_timeline
+      label: 押金/履约保证金退还须有明确时限
+      description: >
+        押金或履约保证金必须在租赁期满腾房后明确时限内（通常不超过30日）退还，
+        退还条件须客观可验证（如无欠租、无损坏），不得以"协商一致"等主观标准为由无限期扣留
+      severity: 企业红线
+
+    - id: holdover_penalty_ceiling
+      label: 逾期腾房违约金须有合理倍数和总额上限
+      description: >
+        逾期腾房的日罚金不得超过日租金的2-3倍，且必须设置总额上限（如不超过一个月租金）。
+        无上限的"日租金5倍+连带第三方损失"条款可能被认定为显失公平，
+        但更应在签署前修正，而非依赖诉讼调减。
+      severity: 企业红线
+
+    - id: cooperation_duty_must_not_trigger_immediate_termination
+      label: 配合融资/办证照义务不得触发立即解约权
+      description: >
+        承租方配合出租方融资、办理产权证照等义务的违约后果应为实际损失赔偿，
+        不得赋予出租方立即解约权或没收全部押金的权利。
+        此类配合义务与租赁核心义务（付租、维护）性质不同，违约后果应对等。
+      severity: 企业红线
+
+    - id: rent_prepayment_must_be_proportional
+      label: 年付/半年付租金须有交付条件或担保对冲
+      description: >
+        租赁合同要求签订后短期内一次性支付全年或半年租金的，
+        须与房屋交付验收挂钩，或由出租方提供等额担保（如银行保函）。
+        大型商业租赁中全额预付无担保属于结构性资金风险，不得接受。
+      severity: 企业红线
+
+    - id: improvements_ownership_clarity
+      label: 装修及添附物权属须明确
+      description: >
+        承租方投入的装修、改造、设备安装等形成的添附物，其权属和处置方式须在合同中明确。
+        不得接受"一切装修无偿归出租方所有"且承租方须"恢复原状"的双重义务条款
+      severity: 高
+
+    - id: maintenance_responsibility_allocation
+      label: 维修责任须按主体结构/日常使用清晰划分
+      description: >
+        房屋主体结构、公共区域、核心设备（电梯/消防/供水供电）的维修责任应由出租方承担；
+        承租方仅承担日常使用范围内的维护。不得接受"一切维修由承租方负责"的兜底条款
+      severity: 高
+
+  reasoning_hints:
+    - id: rent_escalation_transparency
+      label: 租金调涨机制须透明可预期
+      description: 长期租赁合同中的租金递增条款应基于客观指数（如CPI）或固定比例，不得赋予出租方单方任意调价权
+
+    - id: sublease_and_assignment_rights
+      label: 转租与合同转让权须合理
+      description: 承租方的转租权和合同转让权不应被完全禁止。合理的安排是"经出租方书面同意（不得无理拒绝）"
+
+    - id: utility_fee_adjustment
+      label: 水电费等公用事业收费应按实际用量结算
+      description: 不得接受固定偏高单价且无调整机制的水电费条款，应约定按政府定价或市场标准实报实销
+
+    - id: early_termination_compensation_symmetry
+      label: 提前解约补偿应对等
+      description: 出租方提前解约的补偿（如退还剩余租金+押金）应与承租方提前解约的后果（如没收押金）基本对等，不得一方零成本解约、另一方没收全部押金
