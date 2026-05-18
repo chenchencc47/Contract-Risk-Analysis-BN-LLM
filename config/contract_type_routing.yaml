@@ -70,8 +70,8 @@ contract_types:
       - cuad_termination_for_convenience
       - cuad_notice_period_to_terminate
       - confidentiality_nli
-      - cuad_non_solicit_of_customers
-      - cuad_non_solicit_of_employees
+      - cuad_no_solicit_of_customers
+      - cuad_no_solicit_of_employees
       - cuad_non_compete
       - cuad_post_termination_services
       - cuad_audit_rights
@@ -96,8 +96,8 @@ contract_types:
     nodes:
       - confidentiality_nli
       - confidentiality_scope_reasonableness
-      - cuad_non_solicit_of_customers
-      - cuad_non_solicit_of_employees
+      - cuad_no_solicit_of_customers
+      - cuad_no_solicit_of_employees
       - cuad_non_compete
       - cuad_anti_assignment
       - cuad_non_disparagement
