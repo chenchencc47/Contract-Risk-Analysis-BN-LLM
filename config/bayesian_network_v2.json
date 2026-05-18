@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "description": "Bayesian Network v2 with 55 nodes: 30 CUAD contract_fact → 5 aggregate → 5 risk_dimension → decision",
+  "description": "Bayesian Network v2 with 90 nodes: 30 CUAD contract_fact → 5 aggregate → 5 risk_dimension → decision",
   "edges": [
     [
       "termination_clause",
@@ -1883,6 +1883,566 @@
       },
       "cpt_source": "expert_estimated",
       "description": "运输途中的水分蒸发/损耗由谁承担（煤炭运输损耗通常3-5%）"
+    },
+    "cuad_anti_corruption": {
+      "layer": "contract_fact",
+      "label": "反腐败/商业贿赂",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_signing_authority": {
+      "layer": "contract_fact",
+      "label": "签约授权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_compliance_with_laws": {
+      "layer": "contract_fact",
+      "label": "合规条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_cooperation": {
+      "layer": "contract_fact",
+      "label": "合作义务",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_disclosure_schedule": {
+      "layer": "contract_fact",
+      "label": "信息披露/附件",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_further_assurances": {
+      "layer": "contract_fact",
+      "label": "进一步保证",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_contract_term": {
+      "layer": "contract_fact",
+      "label": "合同期限",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_notice": {
+      "layer": "contract_fact",
+      "label": "通知条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_publicity": {
+      "layer": "contract_fact",
+      "label": "公开宣传/新闻发布",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_sanctions": {
+      "layer": "contract_fact",
+      "label": "制裁/出口管制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_taxes": {
+      "layer": "contract_fact",
+      "label": "税务条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_binding_effect": {
+      "layer": "legal_semantics",
+      "label": "合同约束力",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_contra_proferentem": {
+      "layer": "legal_semantics",
+      "label": "合同解释规则(不利解释原则)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_enforceability": {
+      "layer": "legal_semantics",
+      "label": "可执行性",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_interest_on_late_payment": {
+      "layer": "legal_semantics",
+      "label": "逾期利息",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_interpretation_rules": {
+      "layer": "legal_semantics",
+      "label": "合同解释规则",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_no_waiver": {
+      "layer": "legal_semantics",
+      "label": "不放弃权利",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_powers": {
+      "layer": "legal_semantics",
+      "label": "授权/权限",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_representations_warranties": {
+      "layer": "legal_semantics",
+      "label": "陈述与保证",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_severability": {
+      "layer": "legal_semantics",
+      "label": "可分割性",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_survival": {
+      "layer": "legal_semantics",
+      "label": "条款存续",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_regulatory_approvals": {
+      "layer": "contract_fact",
+      "label": "政府许可/审批",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_books_records": {
+      "layer": "contract_fact",
+      "label": "账簿/记录查阅",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_brokers": {
+      "layer": "contract_fact",
+      "label": "中介/居间",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_third_party_consents": {
+      "layer": "contract_fact",
+      "label": "第三方同意",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_qualifications": {
+      "layer": "contract_fact",
+      "label": "资格/资质",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_record_keeping": {
+      "layer": "contract_fact",
+      "label": "记录保存",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_solvency": {
+      "layer": "contract_fact",
+      "label": "偿付能力声明",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_tax_withholding": {
+      "layer": "contract_fact",
+      "label": "税款代扣",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_use_of_proceeds": {
+      "layer": "contract_fact",
+      "label": "资金用途限制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_forfeiture": {
+      "layer": "legal_semantics",
+      "label": "没收/丧失权利",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_liens": {
+      "layer": "legal_semantics",
+      "label": "留置权",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_affiliate_transactions": {
+      "layer": "legal_semantics",
+      "label": "关联交易",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_vesting": {
+      "layer": "legal_semantics",
+      "label": "权利归属/成熟",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_withholding": {
+      "layer": "legal_semantics",
+      "label": "代扣代缴",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
     }
   },
   "thresholds": {

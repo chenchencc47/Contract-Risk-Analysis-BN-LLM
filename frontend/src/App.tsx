@@ -22,12 +22,12 @@ function App() {
   const { status, data, error, submitReview, submitDualReview, dualData, reset } = useReview();
   const [page, setPage] = useState<Page>({ name: "input" });
 
-  const handleSubmit = (text: string, id: string, party: "buyer" | "seller", dual: boolean) => {
+  const handleSubmit = (text: string, id: string, party: "buyer" | "seller", dual: boolean, partyRoleLabel?: string) => {
     if (dual) {
       submitDualReview(text, id);
       setPage({ name: "report" });
     } else {
-      submitReview(text, id, party);
+      submitReview(text, id, party, dual, partyRoleLabel);
       setPage({ name: "report" });
     }
   };

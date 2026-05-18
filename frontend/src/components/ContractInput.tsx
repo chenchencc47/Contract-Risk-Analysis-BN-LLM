@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 interface Props {
-  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean) => void;
+  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean, partyRoleLabel?: string) => void;
   isLoading: boolean;
 }
 
@@ -45,6 +45,27 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
   const [uploading, setUploading] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
 
+  // Party role auto-detection
+  const [partyRoles, setPartyRoles] = useState<{ jia_role: string | null; yi_role: string | null; jia_name: string | null; yi_name: string | null } | null>(null);
+
+  const detectRoles = useCallback(async (text: string) => {
+    try {
+      const res = await fetch("/api/detect-party-roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contract_text: text.slice(0, 3000) }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.jia_role || data.yi_role) {
+          setPartyRoles(data);
+          return;
+        }
+      }
+    } catch {}
+    setPartyRoles(null);
+  }, []);
+
   const handleFile = useCallback(async (f: File) => {
     const suffix = f.name.split(".").pop()?.toLowerCase() || "";
     // Text files: read locally
@@ -77,6 +98,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
         const data = await res.json();
         setFile({ name: f.name, content: data.text });
         setId(f.name.replace(/\.(pdf|docx)$/i, "") || "contract-001");
+        detectRoles(data.text);
       } catch {
         alert("文件上传失败，请检查网络连接");
       } finally {
@@ -100,13 +122,29 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
   };
 
   const handleSubmit = () => {
-    if (file) {
-      onSubmit(file.content, id.trim() || "contract-001", reviewParty, dualMode);
-    } else {
-      const finalText = text.trim() || SAMPLE;
-      onSubmit(finalText, id.trim() || "contract-001", reviewParty, dualMode);
+    const activeText = file ? file.content : (text.trim() || SAMPLE);
+    let roleLabel: string | undefined;
+    if (partyRoles && !dualMode) {
+      if (reviewParty === "buyer") {
+        roleLabel = partyRoles.jia_role || partyRoles.jia_name || undefined;
+      } else {
+        roleLabel = partyRoles.yi_role || partyRoles.yi_name || undefined;
+      }
     }
+    onSubmit(activeText, id.trim() || "contract-001", reviewParty, dualMode, roleLabel);
   };
+
+  // Build party button labels
+  const jiaLabel = partyRoles?.jia_role
+    ? `甲方（${partyRoles.jia_role}）`
+    : partyRoles?.jia_name
+      ? `甲方（${partyRoles.jia_name.slice(0, 8)}）`
+      : "甲方";
+  const yiLabel = partyRoles?.yi_role
+    ? `乙方（${partyRoles.yi_role}）`
+    : partyRoles?.yi_name
+      ? `乙方（${partyRoles.yi_name.slice(0, 8)}）`
+      : "乙方";
 
   return (
     <section className="max-w-3xl mx-auto px-6 pt-12 pb-8 animate-fade-in">
@@ -239,7 +277,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
                 : "text-[#9B8E83] hover:text-[#6B5E53]"
             }`}
           >
-            甲方（买方）
+            {jiaLabel}
           </button>
           <button
             onClick={() => { setReviewParty("seller"); setDualMode(false); }}
@@ -249,7 +287,7 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
                 : "text-[#9B8E83] hover:text-[#6B5E53]"
             }`}
           >
-            乙方（卖方）
+            {yiLabel}
           </button>
           <button
             onClick={() => setDualMode(true)}

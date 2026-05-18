@@ -76,6 +76,8 @@ body {
 }
 
 .report-document {
+  width: 100%;
+  min-width: 0;
   color: #1D2129;
   background:
     linear-gradient(180deg, rgba(250, 247, 243, 0.88) 0%, rgba(255, 255, 255, 1) 220px),

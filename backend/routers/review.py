@@ -130,6 +130,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     contract_text = str(body.get("contract_text", "")).strip()
     contract_id = str(body.get("contract_id", "")).strip() or "unnamed"
     review_party = str(body.get("review_party", "buyer"))
+    party_role_label = str(body.get("party_role_label", "")) or None
     strategy_mode = bool(body.get("strategy_mode", False))
     include_debug = bool(body.get("include_debug"))
 
@@ -236,7 +237,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     try:
         polished = generate_combined_report(
             free_output, consistency, review_party, strategy_mode, dossier=dossier,
-            bn_confidence=bn_confidence,
+            bn_confidence=bn_confidence, party_role_label=party_role_label,
         )
     except Exception as exc:
         logger.error("LLM₂ report generation failed: %s\n%s", exc, _tb.format_exc())

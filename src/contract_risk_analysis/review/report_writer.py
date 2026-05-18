@@ -600,7 +600,7 @@ def generate_executive_brief(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))
+                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments), party_role_label)
                 + "\n你现在的任务是撰写管理层摘要——简明、决策导向、使用商业语言。",
             },
             {"role": "user", "content": prompt},
@@ -630,7 +630,7 @@ def generate_negotiation_playbook(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))
+                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments), party_role_label)
                 + "\n你现在的任务是撰写谈判作战手册——具体、量化、可直接上谈判桌。",
             },
             {"role": "user", "content": prompt},
@@ -1033,8 +1033,12 @@ def polish_report(report: RiskReport) -> PolishedReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "high", risk_count: int = 10) -> str:
-    party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
+def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "high", risk_count: int = 10, party_role_label: str | None = None) -> str:
+    # Build party label — use detected role if available, otherwise fall back to generic
+    if party_role_label:
+        party_label = f"贵司（{party_role_label}）" if review_party == "buyer" else f"贵司（{party_role_label}）"
+    else:
+        party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
 
     # BN confidence framing — adjusts how LLM₂ presents quantitative data
     _BN_FRAMING = {
@@ -1055,8 +1059,10 @@ def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "h
     }
     bn_framing = _BN_FRAMING.get(bn_confidence, _BN_FRAMING["high"])
 
-    # Lightweight mode: simple contracts don't need the full 8-chapter heavy framework
-    is_lightweight = risk_count <= 5 and bn_confidence != "high"
+    # Lightweight mode: only for genuinely simple contracts (very few risks).
+    # Originally designed for NDAs (2 risks) that don't need 8-chapter framework.
+    # BN confidence is NOT a factor — low BN calibration doesn't make a contract simple.
+    is_lightweight = risk_count <= 3
     _LIGHTWEIGHT_INSTRUCTION = (
         f"\n**报告复杂度适配（v2.16-E4）：**\n"
         f"本合同风险项较少（{risk_count}项）且BN量化模型校准有限，适用**精简报告模式**。\n"
@@ -1086,6 +1092,13 @@ def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "h
         f"6. 每一句修改建议请在攻击性结论外面包一层'为了合作顺利'的包装——"
         f"先承认对方的合理关切，再提出我方的修改要求。"
         f"报告的最终目标是促成一份对{party_label}有利且对方愿意签署的合同，而不是把对方骂走。\n"
+        f"\n"
+        f"**身份表述纪律（v2.16）：**\n"
+        f"系统将你保护的当事人标注为{party_label}。但在原合同中，{party_label}可能对应甲方也可能对应乙方。"
+        f"撰写报告时：① 报告抬头和立场声明使用{party_label}；② 正文中涉及原合同条款时，"
+        f"以原合同的甲方/乙方为准，不要自行改写——例如原合同写'甲方有权解除'，你应写'甲方（即贵司）有权解除'"
+        f"或'贵司作为乙方，有权要求甲方……'，具体取决于{party_label}在原合同中的实际身份；"
+        f"③ 如果无法确定{party_label}在原合同中是甲方还是乙方，统一用'贵司'代替'甲方'。\n"
         f"\n"
         f"你的角色定位：\n"
         f"系统已经生成了结构化的 Report Dossier（报告事实清单），包含：\n"
@@ -2461,6 +2474,7 @@ def generate_combined_report(
     strategy_mode: bool = False,
     dossier: ReportDossier | None = None,
     bn_confidence: str = "high",
+    party_role_label: str | None = None,
 ) -> PolishedReport:
     """Generate a combined report using LLM₂ as a CONSTRAINED RENDERER (Phase A).
 
@@ -2519,7 +2533,7 @@ def generate_combined_report(
     completion = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))},
+            {"role": "system", "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments), party_role_label)},
             {"role": "user", "content": prompt},
         ],
         max_tokens=24576,

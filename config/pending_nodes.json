@@ -25,5 +25,41 @@
     "contract_id": "",
     "last_seen": "2026-05-13T16:37:20.166615",
     "occurrence_count": 1
+  },
+  "property_rights": {
+    "clause_type": "property_rights",
+    "risk_title": "装修添附物权属处置双重义务",
+    "severity": "high",
+    "confidence": 0.85,
+    "contract_id": "",
+    "last_seen": "2026-05-18T17:07:38.838548",
+    "occurrence_count": 1
+  },
+  "utility_charges": {
+    "clause_type": "utility_charges",
+    "risk_title": "水电费单价固定且偏高",
+    "severity": "medium",
+    "confidence": 0.7,
+    "contract_id": "",
+    "last_seen": "2026-05-18T17:07:38.840548",
+    "occurrence_count": 1
+  },
+  "maintenance": {
+    "clause_type": "maintenance",
+    "risk_title": "维修期间未明确租金减免或使用影响补偿",
+    "severity": "medium",
+    "confidence": 0.8,
+    "contract_id": "",
+    "last_seen": "2026-05-18T17:07:38.842549",
+    "occurrence_count": 1
+  },
+  "sublease": {
+    "clause_type": "sublease",
+    "risk_title": "转租需甲方同意且未限制不合理拒绝",
+    "severity": "low",
+    "confidence": 0.7,
+    "contract_id": "",
+    "last_seen": "2026-05-18T17:07:38.844548",
+    "occurrence_count": 1
   }
 }

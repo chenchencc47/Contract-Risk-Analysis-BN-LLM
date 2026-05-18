@@ -1,14 +1,15 @@
-"""Miscellaneous endpoints: favicon, health, demo."""
+"""Miscellaneous endpoints: favicon, health, demo, party-role detection."""
 
 from __future__ import annotations
 
 import os
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
 from contract_risk_analysis.bn.config_validator import validate_v2_config
+from contract_risk_analysis.review.ai_review import detect_party_roles
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +107,19 @@ async def api_demo() -> dict:
         },
         "quality_gate": {"counterfactual_count": 2, "note": "demo-mode"},
     }
+
+
+@router.post("/api/detect-party-roles")
+async def api_detect_party_roles(request: Request) -> JSONResponse:
+    """Detect 甲方/乙方 roles from contract text.
+
+    POST body: {"contract_text": "..."}
+    Returns: {"jia_role": "出租方", "yi_role": "承租方", "jia_name": "XX公司", "yi_name": null}
+    """
+    body = await request.json()
+    contract_text = str(body.get("contract_text", "")).strip()
+    if not contract_text:
+        return JSONResponse({"error": "合同文本不能为空"}, status_code=400)
+
+    roles = detect_party_roles(contract_text)
+    return JSONResponse(roles)

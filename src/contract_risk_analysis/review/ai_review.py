@@ -103,6 +103,80 @@ def detect_bn_confidence(contract_text: str) -> str:
     return "medium"
 
 
+def detect_party_roles(contract_text: str) -> dict[str, str | None]:
+    """Extract 甲方/乙方 role labels from contract text.
+
+    Returns dict with keys 'jia_role', 'yi_role', 'jia_name', 'yi_name'.
+    Values are None if not detected.
+
+    Examples of what gets extracted:
+        "甲方（出租方）" → jia_role="出租方"
+        "乙方：XX公司（承租方）" → yi_role="承租方"
+        "甲方（买方）……乙方（卖方）" → jia_role="买方", yi_role="卖方"
+    """
+    import re
+
+    result: dict[str, str | None] = {
+        "jia_role": None, "yi_role": None,
+        "jia_name": None, "yi_name": None,
+    }
+
+    # ── Pattern 1: 甲方（角色）/ 乙方（角色）──
+    m = re.search(r'甲方[（(]([^）)]+)[）)]', contract_text)
+    if m:
+        role = m.group(1).strip()
+        # Filter out names (usually 2-3 chars without role keywords)
+        role_kw = ['出租', '承租', '买方', '卖方', '委托', '开发', '采购', '供货',
+                    '服务', '披露', '接收', '发包', '承包', '贷款', '借款', '担保',
+                    '许可', '转让', '出租方', '承租方']
+        if any(kw in role for kw in role_kw) or len(role) <= 2:
+            result["jia_role"] = role
+
+    m = re.search(r'乙方[（(]([^）)]+)[）)]', contract_text)
+    if m:
+        role = m.group(1).strip()
+        role_kw = ['出租', '承租', '买方', '卖方', '委托', '开发', '采购', '供货',
+                    '服务', '披露', '接收', '发包', '承包', '贷款', '借款', '担保',
+                    '许可', '转让', '出租方', '承租方']
+        if any(kw in role for kw in role_kw) or len(role) <= 2:
+            result["yi_role"] = role
+
+    # ── Pattern 2: 甲方：XX公司 / 乙方：XX公司 ──
+    if not result["jia_name"]:
+        m = re.search(r'甲方[：:]\s*([^\n]{2,40}?(?:公司|企业|单位|机构|研究所|中心|事务所))', contract_text)
+        if m:
+            result["jia_name"] = m.group(1).strip()
+
+    if not result["yi_name"]:
+        m = re.search(r'乙方[：:]\s*([^\n]{2,40}?(?:公司|企业|单位|机构|研究所|中心|事务所))', contract_text)
+        if m:
+            result["yi_name"] = m.group(1).strip()
+
+    # ── Pattern 3: Inline role description ──
+    if not result["jia_role"]:
+        m = re.search(r'甲方[（(]?(出租方|承租方|买方|卖方|委托方|开发方|发包方|承包方|采购方|供货方|服务方|贷款方|借款方|许可方|被许可方)?[）)]?', contract_text)
+        if m and m.group(1):
+            result["jia_role"] = m.group(1)
+
+    if not result["yi_role"]:
+        m = re.search(r'乙方[（(]?(出租方|承租方|买方|卖方|委托方|开发方|发包方|承包方|采购方|供货方|服务方|贷款方|借款方|许可方|被许可方)?[）)]?', contract_text)
+        if m and m.group(1):
+            result["yi_role"] = m.group(1)
+
+    # ── Pattern 4: Separate line role definition ──
+    if not result["jia_role"]:
+        m = re.search(r'甲方[：:].*?(出租方|承租方|买方|卖方|委托方)', contract_text)
+        if m:
+            result["jia_role"] = m.group(1)
+
+    if not result["yi_role"]:
+        m = re.search(r'乙方[：:].*?(出租方|承租方|买方|卖方|委托方)', contract_text)
+        if m:
+            result["yi_role"] = m.group(1)
+
+    return result
+
+
 def load_bn_dimension_pairs() -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
     """Load bn_dimension_pairs from contract_type_parameters.yaml.
 
@@ -636,25 +710,35 @@ def _free_review_prompt(
         "不得自行写出“约X元”“预计损失X元”“每下降10%=X元”等金额化表述。"
         "涉及金额换算时，必须在 risk_description、commercial_impact 或 recommendation 中写明换算依据；"
         "若无法换算，明确写“合同总价未明确，暂不进行金额测算”。"
-        "8. **法律依据纪律**：只有当法条与该风险点直接匹配时，才填写 legal_basis；如果只是类比、存疑或无法准确定位，请留空，禁止为了显得专业而机械套用法条。"
+        "8. **法律依据纪律（v2.16强化）**：审查到以下风险类型时，必须从速查表中匹配对应的法条填入 legal_basis 字段；如果速查表未覆盖但你能确定对应法条，也可填写；只有在完全不确定时才留空。禁止为了显得专业而机械套用法条。\n"
         "尤其对[预付款过高]、[履约担保不足]、[质保金提交过晚]等问题，禁止机械套用与风险点不直接对应的定金罚则或其他法条。\n"
-        "9. **泛化约束**：只能输出适用于当前合同文本的结构性判断，禁止照搬其他报告中的固定比例、固定天数、固定金额、固定地名、固定行业参数。"
+        "9. **合同法常用条文速查（v2.16-F3，基于中文法律QA统计）**：\n"
+        "以下为合同审查中最常引用的《民法典》条文，遇到对应风险类型时可参考——但仅在与当前合同条款直接相关时填写，禁止机械套用：\n"
+        "- **违约金过高/基数不当** → 第585条（违约金调减：约定的违约金过分高于造成的损失的，法院可应请求适当减少）\n"
+        "- **格式条款/不公平免责** → 第496条（格式条款提示说明义务）、第497条（格式条款无效情形：不合理免除或减轻责任、加重对方责任、限制对方主要权利）\n"
+        "- **合同解除权** → 第563条（法定解除权：不可抗力、预期违约、迟延履行经催告仍不履行、根本违约）\n"
+        "- **不安抗辩/预付款风险** → 第527条（不安抗辩权：有确切证据证明对方丧失履行能力的，可中止履行）\n"
+        "- **情势变更** → 第533条（合同基础条件发生无法预见的重大变化，继续履行显失公平的，可协商或请求变更/解除）\n"
+        "- **违约一般规定** → 第577条（违约责任：不履行或履行不符合约定的，应承担继续履行、赔偿损失等责任）\n"
+        "- **风险转移** → 第604条（标的物毁损灭失风险，交付前由出卖人承担，交付后由买受人承担）\n"
+        "以上条文仅供审查时参考，禁止在没有对应风险的合同条款中强行引用。\n"
+        "10. **泛化约束**：只能输出适用于当前合同文本的结构性判断，禁止照搬其他报告中的固定比例、固定天数、固定金额、固定地名、固定行业参数。"
         "如果需要给出具体比例、期限、金额或节点，必须来自当前合同文本、可追溯的量化提取结果，或明确标注为需人工复核的行业参数。\n"
-        "10. **外部评价隔离**：不得把外部评价结论当作标准答案回写进本次审查。即使后续存在网页评价或人工评价，它们也只能用于独立审查完成后的比对，不能反向决定当前风险识别结论。\n"
+        "11. **外部评价隔离**：不得把外部评价结论当作标准答案回写进本次审查。即使后续存在网页评价或人工评价，它们也只能用于独立审查完成后的比对，不能反向决定当前风险识别结论。\n"
         f"{chip_instruction}"
-        "11. **对手预判**：对每个高风险项，预测对方律师可能从哪些角度发起攻击："
+        "12. **对手预判**：对每个高风险项，预测对方律师可能从哪些角度发起攻击："
         "法律角度（如'显失公平'、'违反强制性规定'）、商业角度（如'行业惯例并非如此'、"
         "'影响合作意愿'）、策略角度（如'用次要条款换取对我方不利的修改'）。"
         "**攻击预判纪律（强制执行）：** 每个攻击向量的描述必须引用当前合同的至少一个具体条款号"
         "和至少一个本合同独有的百分比/金额/天数（如'80%预付款''第9条第2款''1,228万元'等），"
         "不得套用'三板斧''显失公平''行业惯例'等无差别攻击模板。"
         "结果填入 counterparty_attack_vector 字段。\n"
-        "12. **优先级排序**：对每个风险项按谈判紧迫性和严重性给出 1-5 级优先级"
+        "13. **优先级排序**：对每个风险项按谈判紧迫性和严重性给出 1-5 级优先级"
         "（填入 priority_rank 字段）："
         "1=签约底线（必须修改，否则不建议签署）；2=核心谈判目标（尽最大努力争取）；"
         "3=可交易项（可让步换取更高优先级目标）；"
         "4=低优先级（接受或仅做提示）；5=仅供参考（不影响谈判立场）。\n"
-        "13. **商业影响评估**：对每个风险项，在 commercial_impact 字段中评估其商业层面影响，"
+        "14. **商业影响评估**：对每个风险项，在 commercial_impact 字段中评估其商业层面影响，"
         f"包括对{party_label}的现金流压力、运营效率、合作关系、市场竞争力等。\n\n"
         "## 条款质量审查要点（请逐条对照审查，不得遗漏）\n"
         "1. **付款与担保的时间逻辑**：审查付款节点与担保措施的时间顺序——"
