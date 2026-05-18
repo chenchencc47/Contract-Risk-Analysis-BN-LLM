@@ -183,6 +183,58 @@ export interface ReviewState {
   error: string | null;
 }
 
+export interface ReportHistoryItem {
+  id: number;
+  contract_id: number;
+  report_version: number;
+  review_party: string;
+  overall_risk_level: string | null;
+  overall_p_high: number | null;
+  bn_counterfactual_count: number;
+  created_at: string;
+  contract_name: string;
+  contract_type: string;
+}
+
+export interface ReportHistoryResponse {
+  reports: ReportHistoryItem[];
+}
+
+export interface ReportDetailResponse {
+  error?: string;
+  id: number;
+  contract_id: number;
+  report_version: number;
+  review_party: string;
+  overall_risk_level: string | null;
+  overall_p_high: number | null;
+  summary_text: string | null;
+  report_content_md: string | null;
+  bn_counterfactual_count: number;
+  created_at: string;
+}
+
+export interface ReportDiffSummary {
+  risk_level: string;
+  counterfactuals: number;
+  created_at: string;
+}
+
+export interface ReportRiskChange {
+  name: string;
+  from: string;
+  to: string;
+}
+
+export interface ReportDiffResponse {
+  error?: string;
+  report_1?: ReportDiffSummary;
+  report_2?: ReportDiffSummary;
+  risk_changes?: ReportRiskChange[];
+  risks_added?: string[];
+  risks_removed?: string[];
+}
+
 // ── BN Sandbox types ──
 
 export interface BnNode {

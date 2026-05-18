@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Header } from "./components/Header";
 import { ContractInput } from "./components/ContractInput";
-import { RiskReport, enhanceReportHtml } from "./components/RiskReport";
+import { RiskReport } from "./components/RiskReport";
 import { SandboxPanel } from "./components/SandboxPanel";
 import { ReportHistory } from "./components/ReportHistory";
 import { RedlineManager } from "./components/RedlineManager";
+import { HistoryDetailPage } from "./components/history/HistoryDetailPage";
+import { HistoryDiffPage } from "./components/history/HistoryDiffPage";
 import { useReview } from "./hooks/useReview";
 
 type Page =
@@ -20,12 +22,12 @@ function App() {
   const { status, data, error, submitReview, submitDualReview, dualData, reset } = useReview();
   const [page, setPage] = useState<Page>({ name: "input" });
 
-  const handleSubmit = (text: string, id: string, party: "buyer" | "seller", dual: boolean, strategy: boolean) => {
+  const handleSubmit = (text: string, id: string, party: "buyer" | "seller", dual: boolean) => {
     if (dual) {
       submitDualReview(text, id);
       setPage({ name: "report" });
     } else {
-      submitReview(text, id, party, strategy);
+      submitReview(text, id, party);
       setPage({ name: "report" });
     }
   };
@@ -59,7 +61,7 @@ function App() {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
         <Header currentPage={page.name} onNavigate={navigate} />
-        <HistoryDetail
+        <HistoryDetailPage
           reportId={page.reportId}
           onBack={() => setPage({ name: "history" })}
         />
@@ -71,7 +73,7 @@ function App() {
     return (
       <div className="min-h-screen bg-[#FAF8F5]">
         <Header currentPage={page.name} onNavigate={navigate} />
-        <HistoryDiff
+        <HistoryDiffPage
           id1={page.id1}
           id2={page.id2}
           onBack={() => setPage({ name: "history" })}
@@ -219,7 +221,7 @@ function App() {
         </div>
       ) : (
         <ContractInput
-          onSubmit={(text, id, party, dual, strategy) => handleSubmit(text, id, party, dual, strategy)}
+          onSubmit={(text, id, party, dual) => handleSubmit(text, id, party, dual)}
           isLoading={status === "loading"}
         />
       )}
@@ -275,170 +277,6 @@ function LoadingScreen() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-// ── History Detail (report view from DB) ──
-
-function HistoryDetail({
-  reportId,
-  onBack,
-}: {
-  reportId: number;
-  onBack: () => void;
-}) {
-  const [html, setHtml] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/reports/${reportId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.report_content_md) {
-          setHtml(enhanceReportHtml(data.report_content_md));
-        } else {
-          setHtml("");
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [reportId]);
-
-  return (
-    <div className="max-w-6xl mx-auto px-6 pb-20 animate-fade-in">
-      <div className="pt-6 mb-4">
-        <button
-          onClick={onBack}
-          className="text-sm text-[#8B6F5C] hover:text-[#6B5243] font-medium
-                     transition-colors duration-200 flex items-center gap-1.5"
-        >
-          <span className="text-lg leading-none">←</span> 返回历史列表
-        </button>
-      </div>
-      {loading ? (
-        <div className="text-center text-[#9B8E83] py-12">加载中...</div>
-      ) : (
-        <article
-          className="report-document bg-white border border-[#E8E2DB] rounded-xl p-6 md:p-10 shadow-sm max-w-none
-                     prose prose-stone
-                     prose-headings:font-sans prose-headings:font-bold
-                     prose-p:text-[#1D2129] prose-p:leading-[1.6] prose-p:text-[14px]
-                     prose-li:text-[#1D2129] prose-li:text-[14px]
-                     prose-code:bg-[#F2F3F5] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-                     prose-code:text-xs prose-code:font-mono prose-a:text-[#165DFF] prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ── History Diff (side-by-side comparison) ──
-
-function HistoryDiff({
-  id1,
-  id2,
-  onBack,
-}: {
-  id1: number;
-  id2: number;
-  onBack: () => void;
-}) {
-  const [diff, setDiff] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useState(() => {
-    fetch(`/api/reports/diff?id1=${id1}&id2=${id2}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setDiff(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  });
-
-  return (
-    <div className="max-w-5xl mx-auto px-6 pb-20 animate-fade-in">
-      <div className="pt-6 mb-4">
-        <button
-          onClick={onBack}
-          className="text-sm text-[#8B6F5C] hover:text-[#6B5243] font-medium
-                     transition-colors duration-200 flex items-center gap-1.5"
-        >
-          <span className="text-lg leading-none">←</span> 返回历史列表
-        </button>
-        <h2 className="font-serif text-2xl text-[#2C2416] mt-2">报告对比</h2>
-      </div>
-
-      {loading ? (
-        <div className="text-center text-[#9B8E83] py-12">加载中...</div>
-      ) : diff?.error ? (
-        <div className="text-center text-red-600 py-12">{String(diff.error)}</div>
-      ) : (
-        <div className="space-y-6">
-          {/* Meta comparison */}
-          <div className="grid grid-cols-2 gap-4">
-            {(["report_1", "report_2"] as const).map((key) => {
-              const r = (diff as Record<string, Record<string, string|number>|undefined>)?.[key];
-              return (
-                <div key={key} className="bg-white border border-[#E8E2DB] rounded-xl p-4 shadow-sm">
-                  <h3 className="font-serif text-[#8B6F5C] text-sm mb-2">
-                    {key === "report_1" ? "报告 1" : "报告 2"}
-                  </h3>
-                  <div className="text-xs space-y-1 text-[#6B5E53]">
-                    <div>风险等级：<span className="font-semibold">{String(r?.risk_level ?? "-")}</span></div>
-                    <div>BN反事实：{String(r?.counterfactuals ?? "-")} 项</div>
-                    <div>时间：{String(r?.created_at ?? "-")}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Risk changes */}
-          {(() => {
-            const d = diff as Record<string, unknown>;
-            const changes = d.risk_changes as Array<Record<string,string>> | undefined;
-            if (!changes || changes.length === 0) return null;
-            return (
-            <div className="bg-white border border-[#E8E2DB] rounded-xl p-4 shadow-sm">
-              <h3 className="font-serif text-[#8B6F5C] text-sm mb-2">风险等级变化</h3>
-              <div className="space-y-1">
-                {changes.map((c, i) => (
-                  <div key={i} className="text-xs text-[#6B5E53] flex items-center gap-2">
-                    <span>{c.name}</span>
-                    <span className="text-red-600">{c.from}</span>
-                    <span>→</span>
-                    <span className="text-green-600">{c.to}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            );
-          })()}
-
-          {(() => {
-            const d = diff as Record<string, unknown>;
-            const added = d.risks_added as string[] | undefined;
-            return added && added.length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <span className="text-xs text-green-700">+ 新增风险：{added.join("、")}</span>
-              </div>
-            );
-          })()}
-          {(() => {
-            const d = diff as Record<string, unknown>;
-            const removed = d.risks_removed as string[] | undefined;
-            return removed && removed.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <span className="text-xs text-red-700">- 消除风险：{removed.join("、")}</span>
-              </div>
-            );
-          })()}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,19 +1,56 @@
 # 实施进度记录（v2）
 
-> 最后更新：2026-05-15（阶段 C 启动：基于六方评测的后续质量提升）
+> 最后更新：2026-05-15（阶段 D 启动：买卖合同基线收口 + 跨合同类型泛化验证）
 
 ---
 
 ## 当前状态
 
-- **当前主线**：阶段 C：基于六方评测的后续质量提升（进行中，P0-3 执行中）
-- **当前计划文件**：`docs/superpowers/plans/2026-05-15-post-evaluation-improvement.md`
-- **当前进展**：WORKLIST 和 PROGRESS 已更新，P0 三项待启动。上一阶段（报告泛化护栏固化）已闭环，Dossier 固定阈值净化器已上线，聚焦回归 80 passed。
-- **下次继续入口**：P0-3（BN 术语去学术化）→ P0-1（签署底线去硬编码）→ P0-2（攻击预判去模板化）→ P1 三项
+- **当前主线**：阶段 D：买卖合同基线收口 + 跨合同类型泛化验证（进行中，第一层执行中）
+- **当前计划文件**：`docs/superpowers/plans/2026-05-15-next-phase-cross-contract-generalization.md`
+- **当前进展**：WORKLIST 和 PROGRESS 已更新。阶段 C（P0-P2 共 9 项）已全面闭环，v22 已被 5 份评测一致认可为最优。第一层三项目标启动。
+- **下次继续入口**：1-1（退让阶梯方向化）→ 1-2（BN 数据去重）→ 1-3（Redline 接入）→ 第一层完成后生成 v23
 
 ---
 
-## 2026-05-15：阶段 C 启动 — P0-3 BN 术语去学术化（已完成）
+## 2026-05-15：阶段 D — 第一层：当前架构内收口（已完成）
+
+### 最新进展
+
+| # | 事项 | 文件 | 状态 |
+|---|------|------|:--:|
+| 1 | 更新 WORKLIST.md 切换至阶段 D 主线 | `worklist/worklist-v2/WORKLIST.md` | ✅ |
+| 2 | 更新 PROGRESS.md 记录新阶段开始 | `worklist/worklist-v2/PROGRESS.md` | ✅ |
+| 3 | 1-1：LLM₂ prompt 退让阶梯指令——"目标写成方向+条件而非另一个独立百分比" | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 4 | 1-1：更新 test_consistency_repairs + test_signing_guardrail 断言 | `tests/review/test_report_writer_negotiation_chip.py` | ✅ |
+| 5 | 1-2：LLM₂ prompt 第四章——"同一结论的多条数据必须合并去重" | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 6 | 1-3：MultiFormatReports 增加 `redline_appendix` 字段 + `include_redline` 参数 | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| 7 | 聚焦回归 89 passed | 测试记录见下 | ✅ |
+
+### 测试记录
+
+```text
+tests/review/test_ai_review.py: 22 passed
+tests/review/test_report_writer_negotiation_chip.py: 14 passed
+tests/regression/test_judgment_regression.py: 53 passed
+Focus全部: 89 passed in 5.52s
+```
+
+### 第一层总结
+
+| 编号 | 改进项 | 效果 |
+|:---:|------|------|
+| 1-1 | 退让阶梯方向化 | 三档阶梯中的目标值必须写成"从合同原文 X% 降至方向+保护条件"，禁止独立目标百分比 |
+| 1-2 | BN 数据去重 | 结论相同的多条防守筹码数据合并为一个汇总段落 |
+| 1-3 | Redline 接入 | `generate_multi_format_reports()` 现在默认生成 Redline 条款对照表 |
+
+### 下次继续入口
+
+第一层完成，买卖合同基线收口。聚焦回归 89 passed。
+下一阶段：第二层（跨合同类型泛化验证）——由用户启动。
+第三层（中长期方向）——用户规划。
+
+---
 
 ### 最新进展
 

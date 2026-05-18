@@ -13,6 +13,7 @@
 | 命令 | 用途 |
 |---|---|
 | `--score-golden-case` | 用指定 golden case 评测一份 Markdown 报告 |
+| `--score-golden-case-batch` | 用指定 golden case 批量评测一个目录下的 Markdown 报告 |
 | `--list-golden-patterns` | 查看当前已沉淀的 golden patterns 元数据 |
 
 核心区别：
@@ -122,7 +123,38 @@ E:/myProgram/BN-Contract-Risk-Analysis
 
 ---
 
-## 4. 评分规则
+## 4. 对整个目录进行 Batch Golden Case 回归
+
+### 4.1 基本命令
+
+```bash
+.venv/Scripts/python.exe -m contract_risk_analysis.cli \
+  --score-golden-case-batch tests/fixtures/golden_cases/sales_purchase_contract_001.yaml \
+  --reports-dir 合同检测报告/买卖合同
+```
+
+含义：
+
+- 使用同一个 golden case 评测目录中的所有 `.md` 报告；
+- 终端先打印批量摘要，再输出结构化 JSON 结果；
+- 适合对同一合同路线下的多版本报告做回归比较。
+
+### 4.2 输出字段
+
+批量 JSON 至少包含：
+
+- `score_kind`
+- `reports_scanned`
+- `reports_scored`
+- `average_score`
+- `best_report`
+- `worst_report`
+- `failed_reports`
+- `results`
+
+---
+
+## 5. 评分规则
 
 当前基础评分器采用加权规则：
 
@@ -150,7 +182,7 @@ should_find_advantages 3/5
 
 ---
 
-## 5. 如何理解 must_find / must_not / should_find_advantages
+## 6. 如何理解 must_find / must_not / should_find_advantages
 
 ### 5.1 must_find
 
@@ -202,7 +234,7 @@ should_find_advantages:
 
 ---
 
-## 6. 查看当前 Golden Patterns
+## 7. 查看当前 Golden Patterns
 
 ### 6.1 基本命令
 
@@ -245,7 +277,7 @@ should_find_advantages:
 
 ---
 
-## 7. Golden Case 与 Golden Pattern 的边界
+## 8. Golden Case 与 Golden Pattern 的边界
 
 不要把 golden case 当成真实审查规则。
 
@@ -275,7 +307,7 @@ sales_purchase_contract_001 中有 80% 预付款。
 
 ---
 
-## 8. 常用示例
+## 9. 常用示例
 
 ### 8.1 评测买卖合同报告 -10
 
@@ -301,19 +333,19 @@ sales_purchase_contract_001 中有 80% 预付款。
 
 ---
 
-## 9. 当前限制
+## 10. 当前限制
 
 当前 CLI 是基础版，有以下限制：
 
 1. 主要基于关键词命中，不等同于完整语义理解；
 2. `golden_patterns` 目前只支持元数据列表，还没有做条件命中评分；
-3. 暂不支持批量评测整个文件夹；
+3. 已支持“单 golden case + 单报告目录”的批量评测，但仍不支持 case 目录与报告目录的自动匹配；
 4. 暂不支持 LLM-as-judge；
 5. 对 PDF 合同原文不做直接证据核验，只评测报告 Markdown。
 
 ---
 
-## 10. 后续计划
+## 11. 后续计划
 
 建议后续增强：
 

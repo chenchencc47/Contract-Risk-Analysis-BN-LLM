@@ -16,7 +16,7 @@ export function useReview() {
   const [dualData, setDualData] = useState<DualData | null>(null);
 
   const submitReview = useCallback(
-    async (contractText: string, contractId: string, reviewParty: "buyer" | "seller" = "buyer", strategyMode = false) => {
+    async (contractText: string, contractId: string, reviewParty: "buyer" | "seller" = "buyer") => {
       if (!contractText.trim()) return;
       setState({ status: "loading", data: null, error: null });
       setDualData(null);
@@ -28,7 +28,6 @@ export function useReview() {
             contract_text: contractText,
             contract_id: contractId,
             review_party: reviewParty,
-            strategy_mode: strategyMode,
           }),
         });
         if (!res.ok) {

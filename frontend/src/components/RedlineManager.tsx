@@ -42,8 +42,10 @@ export function RedlineManager({ onBack }: Props) {
     is_active: 1,
   });
 
-  const fetchRedlines = () => {
-    setLoading(true);
+  const fetchRedlines = (showSpinner = true) => {
+    if (showSpinner) {
+      setLoading(true);
+    }
     fetch("/api/redlines")
       .then((r) => r.json())
       .then((data) => {
@@ -53,7 +55,15 @@ export function RedlineManager({ onBack }: Props) {
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { fetchRedlines(); }, []);
+  useEffect(() => {
+    fetch("/api/redlines")
+      .then((r) => r.json())
+      .then((data) => {
+        setRedlines(data.redlines || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const resetForm = () => {
     setForm({ contract_type: "通用", category: "hard_rules", rule_id: "", label: "", description: "", severity: "", is_active: 1 });
@@ -73,7 +83,9 @@ export function RedlineManager({ onBack }: Props) {
         fetchRedlines();
         resetForm();
       }
-    } catch {}
+    } catch {
+      return;
+    }
   };
 
   const handleEdit = (r: RedlineItem) => {
@@ -95,7 +107,9 @@ export function RedlineManager({ onBack }: Props) {
     try {
       await fetch(`/api/redlines/${id}`, { method: "DELETE" });
       fetchRedlines();
-    } catch {}
+    } catch {
+      return;
+    }
   };
 
   const grouped = redlines.reduce<Record<string, RedlineItem[]>>((acc, r) => {

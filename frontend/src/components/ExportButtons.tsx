@@ -31,8 +31,7 @@ export function ExportButtons({ contractId, markdown }: Props) {
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       downloadFile(blob, `contract-review-${contractId}.md`);
-    } catch (err) {
-      // Fallback: client-side download
+    } catch {
       const blob = new Blob([markdown], { type: "text/markdown" });
       downloadFile(blob, `contract-review-${contractId}.md`);
     } finally {

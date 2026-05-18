@@ -18,6 +18,7 @@ from contract_risk_analysis.pipeline.build_evidence import (
     build_evidence_from_free_output,
 )
 from contract_risk_analysis.review.ai_review import (
+    detect_contract_type_routing,
     free_review_contract_text,
     review_contract_text,
 )
@@ -209,8 +210,15 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         logger.warning("QUALITY_GATE: top risks BN coverage %s/%s (target ≥66%%)", len(covered_top), len(top_risk_nodes))
 
     # ── Phase A: Build structured Report Dossier (system truth source) ──
+    from contract_risk_analysis.review.quantification import build_quantitative_context
     from contract_risk_analysis.review.report_writer import _build_dossier
-    dossier = _build_dossier(free_output, consistency, review_party)
+    quantitative_context = build_quantitative_context(contract_text, free_output)
+    dossier = _build_dossier(
+        free_output,
+        consistency,
+        review_party,
+        quantitative_context=quantitative_context,
+    )
 
     # ── Internal consistency check (Phase A P5) ──
     if dossier.internal_conflicts:
@@ -235,7 +243,9 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     try:
         from contract_risk_analysis.db.repository import (
             save_report, save_report_risks, save_report_counterfactuals, upsert_contract)
+        routing = detect_contract_type_routing(contract_text)
         cid = upsert_contract(contract_name=contract_id, contract_text=contract_text,
+                              contract_type=routing.primary_type or "通用",
                               file_name=body.get("source_document"))
         overall_ph = None
         if consistency and consistency.bn_posteriors:
@@ -362,6 +372,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         },
         "manual_review_items": dossier.manual_review_items,
         "internal_conflicts": dossier.internal_conflicts,
+        "quantitative_context": asdict(dossier.quantitative_context) if dossier.quantitative_context else None,
         "strengths": dossier.strengths,
         "missing_clauses": dossier.missing_clauses,
     }

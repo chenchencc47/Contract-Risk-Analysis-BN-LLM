@@ -308,6 +308,27 @@ class DossierRiskItem:
     """If this item conflicts with another in the same report, describe the conflict."""
 
 
+@dataclass(frozen=True)
+class QuantitativeAnchor:
+    label: str
+    percentage: float | None = None
+    amount: float | None = None
+    days: int | None = None
+    source_text: str = ""
+    formula: str = ""
+
+
+@dataclass(frozen=True)
+class QuantitativeContext:
+    contract_amount: float | None = None
+    currency_label: str = "人民币"
+    amount_source_text: str = ""
+    quantification_allowed: bool = False
+    payment_anchors: list[QuantitativeAnchor] = field(default_factory=list)
+    exchange_rate_hints: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+
 @dataclass
 class ReportDossier:
     """Structured, deterministic fact sheet — the system's single source of truth.
@@ -359,6 +380,8 @@ class ReportDossier:
     favorable_terms: list[FavorableTerm] = field(default_factory=list)
     """Terms that are advantageous to the review party — NOT risks. LLM₂ must
     render these as advantages to protect, not as risks to fix."""
+
+    quantitative_context: QuantitativeContext | None = None
 
     # ── Quality ──
     manual_review_items: list[str] = field(default_factory=list)

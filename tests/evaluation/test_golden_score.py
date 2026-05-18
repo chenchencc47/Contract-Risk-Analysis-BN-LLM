@@ -1,8 +1,13 @@
+from pathlib import Path
+
+from contract_risk_analysis.evaluation import golden_score
 from contract_risk_analysis.evaluation.golden_score import (
     auto_score_report_text,
+    format_batch_golden_summary,
     load_golden_cases,
     load_golden_patterns,
     score_golden_case,
+    score_reports_against_case_batch,
     summarize_patterns,
 )
 
@@ -89,6 +94,141 @@ def test_auto_score_report_text_exposes_regression_semantics():
     assert score["score_label"] == "Golden Case 回归匹配分"
     assert "回归" in score["regression_note"]
     assert "不是任何合同都通用的质量总分" in score["regression_note"]
+
+
+def test_score_reports_against_case_batch_aggregates_directory_scores(tmp_path: Path) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text(
+        """
+case_id: demo_case
+must_find:
+  - id: prepayment
+    expected: 识别预付款
+    evidence_keywords: ["80%", "预付款"]
+must_not: []
+should_find_advantages:
+  - id: forum
+    expected: 识别管辖优势
+    evidence_keywords: ["甲方住所地", "管辖"]
+        """.strip(),
+        encoding="utf-8",
+    )
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+    (reports_dir / "a.md").write_text(
+        "本合同约定80%预付款。争议由甲方住所地法院管辖。",
+        encoding="utf-8",
+    )
+    (reports_dir / "b.md").write_text(
+        "本合同约定80%预付款。",
+        encoding="utf-8",
+    )
+    (reports_dir / "notes.txt").write_text("ignore", encoding="utf-8")
+
+    batch = score_reports_against_case_batch(case_path, reports_dir)
+
+    assert batch.score_kind == "golden_case_batch_regression"
+    assert batch.reports_scanned == 2
+    assert batch.reports_scored == 2
+    assert batch.average_score == 87.5
+    assert batch.best_report == {"report_name": "a.md", "score": 100.0}
+    assert batch.worst_report == {"report_name": "b.md", "score": 75.0}
+    assert [item.report_name for item in batch.results] == ["a.md", "b.md"]
+    assert batch.results[0].must_find_passed == 1
+    assert batch.results[0].advantages_passed == 1
+
+
+def test_score_reports_against_case_batch_returns_empty_batch_for_empty_directory(tmp_path: Path) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text("case_id: demo_case\nmust_find: []\nmust_not: []\n", encoding="utf-8")
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+
+    batch = score_reports_against_case_batch(case_path, reports_dir)
+
+    assert batch.reports_scanned == 0
+    assert batch.reports_scored == 0
+    assert batch.average_score is None
+    assert batch.best_report is None
+    assert batch.worst_report is None
+    assert batch.results == []
+    assert batch.failed_reports == []
+
+
+def test_score_reports_against_case_batch_records_read_failures_and_continues(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text(
+        """
+case_id: demo_case
+must_find:
+  - id: prepayment
+    expected: 识别预付款
+    evidence_keywords: ["80%", "预付款"]
+must_not: []
+should_find_advantages: []
+        """.strip(),
+        encoding="utf-8",
+    )
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+    (reports_dir / "ok.md").write_text("本合同约定80%预付款。", encoding="utf-8")
+    (reports_dir / "broken.md").write_text("损坏报告", encoding="utf-8")
+
+    original_read = golden_score._read_report_text
+
+    def fake_read(report_path: Path) -> str:
+        if report_path.name == "broken.md":
+            raise UnicodeDecodeError("utf-8", b"x", 0, 1, "boom")
+        return original_read(report_path)
+
+    monkeypatch.setattr(golden_score, "_read_report_text", fake_read)
+
+    batch = score_reports_against_case_batch(case_path, reports_dir)
+
+    assert batch.reports_scanned == 2
+    assert batch.reports_scored == 1
+    assert len(batch.failed_reports) == 1
+    assert batch.failed_reports[0]["report_name"] == "broken.md"
+    assert "UnicodeDecodeError" in batch.failed_reports[0]["error"]
+
+
+def test_format_batch_golden_summary_includes_core_fields(tmp_path: Path) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text(
+        """
+case_id: demo_case
+must_find:
+  - id: prepayment
+    expected: 识别预付款
+    evidence_keywords: ["80%", "预付款"]
+must_not: []
+should_find_advantages:
+  - id: forum
+    expected: 识别管辖优势
+    evidence_keywords: ["甲方住所地", "管辖"]
+        """.strip(),
+        encoding="utf-8",
+    )
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+    (reports_dir / "a.md").write_text(
+        "本合同约定80%预付款。争议由甲方住所地法院管辖。",
+        encoding="utf-8",
+    )
+    (reports_dir / "b.md").write_text("本合同约定80%预付款。", encoding="utf-8")
+
+    batch = score_reports_against_case_batch(case_path, reports_dir)
+    summary = format_batch_golden_summary(batch)
+
+    assert "Batch golden-case regression summary" in summary
+    assert "Reports scanned: 2" in summary
+    assert "Reports scored: 2" in summary
+    assert "Average score: 87.5" in summary
+    assert "1. a.md — 100.0" in summary
+    assert "Lowest report:" in summary
 
 
 # ═══════════════════════════════════════════════════════════════════

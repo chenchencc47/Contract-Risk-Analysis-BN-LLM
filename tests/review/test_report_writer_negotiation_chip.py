@@ -300,8 +300,8 @@ def test_combined_prompt_includes_report_17_consistency_repairs() -> None:
     assert "每个攻击方向的小标题必须直接概括其后正文真正攻击的对象和诉求" in prompt
     assert "禁止复用其他报告里的固定攻击标签" in prompt
     assert "如果正文主要攻击管辖、责任上限、验收或付款结构，标题必须如实反映该对象" in prompt
-    assert "如果第六章对某付款/风险条款设置了“在缺少某项保护条件时不得超过X%/不得接受某节点”的签署底线" in prompt
-    assert "必须同步写明使该退让成立的保护前提" in prompt
+    assert "如果第六章对某付款/风险条款设置了签署底线" in prompt
+    assert "使该退让成立的保护前提" in prompt
     assert "按本合同实际数字/节点填写" in prompt
     assert "更低比例、更晚风险转移、更强担保或更明确标准" in prompt
     assert "所有BN百分比都表示高风险概率改善幅度或比较结果" in prompt
@@ -419,3 +419,5 @@ def test_combined_prompt_includes_signing_guardrail_number_discipline() -> None:
     assert "方向+条件的形式" in prompt
     assert "每一段攻击话术必须至少引用当前合同的一个具体条款号和一个本合同独有的百分比或金额" in prompt
     assert "第五章数字自检" in prompt
+    assert "从当前合同的" in prompt
+    assert "目标写成方向+条件而非另一个独立百分比" in prompt

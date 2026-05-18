@@ -42,8 +42,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Show aggregated BN feedback accuracy per node")
     parser.add_argument("--score-golden-case", type=str, default=None, metavar="YAML",
                         help="Score a Markdown report against a golden case YAML")
+    parser.add_argument("--score-golden-case-batch", type=str, default=None, metavar="YAML",
+                        help="Score all Markdown reports in a directory against a golden case YAML")
     parser.add_argument("--report", type=str, default=None, metavar="MD",
                         help="Markdown report path for --score-golden-case")
+    parser.add_argument("--reports-dir", type=str, default=None, metavar="DIR",
+                        help="Markdown reports directory for --score-golden-case-batch")
     parser.add_argument("--list-golden-patterns", action="store_true",
                         help="List golden pattern metadata as JSON")
     parser.add_argument("--golden-patterns-dir", type=str, default="tests/fixtures/golden_patterns",
@@ -75,6 +79,28 @@ def _print_debug_payload(
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+
+    # ── Golden case scoring: --score-golden-case-batch ──
+    if args.score_golden_case_batch:
+        if not args.reports_dir:
+            raise SystemExit("--score-golden-case-batch requires --reports-dir")
+        from contract_risk_analysis.evaluation.golden_score import (
+            format_batch_golden_summary,
+            score_reports_against_case_batch,
+        )
+
+        try:
+            batch = score_reports_against_case_batch(
+                args.score_golden_case_batch,
+                args.reports_dir,
+            )
+        except (FileNotFoundError, NotADirectoryError) as exc:
+            raise SystemExit(str(exc)) from exc
+
+        print(format_batch_golden_summary(batch))
+        print()
+        print(json.dumps(batch.to_dict(), ensure_ascii=False, indent=2))
+        return
 
     # ── Golden case scoring: --score-golden-case ──
     if args.score_golden_case:

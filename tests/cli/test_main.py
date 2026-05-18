@@ -192,6 +192,60 @@ should_find_advantages: []
     assert payload["summary"]["must_not"] == "1/1"
 
 
+def test_main_scores_golden_case_batch(tmp_path: Path, capsys) -> None:
+    case_path = tmp_path / "case.yaml"
+    case_path.write_text(
+        """
+case_id: demo_case
+must_find:
+  - id: prepayment
+    expected: 识别预付款
+    evidence_keywords: ["80%", "预付款"]
+must_not: []
+should_find_advantages:
+  - id: forum
+    expected: 识别管辖优势
+    evidence_keywords: ["甲方住所地", "管辖"]
+        """.strip(),
+        encoding="utf-8",
+    )
+    reports_dir = tmp_path / "reports"
+    reports_dir.mkdir()
+    (reports_dir / "a.md").write_text(
+        "本合同约定80%预付款。争议由甲方住所地法院管辖。",
+        encoding="utf-8",
+    )
+    (reports_dir / "b.md").write_text("本合同约定80%预付款。", encoding="utf-8")
+
+    cli.main([
+        "--score-golden-case-batch",
+        str(case_path),
+        "--reports-dir",
+        str(reports_dir),
+    ])
+
+    output = capsys.readouterr().out.strip()
+    json_start = output.rfind("\n{\n")
+    summary_text = output[:json_start].strip()
+    payload = json.loads(output[json_start + 1 :])
+
+    assert "Batch golden-case regression summary" in summary_text
+    assert "Reports scanned: 2" in summary_text
+    assert "Average score: 87.5" in summary_text
+    assert payload["score_kind"] == "golden_case_batch_regression"
+    assert payload["reports_scored"] == 2
+    assert payload["best_report"]["report_name"] == "a.md"
+
+
+def test_main_score_golden_case_batch_requires_reports_dir() -> None:
+    try:
+        cli.main(["--score-golden-case-batch", "case.yaml"])
+    except SystemExit as exc:
+        assert str(exc) == "--score-golden-case-batch requires --reports-dir"
+    else:
+        raise AssertionError("Expected SystemExit")
+
+
 def test_main_lists_golden_patterns(tmp_path: Path, capsys) -> None:
     patterns_dir = tmp_path / "patterns"
     patterns_dir.mkdir()

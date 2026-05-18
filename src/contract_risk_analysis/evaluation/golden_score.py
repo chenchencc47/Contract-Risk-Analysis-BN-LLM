@@ -75,6 +75,89 @@ class GoldenCaseScore:
         }
 
 
+@dataclass
+class BatchReportScore:
+    report_path: str
+    report_name: str
+    case_id: str
+    score: float
+    score_label: str
+    regression_note: str
+    must_find_passed: int
+    must_find_total: int
+    must_not_passed: int
+    must_not_total: int
+    advantages_passed: int
+    advantages_total: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "report_path": self.report_path,
+            "report_name": self.report_name,
+            "case_id": self.case_id,
+            "score": self.score,
+            "score_label": self.score_label,
+            "regression_note": self.regression_note,
+            "must_find_passed": self.must_find_passed,
+            "must_find_total": self.must_find_total,
+            "must_not_passed": self.must_not_passed,
+            "must_not_total": self.must_not_total,
+            "advantages_passed": self.advantages_passed,
+            "advantages_total": self.advantages_total,
+        }
+
+
+@dataclass
+class BatchGoldenScoreReport:
+    case_id: str
+    case_path: str
+    reports_scanned: int
+    results: list[BatchReportScore] = field(default_factory=list)
+    failed_reports: list[dict[str, str]] = field(default_factory=list)
+
+    @property
+    def score_kind(self) -> str:
+        return "golden_case_batch_regression"
+
+    @property
+    def reports_scored(self) -> int:
+        return len(self.results)
+
+    @property
+    def average_score(self) -> float | None:
+        if not self.results:
+            return None
+        return round(sum(item.score for item in self.results) / len(self.results), 2)
+
+    @property
+    def best_report(self) -> dict[str, Any] | None:
+        if not self.results:
+            return None
+        best = self.results[0]
+        return {"report_name": best.report_name, "score": best.score}
+
+    @property
+    def worst_report(self) -> dict[str, Any] | None:
+        if not self.results:
+            return None
+        worst = min(self.results, key=lambda item: (item.score, item.report_name))
+        return {"report_name": worst.report_name, "score": worst.score}
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "score_kind": self.score_kind,
+            "case_id": self.case_id,
+            "case_path": self.case_path,
+            "reports_scanned": self.reports_scanned,
+            "reports_scored": self.reports_scored,
+            "average_score": self.average_score,
+            "best_report": self.best_report,
+            "worst_report": self.worst_report,
+            "failed_reports": self.failed_reports,
+            "results": [item.to_dict() for item in self.results],
+        }
+
+
 def load_yaml(path: str | Path) -> dict[str, Any]:
     with Path(path).open(encoding="utf-8") as fh:
         return yaml.safe_load(fh) or {}
@@ -155,6 +238,100 @@ def score_report_against_case(case_path: str | Path, report_path: str | Path) ->
     case = load_yaml(case_path)
     report = Path(report_path).read_text(encoding="utf-8")
     return score_golden_case(case, report, str(report_path))
+
+
+def _read_report_text(report_path: Path) -> str:
+    return report_path.read_text(encoding="utf-8")
+
+
+def _list_markdown_reports(reports_dir: str | Path) -> list[Path]:
+    root = Path(reports_dir)
+    if not root.exists():
+        raise FileNotFoundError(f"Reports directory not found: {root}")
+    if not root.is_dir():
+        raise NotADirectoryError(f"Reports path is not a directory: {root}")
+    return sorted((path for path in root.glob("*.md") if path.is_file()), key=lambda path: path.name)
+
+
+def _to_batch_report_score(score: GoldenCaseScore) -> BatchReportScore:
+    return BatchReportScore(
+        report_path=score.report_path,
+        report_name=Path(score.report_path).name,
+        case_id=score.case_id,
+        score=score.score,
+        score_label="Golden Case 回归匹配分",
+        regression_note="该分数表示报告与指定 golden case 的回归匹配程度，不是任何合同都通用的质量总分。",
+        must_find_passed=score.must_find_passed,
+        must_find_total=len(score.must_find),
+        must_not_passed=score.must_not_passed,
+        must_not_total=len(score.must_not),
+        advantages_passed=score.should_passed,
+        advantages_total=len(score.should_find_advantages),
+    )
+
+
+def score_reports_against_case_batch(
+    case_path: str | Path,
+    reports_dir: str | Path,
+) -> BatchGoldenScoreReport:
+    case = load_yaml(case_path)
+    report_paths = _list_markdown_reports(reports_dir)
+    results: list[BatchReportScore] = []
+    failed_reports: list[dict[str, str]] = []
+
+    for report_path in report_paths:
+        try:
+            report_text = _read_report_text(report_path)
+            score = score_golden_case(case, report_text, str(report_path))
+        except Exception as exc:
+            failed_reports.append(
+                {
+                    "report_path": str(report_path),
+                    "report_name": report_path.name,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+            continue
+        results.append(_to_batch_report_score(score))
+
+    results.sort(key=lambda item: (-item.score, item.report_name))
+    return BatchGoldenScoreReport(
+        case_id=str(case.get("case_id", "unknown")),
+        case_path=str(case_path),
+        reports_scanned=len(report_paths),
+        results=results,
+        failed_reports=failed_reports,
+    )
+
+
+def format_batch_golden_summary(batch: BatchGoldenScoreReport, top_n: int = 3) -> str:
+    lines = [
+        "Batch golden-case regression summary",
+        f"Reports scanned: {batch.reports_scanned}",
+        f"Reports scored: {batch.reports_scored}",
+        f"Average score: {batch.average_score:.1f}" if batch.average_score is not None else "Average score: N/A",
+    ]
+
+    if batch.results:
+        lines.append("")
+        lines.append("Top reports:")
+        for idx, item in enumerate(batch.results[:top_n], 1):
+            lines.append(f"{idx}. {item.report_name} — {item.score:.1f}")
+        lines.append("")
+        lines.append("Lowest report:")
+        lowest = batch.worst_report
+        lines.append(f"- {lowest['report_name']} — {lowest['score']:.1f}")
+    else:
+        lines.append("")
+        lines.append("No Markdown reports were scored.")
+
+    if batch.failed_reports:
+        lines.append("")
+        lines.append("Failed reports:")
+        for item in batch.failed_reports:
+            lines.append(f"- {item['report_name']} — {item['error']}")
+
+    return "\n".join(lines)
 
 
 def auto_score_report_text(

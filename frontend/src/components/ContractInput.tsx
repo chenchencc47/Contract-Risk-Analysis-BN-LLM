@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 interface Props {
-  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean, strategy: boolean) => void;
+  onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean) => void;
   isLoading: boolean;
 }
 
@@ -38,12 +38,12 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
   const [id, setId] = useState("contract-001");
   const [reviewParty, setReviewParty] = useState<"buyer" | "seller">("buyer");
   const [dualMode, setDualMode] = useState(false);
-  const [strategyMode, setStrategyMode] = useState(false);
   const [file, setFile] = useState<FileInfo | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploading, setUploading] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
 
   const handleFile = useCallback(async (f: File) => {
     const suffix = f.name.split(".").pop()?.toLowerCase() || "";
@@ -101,10 +101,10 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
 
   const handleSubmit = () => {
     if (file) {
-      onSubmit(file.content, id.trim() || "contract-001", reviewParty, dualMode, strategyMode);
+      onSubmit(file.content, id.trim() || "contract-001", reviewParty, dualMode);
     } else {
       const finalText = text.trim() || SAMPLE;
-      onSubmit(finalText, id.trim() || "contract-001", reviewParty, dualMode, strategyMode);
+      onSubmit(finalText, id.trim() || "contract-001", reviewParty, dualMode);
     }
   };
 
@@ -115,28 +115,12 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
           合同风险审查
         </h2>
         <p className="text-[#9B8E83] text-sm leading-relaxed max-w-lg">
-          上传合同文件或粘贴文本，系统将通过{" "}
+          上传合同文件，系统将通过{" "}
           <span className="text-[#6B5E53] font-medium">LLM 抽取</span> →{" "}
           <span className="text-[#6B5E53] font-medium">贝叶斯网络推理</span> →{" "}
           <span className="text-[#6B5E53] font-medium">智能报告生成</span>{" "}
           三步流程，输出可解释的风险评估。
         </p>
-      </div>
-
-      <div className="mb-5">
-        <label className="block text-xs font-medium text-[#6B5E53] mb-1.5 tracking-wide">
-          合同编号
-        </label>
-        <input
-          type="text"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          className="w-48 px-3 py-2 text-sm border border-[#E8E2DB] rounded-md
-                     bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F5C]/30
-                     focus:border-[#8B6F5C] transition-all duration-200
-                     placeholder:text-[#9B8E83]"
-          placeholder="contract-001"
-        />
       </div>
 
       {/* ── File Upload ── */}
@@ -208,26 +192,37 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
         </div>
       )}
 
-      {/* ── Textarea fallback ── */}
+      {/* ── Paste fallback (collapsible) ── */}
       {!file && (
-        <div className="relative group">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={SAMPLE}
-            rows={14}
-            className="w-full px-4 py-3.5 text-sm leading-relaxed font-mono
-                       border border-[#E8E2DB] rounded-lg bg-white
-                       focus:outline-none focus:ring-2 focus:ring-[#8B6F5C]/30
-                       focus:border-[#8B6F5C] transition-all duration-200
-                       resize-y placeholder:text-[#C4B8AC] placeholder:font-sans
-                       placeholder:text-xs"
-          />
-          {!text.trim() && (
-            <span className="absolute top-3 right-4 text-[10px] text-[#C4B8AC] bg-[#FAF8F5]
-                             px-2 py-0.5 rounded-full font-medium pointer-events-none">
-              示例合同
-            </span>
+        <div className="mb-4">
+          <button
+            onClick={() => setShowPaste(!showPaste)}
+            className="text-xs text-[#9B8E83] hover:text-[#6B5E53] transition-colors flex items-center gap-1"
+          >
+            <span className={`inline-block transition-transform ${showPaste ? "rotate-90" : ""}`}>▸</span>
+            或直接粘贴合同文本
+          </button>
+          {showPaste && (
+            <div className="relative group mt-2">
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={SAMPLE}
+                rows={14}
+                className="w-full px-4 py-3.5 text-sm leading-relaxed font-mono
+                           border border-[#E8E2DB] rounded-lg bg-white
+                           focus:outline-none focus:ring-2 focus:ring-[#8B6F5C]/30
+                           focus:border-[#8B6F5C] transition-all duration-200
+                           resize-y placeholder:text-[#C4B8AC] placeholder:font-sans
+                           placeholder:text-xs"
+              />
+              {!text.trim() && (
+                <span className="absolute top-3 right-4 text-[10px] text-[#C4B8AC] bg-[#FAF8F5]
+                               px-2 py-0.5 rounded-full font-medium pointer-events-none">
+                  示例合同
+                </span>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -267,38 +262,47 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
             🔄 双视角对比
           </button>
         </div>
-        <label className="flex items-center gap-1.5 cursor-pointer ml-3">
-          <input
-            type="checkbox"
-            checked={strategyMode}
-            onChange={(e) => setStrategyMode(e.target.checked)}
-            className="rounded"
-          />
-          <span className="text-xs text-[#6B5E53]">♟ 谈判策略</span>
-        </label>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={isLoading || uploading}
-        className="mt-5 w-full sm:w-auto px-8 py-3 bg-[#8B6F5C] text-white text-sm
-                   font-medium rounded-lg tracking-wide
-                   hover:bg-[#6B5243] active:scale-[0.98]
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   transition-all duration-200 ease-out
-                   shadow-sm hover:shadow-md"
-      >
-        {isLoading ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            正在审查...
-          </span>
-        ) : file ? (
-          `审查 ${file.name}`
-        ) : (
-          "开始审查"
-        )}
-      </button>
+      {/* ── Action bar: ID + Submit ── */}
+      <div className="flex items-end gap-3 mt-4 flex-wrap">
+        <div>
+          <label className="block text-[11px] font-medium text-[#9B8E83] mb-1 tracking-wide">
+            合同编号
+          </label>
+          <input
+            type="text"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            className="w-40 px-3 py-2 text-sm border border-[#E8E2DB] rounded-md
+                       bg-white focus:outline-none focus:ring-2 focus:ring-[#8B6F5C]/30
+                       focus:border-[#8B6F5C] transition-all duration-200
+                       placeholder:text-[#9B8E83]"
+            placeholder="contract-001"
+          />
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading || uploading}
+          className="px-8 py-2.5 bg-[#8B6F5C] text-white text-sm
+                     font-medium rounded-lg tracking-wide
+                     hover:bg-[#6B5243] active:scale-[0.98]
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-all duration-200 ease-out
+                     shadow-sm hover:shadow-md"
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              正在审查...
+            </span>
+          ) : file ? (
+            `审查 ${file.name}`
+          ) : (
+            "开始审查"
+          )}
+        </button>
+      </div>
     </section>
   );
 }
