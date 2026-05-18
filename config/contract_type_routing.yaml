@@ -12,9 +12,8 @@ universal_core:
     - governing_law_clarity
     - force_majeure_completeness
 
-合同类型专属BN配置覆盖（可选，当前无覆盖文件）：
-#   租赁合同:
-#     bn_config_override: bayesian_network_v2_lease.json
+# ── 合同类型专属BN配置覆盖（可选，当前无覆盖文件） ──
+#   示例: 租赁合同.bn_config_override = bayesian_network_v2_lease.json
 #
 contract_types:
   销售合同:
@@ -47,6 +46,62 @@ contract_types:
       - measurement_dispute_resolution
       - unilateral_inspection_rights
       - transportation_loss_allocation
+
+  技术开发合同:
+    bn_config_override: null
+    keywords: [技术开发, 软件开发, 系统开发, 定制开发, 委托开发, 源代码, 软件, 系统, 算法, 接口, API, 部署, 试运行]
+    nodes:
+      - cuad_source_code_escrow
+      - cuad_license_grant
+      - cuad_non_transferable_license
+      - cuad_ip_ownership_assignment
+      - cuad_joint_ip_ownership
+      - cuad_termination_for_convenience
+      - cuad_post_termination_services
+      - cuad_audit_rights
+      - confidentiality_nli
+      - acceptance_process_clarity
+      - cuad_liquidated_damages
+
+  服务合同:
+    bn_config_override: null
+    keywords: [服务, 咨询, 外包, 维护, 运营, 培训, 支持, 专家, 顾问, 劳务, 人力]
+    nodes:
+      - cuad_termination_for_convenience
+      - cuad_notice_period_to_terminate
+      - confidentiality_nli
+      - cuad_non_solicit_of_customers
+      - cuad_non_solicit_of_employees
+      - cuad_non_compete
+      - cuad_post_termination_services
+      - cuad_audit_rights
+      - cuad_anti_assignment
+
+  租赁合同:
+    bn_config_override: null
+    keywords: [租赁, 出租, 承租, 租金, 租期, 押金, 腾房, 转租, 装修, 房屋]
+    nodes:
+      - risk_transfer_point
+      - warranty_scope
+      - cuad_warranty_duration
+      - cuad_liquidated_damages
+      - cuad_anti_assignment
+      - cuad_insurance
+      - force_majeure_completeness
+      - dispute_venue_fairness
+
+  保密协议:
+    bn_config_override: null
+    keywords: [保密, 机密, 商业秘密, 专有信息, 披露, 信息接收, NDA, confidentiality, 返还, 存续]
+    nodes:
+      - confidentiality_nli
+      - confidentiality_scope_reasonableness
+      - cuad_non_solicit_of_customers
+      - cuad_non_solicit_of_employees
+      - cuad_non_compete
+      - cuad_anti_assignment
+      - cuad_non_disparagement
+      - cuad_covenant_not_to_sue
 
 text_triggers:
   质保信号:
@@ -112,6 +167,6 @@ text_triggers:
       - risk_transfer_point
 
 fallback:
-  low_confidence_threshold: 0.6
+  low_confidence_threshold: 0.25
   sparse_type_hit_threshold: 3
   mode: expanded_then_full
