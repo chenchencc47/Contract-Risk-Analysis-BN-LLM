@@ -587,6 +587,7 @@ def generate_executive_brief(
     dossier: ReportDossier,
     free_output: FreeReviewOutput,
     review_party: str = "buyer",
+    bn_confidence: str = "high",
 ) -> str:
     """v2.15-A: Generate a 1-2 page executive summary for management."""
     api_key, base_url, model = _load_polish_settings()
@@ -599,7 +600,7 @@ def generate_executive_brief(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party)
+                "content": _combined_system_prompt(review_party, bn_confidence)
                 + "\n你现在的任务是撰写管理层摘要——简明、决策导向、使用商业语言。",
             },
             {"role": "user", "content": prompt},
@@ -616,6 +617,7 @@ def generate_negotiation_playbook(
     dossier: ReportDossier,
     free_output: FreeReviewOutput,
     review_party: str = "buyer",
+    bn_confidence: str = "high",
 ) -> str:
     """v2.15-C: Generate a negotiation playbook for business teams."""
     api_key, base_url, model = _load_polish_settings()
@@ -628,7 +630,7 @@ def generate_negotiation_playbook(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party)
+                "content": _combined_system_prompt(review_party, bn_confidence)
                 + "\n你现在的任务是撰写谈判作战手册——具体、量化、可直接上谈判桌。",
             },
             {"role": "user", "content": prompt},
@@ -653,6 +655,7 @@ def generate_multi_format_reports(
     include_checklist: bool = True,
     include_appendix: bool = True,
     include_redline: bool = True,
+    bn_confidence: str = "high",
 ) -> MultiFormatReports:
     """v2.15: Generate multiple report formats from the same Dossier.
 
@@ -679,7 +682,7 @@ def generate_multi_format_reports(
         logger.info("Generating executive brief...")
         try:
             reports.executive_brief = generate_executive_brief(
-                dossier, free_output, review_party
+                dossier, free_output, review_party, bn_confidence
             )
         except Exception as e:
             logger.error("Failed to generate executive brief: %s", e)
@@ -689,7 +692,7 @@ def generate_multi_format_reports(
     if include_full_review:
         logger.info("Generating full legal review...")
         try:
-            full = generate_combined_report(free_output, consistency, review_party, dossier=dossier)
+            full = generate_combined_report(free_output, consistency, review_party, dossier=dossier, bn_confidence=bn_confidence)
             reports.full_legal_review = full.narrative_report
         except Exception as e:
             logger.error("Failed to generate full legal review: %s", e)
@@ -700,7 +703,7 @@ def generate_multi_format_reports(
         logger.info("Generating negotiation playbook...")
         try:
             reports.negotiation_playbook = generate_negotiation_playbook(
-                dossier, free_output, review_party
+                dossier, free_output, review_party, bn_confidence
             )
         except Exception as e:
             logger.error("Failed to generate negotiation playbook: %s", e)
@@ -1030,8 +1033,28 @@ def polish_report(report: RiskReport) -> PolishedReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _combined_system_prompt(review_party: str = "buyer") -> str:
+def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "high") -> str:
     party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
+
+    # BN confidence framing — adjusts how LLM₂ presents quantitative data
+    _BN_FRAMING = {
+        "high": (
+            "以下量化数据基于真实合同数据集统计校准，可用于谈判中的数字论证。"
+            "乘数效应分析和反事实概率数字均可作为筹码强弱参考。"
+        ),
+        "medium": (
+            "以下量化数据为方向性参考，基于历史合同数据统计先验推算，"
+            "可能未完全反映本合同特定领域的商业实践。"
+            "请在报告中呈现数字的同时，注明'建议结合具体行业惯例判断'。"
+        ),
+        "low": (
+            "本类型合同的量化模型仍在建设中，BN分析以定性方向为主。"
+            "报告中不应出现具体的百分比数字表格，改为方向性描述（如'此修改可显著降低风险'）。"
+            "明确告知读者：量化模型对本合同类型的校准尚不充分，以下分析以法律判断为准。"
+        ),
+    }
+    bn_framing = _BN_FRAMING.get(bn_confidence, _BN_FRAMING["high"])
+
     return (
         f"你是{party_label}的代理律师/商业谈判顾问，同时你是一个**受约束的报告渲染器**。"
         f"你的使命是在合法前提下，最大化{party_label}的合同利益，"
@@ -1083,6 +1106,9 @@ def _combined_system_prompt(review_party: str = "buyer") -> str:
         f"2. 标为「🔴 仅人工复核备注」的BN数据：必须在报告中标注「建议人工复核」，不得自行下结论\n"
         f"3. BN数据与Dossier裁决冲突时，以Dossier裁决为准，冲突写入「渲染器备注」\n"
         f"4. 如果你不确定某条BN数据的使用层级，宁可保守（标为防守筹码说明）也不要越权（写成主动修改建议）\n"
+        f"\n"
+        f"**BN数据可信度层级（v2.16，本报告适用）：**\n"
+        f"{bn_framing}\n"
         f"\n"
         f"**有利条款处理规则：**\n"
         f"Dossier 中严重度为「positive」（✅有利）的条款是客户的既有优势，不是风险。\n"
@@ -2418,6 +2444,7 @@ def generate_combined_report(
     review_party: str = "buyer",
     strategy_mode: bool = False,
     dossier: ReportDossier | None = None,
+    bn_confidence: str = "high",
 ) -> PolishedReport:
     """Generate a combined report using LLM₂ as a CONSTRAINED RENDERER (Phase A).
 
@@ -2476,7 +2503,7 @@ def generate_combined_report(
     completion = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": _combined_system_prompt(review_party)},
+            {"role": "system", "content": _combined_system_prompt(review_party, bn_confidence)},
             {"role": "user", "content": prompt},
         ],
         max_tokens=24576,

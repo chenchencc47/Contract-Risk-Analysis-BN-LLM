@@ -169,7 +169,9 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
         )
 
     # ── Layer 2: BN consistency validation ──
-    consistency = build_consistency_report(free_output)
+    from contract_risk_analysis.review.ai_review import detect_bn_confidence
+    bn_confidence = detect_bn_confidence(contract_text)
+    consistency = build_consistency_report(free_output, bn_confidence)
 
     # ── P2: Post-hoc rule validation (deterministic, no LLM dependency) ──
     rule_matches = run_validation_rules(contract_text)
@@ -234,6 +236,7 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
     try:
         polished = generate_combined_report(
             free_output, consistency, review_party, strategy_mode, dossier=dossier,
+            bn_confidence=bn_confidence,
         )
     except Exception as exc:
         logger.error("LLM₂ report generation failed: %s\n%s", exc, _tb.format_exc())

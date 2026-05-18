@@ -33,12 +33,18 @@ from contract_risk_analysis.domain.free_review_schema import (
 
 def build_consistency_report(
     free_output: FreeReviewOutput,
+    bn_confidence: str = "high",
 ) -> ConsistencyReport:
     """Orchestrate BN validation and return a ConsistencyReport.
 
     This is the main entry point for the v2 pipeline's BN layer.
     It maps LLM findings to BN nodes, runs all consistency checks,
     performs counterfactual simulation, and produces a structured report.
+
+    bn_confidence controls the depth of BN analysis:
+      'high'   → CUAD-calibrated, full 6-pair multiplier analysis
+      'medium' → partial coverage, top 3 pairs queried
+      'low'    → minimal coverage, universal pairs only
     """
     # Step 1: Map LLM findings to BN nodes
     mapping_service = BnMappingService()
@@ -69,23 +75,44 @@ def build_consistency_report(
     except Exception:
         bn_posteriors = {}
 
-    # Step 6 (P6.1): Joint probability analysis for multiplicative risk pairs
+    # Step 6 (P6.1): Joint probability analysis for multiplicative risk pairs.
+    # Dimension pairs are loaded from contract_type_parameters.yaml (bn_dimension_pairs).
+    # Selection depends on bn_confidence tier:
+    #   high   → universal + optional (all pairs)
+    #   medium → universal + top 1 from optional (by multiplier, queried together)
+    #   low   → universal only
     joint_risks: list[dict] = []
     try:
         from contract_risk_analysis.bn.pgmpy_adapter import (
             DIMENSION_NODES, query_joint_probability,
         )
-        dim_pairs: list[tuple[str, str]] = [
-            ("financial_exposure_risk", "dispute_resolution_risk"),
-            ("performance_delivery_risk", "legal_enforceability_risk"),
-            ("financial_exposure_risk", "clause_balance_risk"),
-            ("dispute_resolution_risk", "legal_enforceability_risk"),
-            ("performance_delivery_risk", "financial_exposure_risk"),
-            ("performance_delivery_risk", "dispute_resolution_risk"),
-        ]
-        joint_results = query_joint_probability(
-            dim_pairs=dim_pairs, evidence=node_states,
-        )
+        from contract_risk_analysis.review.ai_review import load_bn_dimension_pairs
+
+        universal_pairs, optional_pairs = load_bn_dimension_pairs()
+
+        if bn_confidence == "low":
+            dim_pairs = universal_pairs
+            joint_results = query_joint_probability(
+                dim_pairs=dim_pairs, evidence=node_states,
+            )
+        elif bn_confidence == "medium":
+            # Query all pairs, sort by multiplier, keep universal + top 1 optional
+            all_pairs = universal_pairs + optional_pairs
+            joint_results_all = query_joint_probability(
+                dim_pairs=all_pairs, evidence=node_states,
+            )
+            universal_set = set(universal_pairs)
+            optional_results = [r for r in joint_results_all if (r.dim_a, r.dim_b) not in universal_set]
+            optional_results.sort(key=lambda r: -r.multiplier)
+            top_optional = optional_results[:1] if optional_results else []
+            universal_results = [r for r in joint_results_all if (r.dim_a, r.dim_b) in universal_set]
+            joint_results = universal_results + top_optional
+        else:  # high
+            dim_pairs = universal_pairs + optional_pairs
+            joint_results = query_joint_probability(
+                dim_pairs=dim_pairs, evidence=node_states,
+            )
+
         for jr in joint_results:
             joint_risks.append({
                 "dim_a": jr.dim_a,

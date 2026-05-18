@@ -11,6 +11,7 @@
 
 standard_equipment:
   label: "标准工业设备"
+  bn_confidence: high
   keywords:
     - "设备"
     - "仪器"
@@ -29,6 +30,7 @@ standard_equipment:
 
 custom_equipment:
   label: "定制化设备/系统集成"
+  bn_confidence: medium
   keywords:
     - "定制开发"
     - "非标"
@@ -47,6 +49,7 @@ custom_equipment:
 
 bulk_commodity:
   label: "大宗商品/原材料"
+  bn_confidence: medium
   keywords:
     - "原材料"
     - "钢材"
@@ -66,6 +69,7 @@ bulk_commodity:
 
 light_service:
   label: "轻资产服务/咨询服务"
+  bn_confidence: low
   keywords:
     - "服务"
     - "咨询"
@@ -82,3 +86,22 @@ light_service:
     - 付款通常与服务里程碑挂钩（如按月/按阶段），大额预付款不常见
     - SLA（服务水平协议）、保密和知识产权归属是核心条款
     - 违约金上限通常约定为合同总价的 100%，间接损失排除常见
+
+# ── BN dimension pair configuration ──
+# Controls which risk dimension pairs are queried for multiplicative effects.
+# Pairs in "universal" are always checked regardless of contract type.
+# Pairs in "optional" are only checked when bn_confidence != low.
+#
+# Selection rules:
+#   bn_confidence=high  → universal + optional (all 6 pairs)
+#   bn_confidence=medium → universal + top 1 from optional by multiplier (3 pairs)
+#   bn_confidence=low   → universal only (2 pairs)
+bn_dimension_pairs:
+  universal:
+    - [financial_exposure_risk, clause_balance_risk]
+    - [dispute_resolution_risk, legal_enforceability_risk]
+  optional:
+    - [performance_delivery_risk, legal_enforceability_risk]
+    - [financial_exposure_risk, dispute_resolution_risk]
+    - [performance_delivery_risk, financial_exposure_risk]
+    - [performance_delivery_risk, dispute_resolution_risk]

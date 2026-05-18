@@ -67,7 +67,12 @@ SEVERITY_TO_STATE_HINT: dict[str, str] = {
     "positive": "acceptable",
 }
 
-# Cross-dimension risk pairs that multiply each other
+# Cross-dimension risk pairs that multiply each other.
+# NOTE: These are universal fallback descriptions. The actual dimension PAIRS
+# queried for BN joint probability analysis are configured in
+# config/contract_type_parameters.yaml → bn_dimension_pairs.
+# The descriptions here serve as LLM context hints and are NOT the source
+# of truth for which pairs get computed.
 CROSS_DIMENSION_RISK_PAIRS: list[tuple[tuple[str, str], tuple[str, str], str]] = [
     (
         ("financial_exposure_risk", "high"),

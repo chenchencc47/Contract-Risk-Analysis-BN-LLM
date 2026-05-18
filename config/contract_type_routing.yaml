@@ -12,8 +12,13 @@ universal_core:
     - governing_law_clarity
     - force_majeure_completeness
 
+合同类型专属BN配置覆盖（可选，当前无覆盖文件）：
+#   租赁合同:
+#     bn_config_override: bayesian_network_v2_lease.json
+#
 contract_types:
   销售合同:
+    bn_config_override: null
     keywords: [购销, 买卖, 供货, 发货, 收货, 质保金]
     nodes:
       - risk_transfer_point
@@ -23,6 +28,7 @@ contract_types:
       - dispute_venue_fairness
 
   采购合同:
+    bn_config_override: null
     keywords: [采购, 原料, 供应商, 批次结算, 第三方检测]
     nodes:
       - raw_material_acceptance_std
@@ -33,6 +39,7 @@ contract_types:
       - inventory_storage_responsibility
 
   煤炭合同:
+    bn_config_override: null
     keywords: [煤炭, 热值, 收到基, 试烧, 途耗, kcal]
     nodes:
       - calorific_value_pricing

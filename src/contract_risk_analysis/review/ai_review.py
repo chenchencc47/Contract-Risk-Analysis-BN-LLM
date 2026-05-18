@@ -71,6 +71,67 @@ def _detect_asset_type_context(contract_text: str) -> str:
     return ""
 
 
+def detect_bn_confidence(contract_text: str) -> str:
+    """Return bn_confidence tier ('high'/'medium'/'low') for a contract text.
+
+    Uses the same keyword-matching logic as _detect_asset_type_context.
+    Returns 'medium' as default when no asset type is detected.
+    """
+    if not CONTRACT_TYPE_PARAMS_PATH.exists():
+        return "medium"
+    with open(CONTRACT_TYPE_PARAMS_PATH, encoding="utf-8") as f:
+        params = yaml.safe_load(f) or {}
+
+    import re as _re
+    normalized = _re.sub(r'(?<=[一-鿿])\s+(?=[一-鿿])', '', contract_text)
+    text_lower = normalized.lower()
+
+    best_type = ""
+    best_score = 0
+    for asset_type in ("custom_equipment", "bulk_commodity", "light_service", "standard_equipment"):
+        cfg = params.get(asset_type, {})
+        keywords = cfg.get("keywords", [])
+        if not keywords:
+            continue
+        score = sum(1 for kw in keywords if kw.lower() in text_lower)
+        if score > best_score:
+            best_score = score
+            best_type = asset_type
+
+    if best_type and best_score > 0:
+        return params.get(best_type, {}).get("bn_confidence", "medium")
+    return "medium"
+
+
+def load_bn_dimension_pairs() -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """Load bn_dimension_pairs from contract_type_parameters.yaml.
+
+    Returns (universal_pairs, optional_pairs).
+    Falls back to the original hardcoded pairs if config is unavailable.
+    """
+    _FALLBACK_UNIVERSAL: list[tuple[str, str]] = [
+        ("financial_exposure_risk", "clause_balance_risk"),
+        ("dispute_resolution_risk", "legal_enforceability_risk"),
+    ]
+    _FALLBACK_OPTIONAL: list[tuple[str, str]] = [
+        ("financial_exposure_risk", "dispute_resolution_risk"),
+        ("performance_delivery_risk", "legal_enforceability_risk"),
+        ("performance_delivery_risk", "financial_exposure_risk"),
+        ("performance_delivery_risk", "dispute_resolution_risk"),
+    ]
+    try:
+        import yaml as _yaml
+        params_path = Path(__file__).resolve().parents[3] / "config" / "contract_type_parameters.yaml"
+        with open(params_path, encoding="utf-8") as fh:
+            params = _yaml.safe_load(fh) or {}
+        pairs_cfg = params.get("bn_dimension_pairs", {})
+        universal = [tuple(p) for p in pairs_cfg.get("universal", [])]
+        optional = [tuple(p) for p in pairs_cfg.get("optional", [])]
+        return (universal or _FALLBACK_UNIVERSAL, optional or _FALLBACK_OPTIONAL)
+    except Exception:
+        return (_FALLBACK_UNIVERSAL, _FALLBACK_OPTIONAL)
+
+
 def load_company_redlines(matched_types: list[str] | None = None) -> tuple[list[dict], list[dict]]:
     """Load company redline rules filtered by matched contract types.
 

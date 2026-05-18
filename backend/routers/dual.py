@@ -9,7 +9,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from contract_risk_analysis.bn.consistency_validator import build_consistency_report
-from contract_risk_analysis.review.ai_review import free_review_contract_text
+from contract_risk_analysis.review.ai_review import free_review_contract_text, detect_bn_confidence
 from contract_risk_analysis.review.report_writer import generate_combined_report
 
 router = APIRouter()
@@ -25,13 +25,16 @@ async def api_v2_dual_review(request: Request):
         return JSONResponse({"error": "合同文本不能为空"}, status_code=400)
 
     results: dict[str, dict] = {}
+    bn_confidence = detect_bn_confidence(contract_text)
     for party in ("buyer", "seller"):
         t0 = _time.time()
         try:
             free_output = free_review_contract_text(
                 contract_text, contract_id, source_document, party)
-            consistency = build_consistency_report(free_output)
-            polished = generate_combined_report(free_output, consistency, party)
+            consistency = build_consistency_report(free_output, bn_confidence)
+            polished = generate_combined_report(
+                free_output, consistency, party, bn_confidence=bn_confidence,
+            )
             results[party] = {
                 "executive_summary": polished.executive_summary,
                 "signing_advice": polished.signing_advice,
