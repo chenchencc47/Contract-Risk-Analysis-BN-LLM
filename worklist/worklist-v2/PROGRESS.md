@@ -1,15 +1,49 @@
 # 实施进度记录（v2）
 
-> 最后更新：2026-05-18（阶段 E 启动：BN自适应可信度分层 + 跨合同类型证据收口）
+> 最后更新：2026-05-18（阶段 E-1 完成：BN自适应可信度分层 + 维度对配置化）
 
 ---
 
 ## 当前状态
 
-- **当前主线**：阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口（进行中，E-1 启动）
+- **当前主线**：阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口（进行中，E-1 已完成）
 - **当前计划文件**：`docs/superpowers/specs/2026-05-18-bn-adaptive-confidence-design.md`
-- **当前进展**：阶段 D 跨合同类型泛化验证已完成（5 类合同 + 1 组双视角对比）。已产出横向对比分析报告，识别出 BN 乘数效应可信度不足、部分维度对硬编码、contract_type_routing 节点未触发等问题。spec 已写定。
-- **下次继续入口**：E-1a（`contract_type_parameters.yaml` 加 `bn_confidence` 字段）
+- **当前进展**：E-1 全部 7 个子任务完成。bn_confidence 分层机制上线，维度对从代码移入配置，聚焦回归 67 passed。报告在不同合同类型下会自动调整 BN 数据展示深度。
+- **下次继续入口**：E-2（contract_type_routing 链路排查 — 源码托管/SLA 等节点未触发）
+
+---
+
+## 2026-05-18：阶段 E-1 — BN自适应可信度分层 + 维度对配置化（已完成）
+
+### 做了什么
+
+| # | 事项 | 文件 | 状态 |
+|---|------|------|:--:|
+| E-1a | `contract_type_parameters.yaml` 四种资产类型加 `bn_confidence` 字段 | `config/contract_type_parameters.yaml` | ✅ |
+| E-1b | `contract_type_parameters.yaml` 新增 `bn_dimension_pairs` 段 (universal 2对 + optional 4对) | `config/contract_type_parameters.yaml` | ✅ |
+| E-1c | `consistency_validator.py` 维度对从配置读取，按 bn_confidence 选数量 | `src/contract_risk_analysis/bn/consistency_validator.py` | ✅ |
+| E-1d | `contract_type_routing.yaml` 各合同类型加 `bn_config_override: null` 占位 | `config/contract_type_routing.yaml` | ✅ |
+| E-1e | `report_writer.py` LLM₂ prompt 加 BN 可信度层级 framing + 各函数线程化 bn_confidence | `src/contract_risk_analysis/review/report_writer.py` | ✅ |
+| E-1f | `bn_mapping.py` `CROSS_DIMENSION_RISK_PAIRS` 加注释标注为通用回退 | `src/contract_risk_analysis/bn/bn_mapping.py` | ✅ |
+| E-1g | `ai_review.py` 新增 `detect_bn_confidence()` + `load_bn_dimension_pairs()` | `src/contract_risk_analysis/review/ai_review.py` | ✅ |
+| — | 后端路由 (review.py + dual.py) 传入 bn_confidence | `backend/routers/review.py`, `dual.py` | ✅ |
+| — | 聚焦回归 67 passed | 测试 | ✅ |
+
+### bn_confidence 三级行为
+
+| 级别 | 适用合同 | 维度对数量 | LLM₂ prompt 措辞 | BN 数据展示 |
+|:--:|------|:--:|------|------|
+| **high** | 标准设备采购 | 6对 (universal + optional) | "可用于谈判中的数字论证" | 完整表格+数字 |
+| **medium** | 定制开发/大宗商品 | 3对 (universal + top 1) | "方向性参考，建议结合行业惯例" | 简化表格 |
+| **low** | 轻资产服务 | 2对 (universal only) | "量化模型校准尚不充分，以法律判断为主" | 方向性描述，无数字 |
+
+### 后续扩展点
+
+数据集到位后：运行 CPT 校准 → 将对应 `bn_confidence` 翻为 high → 报告自动恢复完整量化。如需合同类型特定 BN 配置，在 `contract_type_routing.yaml` 中设 `bn_config_override` 指向新配置文件即可。
+
+### 下次继续入口
+
+→ E-2：contract_type_routing 链路排查（技术开发合同源码托管/SLA 节点未触发）
 
 ---
 
