@@ -600,7 +600,7 @@ def generate_executive_brief(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party, bn_confidence)
+                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))
                 + "\n你现在的任务是撰写管理层摘要——简明、决策导向、使用商业语言。",
             },
             {"role": "user", "content": prompt},
@@ -630,7 +630,7 @@ def generate_negotiation_playbook(
         messages=[
             {
                 "role": "system",
-                "content": _combined_system_prompt(review_party, bn_confidence)
+                "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))
                 + "\n你现在的任务是撰写谈判作战手册——具体、量化、可直接上谈判桌。",
             },
             {"role": "user", "content": prompt},
@@ -1033,7 +1033,7 @@ def polish_report(report: RiskReport) -> PolishedReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "high") -> str:
+def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "high", risk_count: int = 10) -> str:
     party_label = "甲方（买方）" if review_party == "buyer" else "乙方（卖方）"
 
     # BN confidence framing — adjusts how LLM₂ presents quantitative data
@@ -1054,6 +1054,21 @@ def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "h
         ),
     }
     bn_framing = _BN_FRAMING.get(bn_confidence, _BN_FRAMING["high"])
+
+    # Lightweight mode: simple contracts don't need the full 8-chapter heavy framework
+    is_lightweight = risk_count <= 5 and bn_confidence != "high"
+    _LIGHTWEIGHT_INSTRUCTION = (
+        f"\n**报告复杂度适配（v2.16-E4）：**\n"
+        f"本合同风险项较少（{risk_count}项）且BN量化模型校准有限，适用**精简报告模式**。\n"
+        f"与标准8章结构不同，精简模式按以下规则撰写：\n"
+        f"1. **保持完整**的章节：一（执行摘要）、三（逐条款风险分析）、六（签署建议）、七（整改行动计划）\n"
+        f"2. **合并简化**的章节：\n"
+        f"   - 二（风险总览）：仅保留风险项清单表格，跳过BN乘数效应详细展开（一段话简述即可）\n"
+        f"   - 四（关键条款改善效果预估）：**完全省略**，不写BN数字。如需提及改善方向，在第三章修改建议中一句话带过\n"
+        f"   - 五（筹码防御与谈判策略）：简化为一段核心筹码概述+关键谈判话术，不需要退让阶梯表格和三层防御详述\n"
+        f"3. **总篇幅控制**：精简版报告总长度控制在标准报告的50%-60%，避免'{party_label}只有3个风险点却写了8000字谈判策略'的空洞感\n"
+        f"4. 八（附录方法论）保持原样，不可省略\n"
+    ) if is_lightweight else ""
 
     return (
         f"你是{party_label}的代理律师/商业谈判顾问，同时你是一个**受约束的报告渲染器**。"
@@ -1117,6 +1132,7 @@ def _combined_system_prompt(review_party: str = "buyer", bn_confidence: str = "h
         f"- 在谈判策略中将这些有利条款归类为「底线筹码」或「响应筹码」\n"
         f"- 绝对不要建议修改或削弱这些条款\n"
         f"- 绝对不要将有利条款列入签署条件（signing_forbidden/signing_acceptable）\n"
+        f"{_LIGHTWEIGHT_INSTRUCTION}"
     )
 
 
@@ -2503,7 +2519,7 @@ def generate_combined_report(
     completion = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": _combined_system_prompt(review_party, bn_confidence)},
+            {"role": "system", "content": _combined_system_prompt(review_party, bn_confidence, len(free_output.risk_segments))},
             {"role": "user", "content": prompt},
         ],
         max_tokens=24576,
