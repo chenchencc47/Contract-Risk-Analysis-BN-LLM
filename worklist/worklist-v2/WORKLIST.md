@@ -1,6 +1,6 @@
 # BN-Contract-Risk-Analysis 工作清单（v2）
 
-> 最后更新：2026-05-15（切换至”买卖合同基线收口 + 跨合同类型泛化验证”主线）
+> 最后更新：2026-05-18（BN自适应可信度分层 + 跨合同类型证据收口）
 
 ---
 
@@ -14,77 +14,63 @@
 
 ## 当前总目标
 
-买卖合同优化已接近架构上限（v22 五份评测一致认可）。下一阶段的真正竞争维度是”同一套架构在不同合同类型上能否稳定产出 80+ 分报告”。
+阶段 D 跨合同类型泛化验证已完成（5 类合同 + 1 组双视角对比），明确了系统在买卖合同外的问题：BN 乘数效应数值在新合同类型上可信度不足、部分维度对硬编码、合同类型路由的部分节点未被触发。
 
-当前主线状态：
+当前主线：**阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口**
 
 ```text
-阶段 D：买卖合同基线收口 + 跨合同类型泛化验证
-→ 第一层：当前架构内收口（退让阶梯方向化 / BN 数据去重 / Redline 接入）
-→ 第二层：跨合同类型泛化验证（3 份不同合同类型样本 → 逐份 checklist 验证）
-→ 第三层：中长期方向（多条款联动 BN / 行业参数库 / 谈判模拟器原型）
+阶段 E：BN 自适应可信度分层 + 跨合同类型证据收口
+→ E-1：bn_confidence 分层机制 + 维度对配置化（当前）
+→ E-2：contract_type_routing 链路排查（源码托管/SLA 等节点未触发）
+→ E-3：company_redlines.yaml 补充租赁合同专项
+→ E-4：轻量合同报告框架自适应简化
 ```
 
 当前对应计划文件：
-- `docs/superpowers/plans/2026-05-15-next-phase-cross-contract-generalization.md`
-
-当前待实施项：
-
-**第一层（立即执行）：**
-1. **1-1：退让阶梯方向化**
-   - 将 5.3.2 节退让阶梯中的独立百分比改为”从合同原文 X% 降至方向+保护条件”
-2. **1-2：BN 数据合并去重**
-   - 第四章中结论相同的多条防守筹码数据合并为一个段落
-3. **1-3：Redline 附录接入主报告输出**
-   - 将已实现的 `_build_redline_appendix()` 接入 `generate_multi_format_reports()` 和 API 响应
-
-**第二层（待第一层完成后由用户启动）：**
-4. **跨合同类型泛化验证**：3 份不同合同类型样本 → 逐份 checklist 验证 → 调整配置
-
-**第三层（中长期）：**
-5. 多条款联动 BN 反事实 / 行业参数库 / 谈判模拟器原型
+- `docs/superpowers/specs/2026-05-18-bn-adaptive-confidence-design.md`
 
 ---
 
-## 下一阶段候选（当前主线完成后再选）
+### E-1：bn_confidence 分层机制 + 维度对配置化（当前执行）
 
-### 阶段 B 后续：报告泛化与评测收口
+| 编号 | 实施项 | 涉及文件 | 完成标准 |
+|:--:|------|---------|---------|
+| E-1a | `contract_type_parameters.yaml` 加 `bn_confidence` 字段（high/medium/low） | `config/contract_type_parameters.yaml` | 四种资产类型均有标注 |
+| E-1b | `contract_type_parameters.yaml` 加 `bn_dimension_pairs` 段（universal + optional） | `config/contract_type_parameters.yaml` | 维度对从代码移入配置 |
+| E-1c | `consistency_validator.py` 从配置读取维度对 + 按 bn_confidence 选择数量 | `src/contract_risk_analysis/bn/consistency_validator.py` | high=6对, medium=3对, low=2对 |
+| E-1d | `contract_type_routing.yaml` 各合同类型加 `bn_config_override: null` 占位 | `config/contract_type_routing.yaml` | 扩展点文档化 |
+| E-1e | `report_writer.py` Ch.2/Ch.4 按 bn_confidence 调整展示深度 | `src/contract_risk_analysis/review/report_writer.py` | low时无数字表格、prompt措辞区分 |
+| E-1f | `bn_mapping.py` `CROSS_DIMENSION_RISK_PAIRS` 加注释标注为通用回退 | `src/contract_risk_analysis/bn/bn_mapping.py` | 注释说明未来可配置化 |
+| E-1g | 运行现有聚焦回归，确保 `bn_confidence=high` 行为不变 | 测试 | 全部通过 |
 
-**候选方向：**
-1. 基于批量结果生成“谁进步/谁退步”的自动摘要；
-2. golden case / golden pattern / production rule 的进一步收口；
-3. 不同合同类型的量化锚点泛化。
+### E-2：contract_type_routing 链路排查（待 E-1 完成后启动）
 
-**进入前提：**
-- 先完成当前“报告事实准确性与客户版输出收口”主线；
-- 保留本次聚焦回归入口作为后续版本回归基线。
+| 编号 | 实施项 | 涉及文件 | 完成标准 |
+|:--:|------|---------|---------|
+| E-2a | 排查技术开发合同为何未触发 `cuad_source_code_escrow` / `cuad_license_grant` | `bn_mapping.py`, `contract_type_routing.yaml` | 定位根因 |
+| E-2b | 排查服务合同 light_service context 是否注入到 LLM prompt | `report_writer.py` | context 字符串确认到位 |
+| E-2c | 修复后重跑技术开发合同和服务合同验证 | 报告对比 | 缺失节点出现 |
+
+### E-3：company_redlines.yaml 补充租赁合同专项（待 E-1 完成后启动）
+
+增加租赁合同专属红线规则（押金保护、转租权、维修责任划分等）。
+
+### E-4：轻量合同报告框架自适应简化（待 E-1 完成后启动）
+
+保密协议等简单合同不套用完整的8章重型框架，BN章节按 `bn_confidence=low` 自动精简。
 
 ---
 
-### 阶段 C：更多合同类型扩展
+## 下一阶段候选
 
-**候选方向：**
-1. 采购/销售之外的常见合同类型；
-2. 合同类型专属红线与策略模板；
-3. 对应报告主线的结构化复用。
+### 阶段 F：数据集扩充与 BN CPT 校准增强
 
-**启动前完成标准：**
-- 先完成阶段 B 中至少一条泛化/评测主线；
-- 明确目标合同类型及最小测试集；
-- 明确不复用旧阶段的临时假设。
+**前提：** 获得新合同类型的结构化数据（网上公开数据集 或 社区贡献）
 
----
-
-## 下次继续建议
-
-等待你的“开始”指令后，再按以下顺序继续：
-
-```text
-1. 先实施 LLM₁ 泛化提示纪律与测试
-2. 再实施 LLM₂ 去硬编码约束与客户版清洁 lint
-3. 然后收紧规则层推荐措辞并补回归
-4. 最后重跑真实样本验证，不覆盖旧报告
-```
+**方向：**
+1. 为租赁/服务/技术开发合同收集训练数据
+2. 运行 CPT 校准脚本生成合同类型特定参数
+3. 将对应 `bn_confidence` 从 low 翻为 high
 
 ---
 
@@ -92,4 +78,5 @@
 
 - 每完成一个阶段或关键子任务，就在 `PROGRESS.md` 顶部追加记录；
 - `WORKLIST.md` 只保留未完成阶段与后续候选，不重复写历史实现细节；
-- 如果开始新阶段，先更新本文件的“当前总目标/当前主线状态/下次继续建议”。
+- 如果开始新阶段，先更新本文件的”当前总目标/当前主线状态/下次继续建议”。
+- 每次 `PROGRESS.md` 续写时在顶部更新”下次继续入口”
