@@ -1,0 +1,278 @@
+{
+  "nodes": [
+    {
+      "node_name": "termination_clause_existence",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "liability_cap_existence",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "governing_law_clause_existence",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "dispute_resolution_clause_existence",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "confidentiality_clause_existence",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "termination_clause",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "liability_cap",
+      "node_layer": "contract_fact",
+      "states": [
+        "acceptable",
+        "unfavorable",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "confidentiality_nli",
+      "node_layer": "legal_semantics",
+      "states": [
+        "entailment",
+        "neutral",
+        "contradiction",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "governing_law_clause",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "dispute_resolution_clause",
+      "node_layer": "contract_fact",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "termination_clause_completeness",
+      "node_layer": "legal_semantics",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "termination_right_balance",
+      "node_layer": "legal_semantics",
+      "states": [
+        "balanced",
+        "counterparty_favorable",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "liability_cap_strength",
+      "node_layer": "legal_semantics",
+      "states": [
+        "acceptable",
+        "moderate",
+        "missing",
+        "severe",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "governing_law_clarity",
+      "node_layer": "legal_semantics",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "dispute_resolution_clarity",
+      "node_layer": "legal_semantics",
+      "states": [
+        "present",
+        "missing",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "jurisdiction_fairness",
+      "node_layer": "legal_semantics",
+      "states": [
+        "balanced",
+        "counterparty_favorable",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "confidentiality_scope_reasonableness",
+      "node_layer": "legal_semantics",
+      "states": [
+        "entailment",
+        "neutral",
+        "contradiction",
+        "ambiguous",
+        "unknown"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "legal_enforceability_risk",
+      "node_layer": "risk_dimension",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "financial_exposure_risk",
+      "node_layer": "risk_dimension",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "dispute_resolution_risk",
+      "node_layer": "risk_dimension",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "confidentiality_risk",
+      "node_layer": "risk_dimension",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "overall_contract_risk",
+      "node_layer": "decision",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "requires_manual_review",
+      "node_layer": "decision",
+      "states": [
+        "yes",
+        "no",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    },
+    {
+      "node_name": "signing_recommendation",
+      "node_layer": "decision",
+      "states": [
+        "sign",
+        "conditional_sign",
+        "do_not_sign",
+        "unknown",
+        "ambiguous"
+      ],
+      "priority": "P0"
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "nodes": {
+    "termination_clause": {
+      "states": ["missing", "present"],
+      "parents": []
+    },
+    "liability_cap": {
+      "states": ["unfavorable", "acceptable"],
+      "parents": []
+    },
+    "confidentiality_nli": {
+      "states": ["contradiction", "entailment", "neutral"],
+      "parents": []
+    },
+    "governing_law_clause": {
+      "states": ["missing", "present"],
+      "parents": []
+    },
+    "dispute_resolution_clause": {
+      "states": ["missing", "present"],
+      "parents": []
+    },
+    "termination_clause_completeness": {
+      "states": ["present", "missing"],
+      "parents": []
+    },
+    "termination_right_balance": {
+      "states": ["balanced", "counterparty_favorable"],
+      "parents": []
+    },
+    "liability_cap_strength": {
+      "states": ["acceptable", "moderate", "missing", "severe"],
+      "parents": []
+    },
+    "damages_exposure": {
+      "states": ["low", "medium", "high"],
+      "parents": []
+    },
+    "acceptance_process_clarity": {
+      "states": ["present", "missing"],
+      "parents": []
+    },
+    "governing_law_clarity": {
+      "states": ["present", "missing"],
+      "parents": []
+    },
+    "dispute_resolution_clarity": {
+      "states": ["present", "missing"],
+      "parents": []
+    },
+    "jurisdiction_fairness": {
+      "states": ["balanced", "counterparty_favorable"],
+      "parents": []
+    },
+    "termination_risk": {
+      "states": ["low", "high"],
+      "parents": ["termination_clause"]
+    },
+    "liability_risk": {
+      "states": ["low", "high"],
+      "parents": ["liability_cap"]
+    },
+    "confidentiality_risk": {
+      "states": ["low", "high"],
+      "parents": ["confidentiality_nli"]
+    },
+    "overall_legal_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["termination_risk", "liability_risk", "confidentiality_risk"]
+    },
+    "legal_enforceability_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["termination_clause_completeness", "governing_law_clarity"]
+    },
+    "financial_exposure_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["liability_cap_strength", "damages_exposure"]
+    },
+    "performance_delivery_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["acceptance_process_clarity", "termination_clause_completeness"]
+    },
+    "dispute_resolution_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["dispute_resolution_clarity", "jurisdiction_fairness", "governing_law_clarity"]
+    },
+    "clause_balance_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": ["termination_right_balance", "liability_cap_strength"]
+    },
+    "overall_contract_risk": {
+      "states": ["low", "medium", "high"],
+      "parents": [
+        "legal_enforceability_risk",
+        "financial_exposure_risk",
+        "performance_delivery_risk",
+        "dispute_resolution_risk",
+        "clause_balance_risk"
+      ]
+    }
+  },
+  "cpts": {
+    "termination_risk": {
+      "missing": 0.85,
+      "present": 0.2
+    },
+    "liability_risk": {
+      "unfavorable": 0.8,
+      "acceptable": 0.1
+    },
+    "confidentiality_risk": {
+      "contradiction": 0.8,
+      "entailment": 0.15,
+      "neutral": 0.45
+    },
+    "overall_legal_risk": {
+      "high|high|high": {"high": 0.95, "medium": 0.04, "low": 0.01},
+      "high|high|low": {"high": 0.85, "medium": 0.1, "low": 0.05},
+      "high|low|high": {"high": 0.85, "medium": 0.1, "low": 0.05},
+      "low|high|high": {"high": 0.8, "medium": 0.15, "low": 0.05},
+      "high|low|low": {"high": 0.2, "medium": 0.55, "low": 0.25},
+      "low|high|low": {"high": 0.2, "medium": 0.5, "low": 0.3},
+      "low|low|high": {"high": 0.2, "medium": 0.45, "low": 0.35},
+      "low|low|low": {"high": 0.05, "medium": 0.15, "low": 0.8}
+    }
+  },
+  "dimension_risk_rules": {
+    "legal_enforceability_risk": {
+      "label": "法律可执行性风险",
+      "inputs": {
+        "termination_clause_completeness": {"present": 0.2, "missing": 0.85},
+        "governing_law_clarity": {"present": 0.15, "missing": 0.7}
+      },
+      "weights": {
+        "termination_clause_completeness": 0.55,
+        "governing_law_clarity": 0.45
+      },
+      "summary_templates": {
+        "high": "合同在终止机制或适用法律上存在明显缺口，法律执行路径不稳定。",
+        "medium": "合同存在一定法律执行不确定性，建议签署前补齐关键基础条款。",
+        "low": "法律执行性条款整体较完整。"
+      }
+    },
+    "financial_exposure_risk": {
+      "label": "财务暴露风险",
+      "inputs": {
+        "liability_cap_strength": {"acceptable": 0.15, "moderate": 0.45, "missing": 0.75, "severe": 0.92},
+        "damages_exposure": {"low": 0.2, "medium": 0.5, "high": 0.85}
+      },
+      "weights": {
+        "liability_cap_strength": 0.65,
+        "damages_exposure": 0.35
+      },
+      "summary_templates": {
+        "high": "责任上限或损害赔偿安排明显偏重，财务暴露较大。",
+        "medium": "财务责任边界不够稳妥，建议继续谈判限制赔偿范围。",
+        "low": "财务责任暴露整体可控。"
+      }
+    },
+    "performance_delivery_risk": {
+      "label": "履约交付风险",
+      "inputs": {
+        "acceptance_process_clarity": {"present": 0.15, "missing": 0.78},
+        "termination_clause_completeness": {"present": 0.2, "missing": 0.65}
+      },
+      "weights": {
+        "acceptance_process_clarity": 0.65,
+        "termination_clause_completeness": 0.35
+      },
+      "summary_templates": {
+        "high": "验收或退出机制不清晰，后续履约交付争议概率高。",
+        "medium": "履约流程尚有不确定性，建议进一步明确验收与违约处理。",
+        "low": "履约与交付路径整体清晰。"
+      }
+    },
+    "dispute_resolution_risk": {
+      "label": "争议处置风险",
+      "inputs": {
+        "dispute_resolution_clarity": {"present": 0.15, "missing": 0.85},
+        "jurisdiction_fairness": {"balanced": 0.2, "counterparty_favorable": 0.8},
+        "governing_law_clarity": {"present": 0.15, "missing": 0.65}
+      },
+      "weights": {
+        "dispute_resolution_clarity": 0.45,
+        "jurisdiction_fairness": 0.35,
+        "governing_law_clarity": 0.2
+      },
+      "summary_templates": {
+        "high": "争议解决路径和管辖安排对我方不利，纠纷成本可能显著上升。",
+        "medium": "争议条款存在一定不利因素，建议补充或调整处理路径。",
+        "low": "争议解决路径基本清晰且可控。"
+      }
+    },
+    "clause_balance_risk": {
+      "label": "条款失衡风险",
+      "inputs": {
+        "termination_right_balance": {"balanced": 0.2, "counterparty_favorable": 0.78},
+        "liability_cap_strength": {"acceptable": 0.2, "moderate": 0.45, "missing": 0.72, "severe": 0.88}
+      },
+      "weights": {
+        "termination_right_balance": 0.45,
+        "liability_cap_strength": 0.55
+      },
+      "summary_templates": {
+        "high": "合同关键权利义务明显失衡，谈判地位偏弱。",
+        "medium": "部分条款存在失衡倾向，建议针对核心商业条款重新谈判。",
+        "low": "合同整体条款平衡性尚可。"
+      }
+    }
+  },
+  "overall_contract_risk": {
+    "weights": {
+      "legal_enforceability_risk": 0.2,
+      "financial_exposure_risk": 0.3,
+      "performance_delivery_risk": 0.15,
+      "dispute_resolution_risk": 0.2,
+      "clause_balance_risk": 0.15
+    },
+    "thresholds": {
+      "high": 0.7,
+      "medium": 0.35
+    }
+  }
+}

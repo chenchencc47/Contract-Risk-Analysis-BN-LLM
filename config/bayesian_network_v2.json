@@ -1,0 +1,2459 @@
+{
+  "version": "2.0",
+  "description": "Bayesian Network v2 with 90 nodes: 30 CUAD contract_fact → 5 aggregate → 5 risk_dimension → decision",
+  "edges": [
+    [
+      "termination_clause",
+      "termination_clause_completeness"
+    ],
+    [
+      "termination_clause",
+      "termination_right_balance"
+    ],
+    [
+      "liability_cap",
+      "liability_cap_strength"
+    ],
+    [
+      "liability_cap",
+      "damages_exposure"
+    ],
+    [
+      "confidentiality_nli",
+      "confidentiality_scope_reasonableness"
+    ],
+    [
+      "governing_law_clause",
+      "governing_law_clarity"
+    ],
+    [
+      "dispute_resolution_clause",
+      "dispute_resolution_clarity"
+    ],
+    [
+      "dispute_resolution_clause",
+      "jurisdiction_fairness"
+    ],
+    [
+      "termination_clause_completeness",
+      "legal_enforceability_risk"
+    ],
+    [
+      "governing_law_clarity",
+      "legal_enforceability_risk"
+    ],
+    [
+      "termination_clause_completeness",
+      "performance_delivery_risk"
+    ],
+    [
+      "acceptance_process_clarity",
+      "performance_delivery_risk"
+    ],
+    [
+      "liability_cap_strength",
+      "financial_exposure_risk"
+    ],
+    [
+      "damages_exposure",
+      "financial_exposure_risk"
+    ],
+    [
+      "dispute_resolution_clarity",
+      "dispute_resolution_risk"
+    ],
+    [
+      "jurisdiction_fairness",
+      "dispute_resolution_risk"
+    ],
+    [
+      "governing_law_clarity",
+      "dispute_resolution_risk"
+    ],
+    [
+      "termination_right_balance",
+      "clause_balance_risk"
+    ],
+    [
+      "liability_cap_strength",
+      "clause_balance_risk"
+    ],
+    [
+      "legal_enforceability_risk",
+      "overall_contract_risk"
+    ],
+    [
+      "financial_exposure_risk",
+      "overall_contract_risk"
+    ],
+    [
+      "performance_delivery_risk",
+      "overall_contract_risk"
+    ],
+    [
+      "dispute_resolution_risk",
+      "overall_contract_risk"
+    ],
+    [
+      "clause_balance_risk",
+      "overall_contract_risk"
+    ],
+    [
+      "financial_exposure_risk",
+      "dispute_resolution_risk"
+    ],
+    [
+      "clause_balance_risk",
+      "financial_exposure_risk"
+    ],
+    [
+      "legal_enforceability_risk",
+      "performance_delivery_risk"
+    ],
+    [
+      "dispute_resolution_risk",
+      "legal_enforceability_risk"
+    ],
+    [
+      "cuad_termination_for_convenience",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_notice_period_to_terminate",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_governing_law",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_third_party_beneficiary",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_audit_rights",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_agg_legal",
+      "legal_enforceability_risk"
+    ],
+    [
+      "cuad_uncapped_liability",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_cap_on_liability",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_liquidated_damages",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_insurance",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_warranty_duration",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_agg_financial_a",
+      "financial_exposure_risk"
+    ],
+    [
+      "cuad_revenue_profit_sharing",
+      "cuad_agg_financial_b"
+    ],
+    [
+      "cuad_minimum_commitment",
+      "cuad_agg_financial_b"
+    ],
+    [
+      "cuad_volume_restriction",
+      "cuad_agg_financial_b"
+    ],
+    [
+      "cuad_agg_financial_b",
+      "financial_exposure_risk"
+    ],
+    [
+      "cuad_post_termination_services",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_source_code_escrow",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_agg_performance",
+      "performance_delivery_risk"
+    ],
+    [
+      "cuad_covenant_not_to_sue",
+      "cuad_agg_dispute"
+    ],
+    [
+      "cuad_no_solicit_of_customers",
+      "cuad_agg_dispute"
+    ],
+    [
+      "cuad_no_solicit_of_employees",
+      "cuad_agg_dispute"
+    ],
+    [
+      "cuad_non_disparagement",
+      "cuad_agg_dispute"
+    ],
+    [
+      "cuad_agg_dispute",
+      "dispute_resolution_risk"
+    ],
+    [
+      "cuad_anti_assignment",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_change_of_control",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_non_compete",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_exclusivity",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_most_favored_nation",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_rofr_rofo_rofn",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "cuad_agg_balance_a",
+      "clause_balance_risk"
+    ],
+    [
+      "cuad_ip_ownership_assignment",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_joint_ip_ownership",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_license_grant",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_non_transferable_license",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_price_restrictions",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_agg_balance_b",
+      "clause_balance_risk"
+    ],
+    [
+      "payment_structure",
+      "financial_exposure_risk"
+    ],
+    [
+      "delivery_terms",
+      "performance_delivery_risk"
+    ],
+    [
+      "risk_transfer_point",
+      "performance_delivery_risk"
+    ],
+    [
+      "dispute_venue_fairness",
+      "dispute_resolution_risk"
+    ],
+    [
+      "force_majeure_completeness",
+      "legal_enforceability_risk"
+    ],
+    [
+      "warranty_scope",
+      "financial_exposure_risk"
+    ],
+    [
+      "raw_material_acceptance_std",
+      "performance_delivery_risk"
+    ],
+    [
+      "batch_settlement_terms",
+      "financial_exposure_risk"
+    ],
+    [
+      "energy_pricing_terms",
+      "financial_exposure_risk"
+    ],
+    [
+      "supply_guarantee_terms",
+      "performance_delivery_risk"
+    ],
+    [
+      "quality_inspection_rights",
+      "performance_delivery_risk"
+    ],
+    [
+      "price_adjustment_mechanism",
+      "clause_balance_risk"
+    ],
+    [
+      "inventory_storage_responsibility",
+      "financial_exposure_risk"
+    ],
+    [
+      "calorific_value_pricing",
+      "financial_exposure_risk"
+    ],
+    [
+      "trial_burn_acceptance",
+      "performance_delivery_risk"
+    ],
+    [
+      "measurement_dispute_resolution",
+      "dispute_resolution_risk"
+    ],
+    [
+      "unilateral_inspection_rights",
+      "clause_balance_risk"
+    ],
+    [
+      "transportation_loss_allocation",
+      "financial_exposure_risk"
+    ]
+  ],
+  "nodes": {
+    "termination_clause": {
+      "layer": "contract_fact",
+      "label": "终止条款存在性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.665,
+        "missing": 0.285,
+        "unknown": 0.05
+      }
+    },
+    "liability_cap": {
+      "layer": "contract_fact",
+      "label": "责任上限条款质量",
+      "states": [
+        "acceptable",
+        "unfavorable",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "acceptable": 0.57,
+        "unfavorable": 0.38,
+        "unknown": 0.05
+      }
+    },
+    "confidentiality_nli": {
+      "layer": "contract_fact",
+      "label": "保密条款NLI关系",
+      "states": [
+        "entailment",
+        "neutral",
+        "contradiction",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "entailment": 0.468544,
+        "neutral": 0.41355,
+        "contradiction": 0.117906
+      },
+      "cpt_source": "contractnli_empirical"
+    },
+    "governing_law_clause": {
+      "layer": "contract_fact",
+      "label": "适用法律条款存在性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.7125,
+        "missing": 0.2375,
+        "unknown": 0.05
+      }
+    },
+    "dispute_resolution_clause": {
+      "layer": "contract_fact",
+      "label": "争议解决条款存在性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.665,
+        "missing": 0.285,
+        "unknown": 0.05
+      }
+    },
+    "termination_clause_completeness": {
+      "layer": "legal_semantics",
+      "label": "终止条款完整性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [
+        "termination_clause"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "present": 0.76,
+        "missing": 0.0475
+      }
+    },
+    "termination_right_balance": {
+      "layer": "legal_semantics",
+      "label": "解除权平衡性",
+      "states": [
+        "balanced",
+        "counterparty_favorable",
+        "unknown"
+      ],
+      "parents": [
+        "termination_clause"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "present": 0.57,
+        "missing": 0.0475
+      }
+    },
+    "liability_cap_strength": {
+      "layer": "legal_semantics",
+      "label": "责任上限强度",
+      "states": [
+        "acceptable",
+        "moderate",
+        "missing",
+        "severe",
+        "unknown"
+      ],
+      "parents": [
+        "liability_cap"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "acceptable": {
+          "acceptable": 0.679,
+          "moderate": 0.194,
+          "missing": 0.0485,
+          "severe": 0.0485,
+          "unknown": 0.03
+        },
+        "unfavorable": {
+          "acceptable": 0.0485,
+          "moderate": 0.1455,
+          "missing": 0.097,
+          "severe": 0.679,
+          "unknown": 0.03
+        }
+      }
+    },
+    "damages_exposure": {
+      "layer": "legal_semantics",
+      "label": "损害赔偿暴露",
+      "states": [
+        "low",
+        "medium",
+        "high",
+        "unknown"
+      ],
+      "parents": [
+        "liability_cap"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "acceptable": {
+          "low": 0.6305,
+          "medium": 0.2425,
+          "high": 0.097,
+          "unknown": 0.03
+        },
+        "unfavorable": {
+          "low": 0.097,
+          "medium": 0.291,
+          "high": 0.582,
+          "unknown": 0.03
+        }
+      }
+    },
+    "confidentiality_scope_reasonableness": {
+      "layer": "legal_semantics",
+      "label": "保密范围合理性",
+      "states": [
+        "entailment",
+        "neutral",
+        "contradiction",
+        "unknown"
+      ],
+      "parents": [
+        "confidentiality_nli"
+      ],
+      "cpt_source": "contractnli_empirical",
+      "cpt": {
+        "entailment": {
+          "entailment": 0.85,
+          "neutral": 0.1,
+          "contradiction": 0.05
+        },
+        "neutral": {
+          "entailment": 0.2,
+          "neutral": 0.65,
+          "contradiction": 0.15
+        },
+        "contradiction": {
+          "entailment": 0.05,
+          "neutral": 0.15,
+          "contradiction": 0.8
+        }
+      }
+    },
+    "governing_law_clarity": {
+      "layer": "legal_semantics",
+      "label": "适用法律明确性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [
+        "governing_law_clause"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "present": 0.855,
+        "missing": 0.019
+      }
+    },
+    "dispute_resolution_clarity": {
+      "layer": "legal_semantics",
+      "label": "争议解决明确性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [
+        "dispute_resolution_clause"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "present": 0.8075,
+        "missing": 0.019
+      }
+    },
+    "jurisdiction_fairness": {
+      "layer": "legal_semantics",
+      "label": "管辖安排公平性",
+      "states": [
+        "balanced",
+        "counterparty_favorable",
+        "unknown"
+      ],
+      "parents": [
+        "dispute_resolution_clause"
+      ],
+      "cpt_source": "expert_estimated",
+      "cpt": {
+        "present": 0.5225,
+        "missing": 0.0475
+      }
+    },
+    "acceptance_process_clarity": {
+      "layer": "legal_semantics",
+      "label": "验收流程明确性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.5225,
+        "missing": 0.4275,
+        "unknown": 0.05
+      }
+    },
+    "legal_enforceability_risk": {
+      "layer": "risk_dimension",
+      "label": "法律可执行性风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "termination_clause_completeness",
+        "governing_law_clarity",
+        "dispute_resolution_risk",
+        "cuad_agg_legal",
+        "force_majeure_completeness"
+      ],
+      "cpt_source": "noisy_max_with_cross_dim",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "termination_clause_completeness": 0.4,
+        "governing_law_clarity": 0.35,
+        "dispute_resolution_risk": 0.4,
+        "cuad_agg_legal": 0.15,
+        "force_majeure_completeness": 0.12
+      },
+      "cross_dim_calibration": {
+        "dispute_resolution_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.7738,
+          "blended_weight": 0.4,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 130,
+          "cond_total": 168
+        }
+      }
+    },
+    "financial_exposure_risk": {
+      "layer": "risk_dimension",
+      "label": "财务暴露风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "liability_cap_strength",
+        "damages_exposure",
+        "clause_balance_risk",
+        "cuad_agg_financial_a",
+        "cuad_agg_financial_b",
+        "payment_structure",
+        "warranty_scope",
+        "batch_settlement_terms",
+        "energy_pricing_terms",
+        "inventory_storage_responsibility",
+        "calorific_value_pricing",
+        "transportation_loss_allocation"
+      ],
+      "cpt_source": "noisy_max_with_cross_dim",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "liability_cap_strength": 0.4,
+        "damages_exposure": 0.35,
+        "clause_balance_risk": 0.4,
+        "cuad_agg_financial_a": 0.1,
+        "cuad_agg_financial_b": 0.08,
+        "payment_structure": 0.3,
+        "warranty_scope": 0.08,
+        "cuad_warranty_duration": 0.1,
+        "cuad_uncapped_liability": 0.05,
+        "cuad_cap_on_liability": 0.05,
+        "cuad_liquidated_damages": 0.05,
+        "cuad_insurance": 0.05,
+        "cuad_revenue_profit_sharing": 0.03,
+        "cuad_minimum_commitment": 0.03,
+        "cuad_volume_restriction": 0.03
+      },
+      "cross_dim_calibration": {
+        "clause_balance_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.7634,
+          "blended_weight": 0.4,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 313,
+          "cond_total": 410
+        }
+      }
+    },
+    "performance_delivery_risk": {
+      "layer": "risk_dimension",
+      "label": "履约交付风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "termination_clause_completeness",
+        "acceptance_process_clarity",
+        "legal_enforceability_risk",
+        "cuad_agg_performance",
+        "delivery_terms",
+        "risk_transfer_point",
+        "raw_material_acceptance_std",
+        "supply_guarantee_terms",
+        "quality_inspection_rights",
+        "trial_burn_acceptance"
+      ],
+      "cpt_source": "noisy_max_with_cross_dim",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "acceptance_process_clarity": 0.4,
+        "termination_clause_completeness": 0.35,
+        "legal_enforceability_risk": 0.317,
+        "cuad_agg_performance": 0.15,
+        "delivery_terms": 0.12,
+        "risk_transfer_point": 0.15,
+        "cuad_post_termination_services": 0.03,
+        "cuad_source_code_escrow": 0.03
+      },
+      "cross_dim_calibration": {
+        "legal_enforceability_risk": {
+          "original_weight": 0.25,
+          "cuad_cooccurrence": 0.4735,
+          "blended_weight": 0.317,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 161,
+          "cond_total": 340
+        }
+      }
+    },
+    "dispute_resolution_risk": {
+      "layer": "risk_dimension",
+      "label": "争议处置风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "dispute_resolution_clarity",
+        "jurisdiction_fairness",
+        "governing_law_clarity",
+        "financial_exposure_risk",
+        "cuad_agg_dispute",
+        "dispute_venue_fairness",
+        "measurement_dispute_resolution"
+      ],
+      "cpt_source": "noisy_max_with_cross_dim",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "dispute_resolution_clarity": 0.35,
+        "jurisdiction_fairness": 0.25,
+        "governing_law_clarity": 0.2,
+        "financial_exposure_risk": 0.367,
+        "cuad_agg_dispute": 0.15,
+        "dispute_venue_fairness": 0.25,
+        "cuad_covenant_not_to_sue": 0.05,
+        "cuad_no_solicit_of_customers": 0.03,
+        "cuad_no_solicit_of_employees": 0.03,
+        "cuad_non_disparagement": 0.03
+      },
+      "cross_dim_calibration": {
+        "financial_exposure_risk": {
+          "original_weight": 0.2,
+          "cuad_cooccurrence": 0.756,
+          "blended_weight": 0.367,
+          "source": "cuad_cooccurrence_empirical",
+          "joint_count": 127,
+          "cond_total": 168
+        }
+      }
+    },
+    "clause_balance_risk": {
+      "layer": "risk_dimension",
+      "label": "条款失衡风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "termination_right_balance",
+        "liability_cap_strength",
+        "cuad_agg_balance_a",
+        "cuad_agg_balance_b",
+        "price_adjustment_mechanism",
+        "unilateral_inspection_rights"
+      ],
+      "cpt_source": "noisy_max_with_cuad_agg",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "termination_right_balance": 0.45,
+        "liability_cap_strength": 0.3,
+        "cuad_agg_balance_a": 0.1,
+        "cuad_agg_balance_b": 0.08,
+        "cuad_anti_assignment": 0.05,
+        "cuad_change_of_control": 0.05,
+        "cuad_non_compete": 0.05,
+        "cuad_exclusivity": 0.05,
+        "cuad_most_favored_nation": 0.03,
+        "cuad_ip_ownership_assignment": 0.03,
+        "cuad_joint_ip_ownership": 0.03,
+        "cuad_license_grant": 0.03,
+        "cuad_non_transferable_license": 0.03,
+        "cuad_rofr_rofo_rofn": 0.03,
+        "cuad_price_restrictions": 0.05
+      }
+    },
+    "overall_contract_risk": {
+      "layer": "decision",
+      "label": "合同总体风险",
+      "states": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "parents": [
+        "legal_enforceability_risk",
+        "financial_exposure_risk",
+        "performance_delivery_risk",
+        "dispute_resolution_risk",
+        "clause_balance_risk"
+      ],
+      "cpt_source": "noisy_max_generated",
+      "cpt": {
+        "_noisy_or": true
+      },
+      "noisy_or_weights": {
+        "legal_enforceability_risk": 0.2,
+        "financial_exposure_risk": 0.3,
+        "performance_delivery_risk": 0.15,
+        "dispute_resolution_risk": 0.2,
+        "clause_balance_risk": 0.15
+      }
+    },
+    "cuad_termination_for_convenience": {
+      "layer": "contract_fact",
+      "label": "任意终止权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.358824,
+        "missing": 0.611176,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Termination For Convenience",
+      "cuad_present_count": 183,
+      "cuad_total_count": 510
+    },
+    "cuad_notice_period_to_terminate": {
+      "layer": "contract_fact",
+      "label": "终止通知期",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.217647,
+        "missing": 0.752353,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Notice Period To Terminate Renewal",
+      "cuad_present_count": 111,
+      "cuad_total_count": 510
+    },
+    "cuad_governing_law": {
+      "layer": "contract_fact",
+      "label": "适用法律",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.856863,
+        "missing": 0.113137,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Governing Law",
+      "cuad_present_count": 437,
+      "cuad_total_count": 510
+    },
+    "cuad_third_party_beneficiary": {
+      "layer": "contract_fact",
+      "label": "第三方受益人",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.062745,
+        "missing": 0.907255,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Third Party Beneficiary",
+      "cuad_present_count": 32,
+      "cuad_total_count": 510
+    },
+    "cuad_audit_rights": {
+      "layer": "contract_fact",
+      "label": "审计权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.419608,
+        "missing": 0.550392,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Audit Rights",
+      "cuad_present_count": 214,
+      "cuad_total_count": 510
+    },
+    "cuad_uncapped_liability": {
+      "layer": "contract_fact",
+      "label": "无限责任",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.217647,
+        "missing": 0.752353,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Uncapped Liability",
+      "cuad_present_count": 111,
+      "cuad_total_count": 510
+    },
+    "cuad_cap_on_liability": {
+      "layer": "contract_fact",
+      "label": "责任上限",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.539216,
+        "missing": 0.430784,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Cap On Liability",
+      "cuad_present_count": 275,
+      "cuad_total_count": 510
+    },
+    "cuad_liquidated_damages": {
+      "layer": "contract_fact",
+      "label": "约定违约金",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.119608,
+        "missing": 0.850392,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Liquidated Damages",
+      "cuad_present_count": 61,
+      "cuad_total_count": 510
+    },
+    "cuad_insurance": {
+      "layer": "contract_fact",
+      "label": "保险条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.32549,
+        "missing": 0.64451,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Insurance",
+      "cuad_present_count": 166,
+      "cuad_total_count": 510
+    },
+    "cuad_warranty_duration": {
+      "layer": "contract_fact",
+      "label": "质保期限",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.147059,
+        "missing": 0.822941,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Warranty Duration",
+      "cuad_present_count": 75,
+      "cuad_total_count": 510
+    },
+    "cuad_revenue_profit_sharing": {
+      "layer": "contract_fact",
+      "label": "收入分成",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.32549,
+        "missing": 0.64451,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Revenue/Profit Sharing",
+      "cuad_present_count": 166,
+      "cuad_total_count": 510
+    },
+    "cuad_minimum_commitment": {
+      "layer": "contract_fact",
+      "label": "最低采购承诺",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.323529,
+        "missing": 0.646471,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Minimum Commitment",
+      "cuad_present_count": 165,
+      "cuad_total_count": 510
+    },
+    "cuad_volume_restriction": {
+      "layer": "contract_fact",
+      "label": "数量限制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.160784,
+        "missing": 0.809216,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Volume Restriction",
+      "cuad_present_count": 82,
+      "cuad_total_count": 510
+    },
+    "cuad_post_termination_services": {
+      "layer": "contract_fact",
+      "label": "终止后服务",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.356863,
+        "missing": 0.613137,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Post-Termination Services",
+      "cuad_present_count": 182,
+      "cuad_total_count": 510
+    },
+    "cuad_source_code_escrow": {
+      "layer": "contract_fact",
+      "label": "源代码托管",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.02549,
+        "missing": 0.94451,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Source Code Escrow",
+      "cuad_present_count": 13,
+      "cuad_total_count": 510
+    },
+    "cuad_covenant_not_to_sue": {
+      "layer": "contract_fact",
+      "label": "不起诉承诺",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.196078,
+        "missing": 0.773922,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Covenant Not To Sue",
+      "cuad_present_count": 100,
+      "cuad_total_count": 510
+    },
+    "cuad_no_solicit_of_customers": {
+      "layer": "contract_fact",
+      "label": "不招揽客户",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.107843,
+        "missing": 0.862157,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "No-Solicit Of Customers",
+      "cuad_present_count": 110,
+      "cuad_total_count": 1020
+    },
+    "cuad_no_solicit_of_employees": {
+      "layer": "contract_fact",
+      "label": "不招揽员工",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.115686,
+        "missing": 0.854314,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "No-Solicit Of Employees",
+      "cuad_present_count": 59,
+      "cuad_total_count": 510
+    },
+    "cuad_non_disparagement": {
+      "layer": "contract_fact",
+      "label": "不贬损条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.07451,
+        "missing": 0.89549,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Non-Disparagement",
+      "cuad_present_count": 38,
+      "cuad_total_count": 510
+    },
+    "cuad_anti_assignment": {
+      "layer": "contract_fact",
+      "label": "禁止转让",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.733333,
+        "missing": 0.236667,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Anti-Assignment",
+      "cuad_present_count": 374,
+      "cuad_total_count": 510
+    },
+    "cuad_change_of_control": {
+      "layer": "contract_fact",
+      "label": "控制权变更",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.237255,
+        "missing": 0.732745,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Change Of Control",
+      "cuad_present_count": 121,
+      "cuad_total_count": 510
+    },
+    "cuad_non_compete": {
+      "layer": "contract_fact",
+      "label": "竞业禁止",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.233333,
+        "missing": 0.736667,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Non-Compete",
+      "cuad_present_count": 119,
+      "cuad_total_count": 510
+    },
+    "cuad_exclusivity": {
+      "layer": "contract_fact",
+      "label": "排他性",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.352941,
+        "missing": 0.617059,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Exclusivity",
+      "cuad_present_count": 180,
+      "cuad_total_count": 510
+    },
+    "cuad_most_favored_nation": {
+      "layer": "contract_fact",
+      "label": "最惠国待遇",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.054902,
+        "missing": 0.915098,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Most Favored Nation",
+      "cuad_present_count": 28,
+      "cuad_total_count": 510
+    },
+    "cuad_ip_ownership_assignment": {
+      "layer": "contract_fact",
+      "label": "知识产权归属",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.243137,
+        "missing": 0.726863,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Ip Ownership Assignment",
+      "cuad_present_count": 124,
+      "cuad_total_count": 510
+    },
+    "cuad_joint_ip_ownership": {
+      "layer": "contract_fact",
+      "label": "共同知识产权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.090196,
+        "missing": 0.879804,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Joint Ip Ownership",
+      "cuad_present_count": 46,
+      "cuad_total_count": 510
+    },
+    "cuad_license_grant": {
+      "layer": "contract_fact",
+      "label": "许可授予",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.19951,
+        "missing": 0.77049,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "License Grant",
+      "cuad_present_count": 407,
+      "cuad_total_count": 2040
+    },
+    "cuad_non_transferable_license": {
+      "layer": "contract_fact",
+      "label": "不可转让许可",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.270588,
+        "missing": 0.699412,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Non-Transferable License",
+      "cuad_present_count": 138,
+      "cuad_total_count": 510
+    },
+    "cuad_rofr_rofo_rofn": {
+      "layer": "contract_fact",
+      "label": "优先购买权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.166667,
+        "missing": 0.803333,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Rofr/Rofo/Rofn",
+      "cuad_present_count": 85,
+      "cuad_total_count": 510
+    },
+    "cuad_price_restrictions": {
+      "layer": "contract_fact",
+      "label": "价格限制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.029412,
+        "missing": 0.940588,
+        "unknown": 0.03
+      },
+      "cpt_source": "cuad_empirical",
+      "cuad_category": "Price Restrictions",
+      "cuad_present_count": 15,
+      "cuad_total_count": 510
+    },
+    "cuad_agg_legal": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (legal_enforceability_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_termination_for_convenience",
+        "cuad_notice_period_to_terminate",
+        "cuad_governing_law",
+        "cuad_third_party_beneficiary",
+        "cuad_audit_rights"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_financial_a": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (financial_exposure_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_uncapped_liability",
+        "cuad_cap_on_liability",
+        "cuad_liquidated_damages",
+        "cuad_insurance",
+        "cuad_warranty_duration"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_financial_b": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (financial_exposure_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_revenue_profit_sharing",
+        "cuad_minimum_commitment",
+        "cuad_volume_restriction"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_performance": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (performance_delivery_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_post_termination_services",
+        "cuad_source_code_escrow"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_dispute": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (dispute_resolution_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_covenant_not_to_sue",
+        "cuad_no_solicit_of_customers",
+        "cuad_no_solicit_of_employees",
+        "cuad_non_disparagement"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_balance_a": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (clause_balance_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_anti_assignment",
+        "cuad_change_of_control",
+        "cuad_non_compete",
+        "cuad_exclusivity",
+        "cuad_most_favored_nation",
+        "cuad_rofr_rofo_rofn"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "cuad_agg_balance_b": {
+      "layer": "legal_semantics",
+      "label": "CUAD Aggregate (clause_balance_risk)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_ip_ownership_assignment",
+        "cuad_joint_ip_ownership",
+        "cuad_license_grant",
+        "cuad_non_transferable_license",
+        "cuad_price_restrictions"
+      ],
+      "cpt_source": "cuad_aggregate_counting",
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      }
+    },
+    "payment_structure": {
+      "layer": "contract_fact",
+      "label": "付款结构",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.3,
+        "neutral": 0.3,
+        "unfavorable": 0.35,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "delivery_terms": {
+      "layer": "contract_fact",
+      "label": "交货条款",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.35,
+        "neutral": 0.35,
+        "unfavorable": 0.25,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "risk_transfer_point": {
+      "layer": "contract_fact",
+      "label": "风险转移节点",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.3,
+        "neutral": 0.35,
+        "unfavorable": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "dispute_venue_fairness": {
+      "layer": "legal_semantics",
+      "label": "争议管辖公平性",
+      "states": [
+        "balanced",
+        "counterparty_favorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "balanced": 0.4,
+        "counterparty_favorable": 0.55,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "force_majeure_completeness": {
+      "layer": "contract_fact",
+      "label": "不可抗力条款完整性",
+      "states": [
+        "present",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "warranty_scope": {
+      "layer": "legal_semantics",
+      "label": "质保范围",
+      "states": [
+        "broad",
+        "narrow",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "broad": 0.3,
+        "narrow": 0.35,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated"
+    },
+    "raw_material_acceptance_std": {
+      "label": "原料验收标准",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.45,
+          "missing": 0.25
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "原料（粘土/釉料等）的质量验收标准是否明确约定"
+    },
+    "batch_settlement_terms": {
+      "label": "批次结算条款",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.25,
+          "neutral": 0.45,
+          "unfavorable": 0.3
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "付款是否按批次验收后结算，而非一次性预付"
+    },
+    "energy_pricing_terms": {
+      "label": "能源计价条款",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.2,
+          "neutral": 0.4,
+          "unfavorable": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "能源（天然气/电力）价格是否与市场指数挂钩，调价机制是否合理"
+    },
+    "supply_guarantee_terms": {
+      "label": "供货保障条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.35,
+          "missing": 0.35
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "供应商延迟/拒绝交货的违约金和赔偿机制是否充分"
+    },
+    "quality_inspection_rights": {
+      "label": "质量检测权",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.3,
+          "neutral": 0.4,
+          "unfavorable": 0.3
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "买方是否有权在交货前/中/后进行独立质量检测"
+    },
+    "price_adjustment_mechanism": {
+      "label": "价格调整机制",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.25,
+          "vague": 0.35,
+          "missing": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "长期供应合同中的价格调整公式/触发条件是否明确"
+    },
+    "inventory_storage_responsibility": {
+      "label": "库存仓储责任",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.3,
+          "neutral": 0.35,
+          "unfavorable": 0.35
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "库存保管责任和仓储费用由谁承担"
+    },
+    "calorific_value_pricing": {
+      "label": "热值计价条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.3,
+          "vague": 0.25,
+          "missing": 0.45
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "煤炭是否按实际热值(kcal/kg)计价而非仅按重量"
+    },
+    "trial_burn_acceptance": {
+      "label": "试烧验收条款",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.2,
+          "vague": 0.25,
+          "missing": 0.55
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "是否约定通过试烧验证煤炭质量后再批量验收"
+    },
+    "measurement_dispute_resolution": {
+      "label": "计量争议解决",
+      "layer": "contract_fact",
+      "states": [
+        "present",
+        "vague",
+        "missing"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "present": 0.25,
+          "vague": 0.3,
+          "missing": 0.45
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "矿发量与到厂量差异的争议解决机制（第三方检验/共同取样）"
+    },
+    "unilateral_inspection_rights": {
+      "label": "单方检验权",
+      "layer": "contract_fact",
+      "states": [
+        "balanced",
+        "counterparty_favorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "balanced": 0.3,
+          "counterparty_favorable": 0.7
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "质量检验权是否由一方独享（煤炭行业通常卖方独享装车检验）"
+    },
+    "transportation_loss_allocation": {
+      "label": "运输损耗承担",
+      "layer": "contract_fact",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "": {
+          "favorable": 0.25,
+          "neutral": 0.35,
+          "unfavorable": 0.4
+        }
+      },
+      "cpt_source": "expert_estimated",
+      "description": "运输途中的水分蒸发/损耗由谁承担（煤炭运输损耗通常3-5%）"
+    },
+    "cuad_anti_corruption": {
+      "layer": "contract_fact",
+      "label": "反腐败/商业贿赂",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_signing_authority": {
+      "layer": "contract_fact",
+      "label": "签约授权",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_compliance_with_laws": {
+      "layer": "contract_fact",
+      "label": "合规条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_cooperation": {
+      "layer": "contract_fact",
+      "label": "合作义务",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_disclosure_schedule": {
+      "layer": "contract_fact",
+      "label": "信息披露/附件",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_further_assurances": {
+      "layer": "contract_fact",
+      "label": "进一步保证",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_contract_term": {
+      "layer": "contract_fact",
+      "label": "合同期限",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_notice": {
+      "layer": "contract_fact",
+      "label": "通知条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_publicity": {
+      "layer": "contract_fact",
+      "label": "公开宣传/新闻发布",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_sanctions": {
+      "layer": "contract_fact",
+      "label": "制裁/出口管制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_taxes": {
+      "layer": "contract_fact",
+      "label": "税务条款",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.65,
+        "missing": 0.3,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_binding_effect": {
+      "layer": "legal_semantics",
+      "label": "合同约束力",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_contra_proferentem": {
+      "layer": "legal_semantics",
+      "label": "合同解释规则(不利解释原则)",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_enforceability": {
+      "layer": "legal_semantics",
+      "label": "可执行性",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_interest_on_late_payment": {
+      "layer": "legal_semantics",
+      "label": "逾期利息",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_interpretation_rules": {
+      "layer": "legal_semantics",
+      "label": "合同解释规则",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_no_waiver": {
+      "layer": "legal_semantics",
+      "label": "不放弃权利",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_powers": {
+      "layer": "legal_semantics",
+      "label": "授权/权限",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_representations_warranties": {
+      "layer": "legal_semantics",
+      "label": "陈述与保证",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_severability": {
+      "layer": "legal_semantics",
+      "label": "可分割性",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_survival": {
+      "layer": "legal_semantics",
+      "label": "条款存续",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_regulatory_approvals": {
+      "layer": "contract_fact",
+      "label": "政府许可/审批",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_books_records": {
+      "layer": "contract_fact",
+      "label": "账簿/记录查阅",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_brokers": {
+      "layer": "contract_fact",
+      "label": "中介/居间",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_third_party_consents": {
+      "layer": "contract_fact",
+      "label": "第三方同意",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_qualifications": {
+      "layer": "contract_fact",
+      "label": "资格/资质",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_record_keeping": {
+      "layer": "contract_fact",
+      "label": "记录保存",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_solvency": {
+      "layer": "contract_fact",
+      "label": "偿付能力声明",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_tax_withholding": {
+      "layer": "contract_fact",
+      "label": "税款代扣",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_use_of_proceeds": {
+      "layer": "contract_fact",
+      "label": "资金用途限制",
+      "states": [
+        "present",
+        "missing",
+        "unknown"
+      ],
+      "parents": [],
+      "cpt": {
+        "present": 0.55,
+        "missing": 0.4,
+        "unknown": 0.05
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_forfeiture": {
+      "layer": "legal_semantics",
+      "label": "没收/丧失权利",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_liens": {
+      "layer": "legal_semantics",
+      "label": "留置权",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_affiliate_transactions": {
+      "layer": "legal_semantics",
+      "label": "关联交易",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_vesting": {
+      "layer": "legal_semantics",
+      "label": "权利归属/成熟",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    },
+    "cuad_withholding": {
+      "layer": "legal_semantics",
+      "label": "代扣代缴",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [],
+      "cpt": {
+        "favorable": 0.5,
+        "neutral": 0.3,
+        "unfavorable": 0.2
+      },
+      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+    }
+  },
+  "thresholds": {
+    "high": 0.7,
+    "medium": 0.35
+  },
+  "dimension_labels": {
+    "legal_enforceability_risk": "法律可执行性风险",
+    "financial_exposure_risk": "财务暴露风险",
+    "performance_delivery_risk": "履约交付风险",
+    "dispute_resolution_risk": "争议处置风险",
+    "clause_balance_risk": "条款失衡风险"
+  }
+}

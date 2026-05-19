@@ -1,0 +1,135 @@
+{
+  "finding_key_rules": {
+    "termination_clause_missing": {
+      "node_name": "termination_clause_completeness",
+      "mapped_state": "missing"
+    },
+    "termination_clause_present": {
+      "node_name": "termination_clause_completeness",
+      "mapped_state": "present"
+    },
+    "termination_right_unbalanced": {
+      "node_name": "termination_right_balance",
+      "mapped_state": "counterparty_favorable"
+    },
+    "liability_cap_missing": {
+      "node_name": "liability_cap_strength",
+      "mapped_state": "missing"
+    },
+    "liability_cap_present": {
+      "node_name": "liability_cap_strength",
+      "mapped_state": "moderate"
+    },
+    "indirect_damage_exposure_high": {
+      "node_name": "liability_cap_strength",
+      "mapped_state": "severe"
+    },
+    "liquidated_damages_high": {
+      "node_name": "damages_exposure",
+      "mapped_state": "high"
+    },
+    "acceptance_terms_missing": {
+      "node_name": "acceptance_process_clarity",
+      "mapped_state": "missing"
+    },
+    "governing_law_missing": {
+      "node_name": "governing_law_clarity",
+      "mapped_state": "missing"
+    },
+    "dispute_resolution_missing": {
+      "node_name": "dispute_resolution_clarity",
+      "mapped_state": "missing"
+    },
+    "jurisdiction_one_sided": {
+      "node_name": "jurisdiction_fairness",
+      "mapped_state": "counterparty_favorable"
+    }
+  },
+  "state_priority_by_node": {
+    "termination_clause_completeness": ["present", "missing"],
+    "termination_right_balance": ["balanced", "counterparty_favorable"],
+    "liability_cap_strength": ["acceptable", "moderate", "missing", "severe"],
+    "damages_exposure": ["low", "medium", "high"],
+    "acceptance_process_clarity": ["present", "missing"],
+    "governing_law_clarity": ["present", "missing"],
+    "dispute_resolution_clarity": ["present", "missing"],
+    "jurisdiction_fairness": ["balanced", "counterparty_favorable"],
+    "termination_clause": ["present", "missing"],
+    "liability_cap": ["acceptable", "unfavorable"],
+    "confidentiality_nli": ["entailment", "neutral", "contradiction"],
+    "governing_law_clause": ["present", "missing"],
+    "dispute_resolution_clause": ["present", "missing"]
+  },
+  "clause_type_rules": {
+    "termination": {
+      "node_name": "termination_clause",
+      "state_by_status": {
+        "missing": "missing",
+        "present": "present"
+      }
+    },
+    "liability_cap": {
+      "node_name": "liability_cap",
+      "state_by_status": {
+        "unfavorable": "unfavorable",
+        "acceptable": "acceptable"
+      }
+    },
+    "confidentiality": {
+      "node_name": "confidentiality_nli",
+      "state_by_status": {
+        "contradiction": "contradiction",
+        "entailment": "entailment",
+        "neutral": "neutral"
+      }
+    },
+    "governing_law": {
+      "node_name": "governing_law_clause",
+      "state_by_status": {
+        "missing": "missing",
+        "present": "present"
+      }
+    },
+    "dispute_resolution": {
+      "node_name": "dispute_resolution_clause",
+      "state_by_status": {
+        "missing": "missing",
+        "present": "present"
+      }
+    }
+  },
+  "risk_factor_rules": {
+    "liability_risk": {
+      "node_name": "liability_cap",
+      "state_by_status": {
+        "missing": "unfavorable",
+        "unfavorable": "unfavorable",
+        "acceptable": "acceptable"
+      }
+    },
+    "governing_law_risk": {
+      "node_name": "governing_law_clause",
+      "state_by_status": {
+        "missing": "missing",
+        "present": "present"
+      }
+    },
+    "dispute_resolution_risk": {
+      "node_name": "dispute_resolution_clause",
+      "state_by_status": {
+        "missing": "missing",
+        "present": "present"
+      }
+    }
+  },
+  "hypothesis_rules": {
+    "Agreement contains a confidentiality restriction.": {
+      "node_name": "confidentiality_nli",
+      "state_by_status": {
+        "contradiction": "contradiction",
+        "entailment": "entailment",
+        "neutral": "neutral"
+      }
+    }
+  }
+}

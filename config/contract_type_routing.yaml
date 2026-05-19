@@ -1,0 +1,270 @@
+universal_core:
+  nodes:
+    - payment_structure
+    - delivery_terms
+    - acceptance_process_clarity
+    - liability_cap_strength
+    - damages_exposure
+    - termination_clause_completeness
+    - termination_right_balance
+    - dispute_resolution_clarity
+    - jurisdiction_fairness
+    - governing_law_clarity
+    - force_majeure_completeness
+    # ── v2.16 LEDGAR expansion: universal nodes (16 of 21 pass template validation) ──
+    - cuad_anti_corruption
+    - cuad_signing_authority
+    - cuad_binding_effect
+    - cuad_compliance_with_laws
+    - cuad_cooperation
+    - cuad_disclosure_schedule
+    - cuad_enforceability
+    - cuad_further_assurances
+    - cuad_interest_on_late_payment
+    - cuad_notice
+    - cuad_powers
+    - cuad_publicity
+    - cuad_representations_warranties
+    - cuad_severability
+    - cuad_survival
+    - cuad_taxes
+    - cuad_contract_term
+    # ── End v2.16 LEDGAR expansion ──
+
+# ── 合同类型专属BN配置覆盖（可选，当前无覆盖文件） ──
+#   示例: 租赁合同.bn_config_override = bayesian_network_v2_lease.json
+#
+contract_types:
+  销售合同:
+    bn_config_override: null
+    keywords: [购销, 买卖, 供货, 发货, 收货, 质保金, 小商品, 订货, 工矿产品]
+    nodes:
+      - risk_transfer_point
+      - warranty_scope
+      - cuad_warranty_duration
+      - cuad_liquidated_damages
+      - dispute_venue_fairness
+      - cuad_brokers
+
+  采购合同:
+    bn_config_override: null
+    keywords: [采购, 原料, 供应商, 批次结算, 第三方检测, 小商品, 工矿, 订货, 订购]
+    nodes:
+      - raw_material_acceptance_std
+      - batch_settlement_terms
+      - quality_inspection_rights
+      - price_adjustment_mechanism
+      - supply_guarantee_terms
+      - inventory_storage_responsibility
+      - cuad_regulatory_approvals
+      - cuad_liens
+      - cuad_solvency
+      - cuad_use_of_proceeds
+
+  煤炭合同:
+    bn_config_override: null
+    keywords: [煤炭, 热值, 收到基, 试烧, 途耗, kcal]
+    nodes:
+      - calorific_value_pricing
+      - trial_burn_acceptance
+      - measurement_dispute_resolution
+      - unilateral_inspection_rights
+      - transportation_loss_allocation
+
+  技术开发合同:
+    bn_config_override: null
+    keywords: [技术开发, 软件开发, 系统开发, 定制开发, 委托开发, 源代码, 软件, 系统, 算法, 接口, API, 部署, 试运行]
+    nodes:
+      - cuad_source_code_escrow
+      - cuad_license_grant
+      - cuad_non_transferable_license
+      - cuad_ip_ownership_assignment
+      - cuad_joint_ip_ownership
+      - cuad_termination_for_convenience
+      - cuad_post_termination_services
+      - cuad_audit_rights
+      - confidentiality_nli
+      - acceptance_process_clarity
+      - cuad_liquidated_damages
+      - cuad_vesting
+
+  服务合同:
+    bn_config_override: null
+    keywords: [服务, 咨询, 外包, 维护, 运营, 培训, 支持, 专家, 顾问, 劳务, 人力, 聘用, 设计服务, 技术服务]
+    nodes:
+      - cuad_termination_for_convenience
+      - cuad_notice_period_to_terminate
+      - confidentiality_nli
+      - cuad_no_solicit_of_customers
+      - cuad_no_solicit_of_employees
+      - cuad_non_compete
+      - cuad_post_termination_services
+      - cuad_audit_rights
+      - cuad_anti_assignment
+      - cuad_qualifications
+      - cuad_books_records
+
+  租赁合同:
+    bn_config_override: null
+    keywords: [租赁, 出租, 承租, 租金, 租期, 押金, 腾房, 转租, 装修, 房屋, 保证金, 搬迁, 恢复原状]
+    nodes:
+      - risk_transfer_point
+      - warranty_scope
+      - cuad_warranty_duration
+      - cuad_liquidated_damages
+      - cuad_anti_assignment
+      - cuad_insurance
+      - force_majeure_completeness
+      - dispute_venue_fairness
+      - cuad_books_records
+      - cuad_third_party_consents
+      - cuad_forfeiture
+
+  保密协议:
+    bn_config_override: null
+    keywords: [保密, 机密, 商业秘密, 专有信息, 披露, 信息接收, NDA, confidentiality, 返还, 存续]
+    nodes:
+      - confidentiality_nli
+      - confidentiality_scope_reasonableness
+      - cuad_no_solicit_of_customers
+      - cuad_no_solicit_of_employees
+      - cuad_non_compete
+      - cuad_anti_assignment
+      - cuad_non_disparagement
+      - cuad_covenant_not_to_sue
+
+  # ── v2.16-F3: New contract types from template analysis ──
+  劳动/聘用合同:
+    bn_config_override: null
+    keywords: [劳动, 聘用, 用工, 劳务派遣, 劳动合同, 雇佣, 入职, 离职, 竞业限制, 补偿金]
+    nodes:
+      - cuad_contract_term
+      - cuad_notice
+      - cuad_non_compete
+      - confidentiality_nli
+      - cuad_termination_for_convenience
+      - cuad_no_solicit_of_employees
+      - termination_clause
+      - cuad_signing_authority
+      - cuad_taxes
+      - cuad_anti_assignment
+
+  工程承包/施工合同:
+    bn_config_override: null
+    keywords: [工程, 承包, 施工, 总包, 分包, 土建, 装修工程, 竣工验收, 工期, 监理]
+    nodes:
+      - acceptance_process_clarity
+      - cuad_liquidated_damages
+      - cuad_warranty_duration
+      - force_majeure_completeness
+      - cuad_insurance
+      - payment_structure
+      - delivery_terms
+      - cuad_qualifications
+      - cuad_regulatory_approvals
+      - cuad_solvency
+
+  借款/抵押/担保合同:
+    bn_config_override: null
+    keywords: [借款, 贷款, 抵押, 典当, 担保, 融资, 借贷, 债权, 债务, 利息, 本金]
+    nodes:
+      - cuad_interest_on_late_payment
+      - cuad_liens
+      - cuad_solvency
+      - payment_structure
+      - cuad_contract_term
+      - cuad_signing_authority
+      - cuad_notice
+      - termination_clause
+      - damages_exposure
+      - cuad_forfeiture
+
+text_triggers:
+  质保信号:
+    any_of: [质保期, 保修, warranty]
+    nodes:
+      - warranty_scope
+      - cuad_warranty_duration
+
+  违约金信号:
+    any_of: [违约金, penalty, liquidated damages]
+    nodes:
+      - cuad_liquidated_damages
+
+  管辖信号:
+    any_of: [仲裁, 管辖法院, jurisdiction]
+    nodes:
+      - dispute_venue_fairness
+
+  煤炭信号:
+    any_of: [热值, 收到基, 发热量, kcal, 试烧, 途耗]
+    nodes:
+      - calorific_value_pricing
+      - trial_burn_acceptance
+      - measurement_dispute_resolution
+      - transportation_loss_allocation
+
+  保密信号:
+    any_of: [保密, 机密信息, 技术资料, 商业秘密, 返还, 存续]
+    nodes:
+      - confidentiality_nli
+
+  价格联动信号:
+    any_of: [调价, 价格波动, 指数, 原材料上涨]
+    nodes:
+      - price_adjustment_mechanism
+
+  软件交付信号:
+    any_of: [源代码, license, SaaS, 软件授权]
+    nodes:
+      - cuad_source_code_escrow
+      - cuad_license_grant
+
+  付款担保逻辑信号:
+    any_of: [质保金, 保证金, 保函, 质量保证金, 履约担保]
+    nodes:
+      - payment_structure
+      - cuad_uncapped_liability
+
+  交付地点信号:
+    any_of: [市辖区范围, 指定地点, 甲方指定地点, 乙方指定地点]
+    nodes:
+      - delivery_terms
+
+  违约金基数信号:
+    any_of: [按合同总价, 按合同金额]
+    nodes:
+      - cuad_liquidated_damages
+
+  默示接受信号:
+    any_of: [视为接受, 视为交付, 视为验收, 视为合格, 逾期视为, 逾期未提出异议]
+    nodes:
+      - acceptance_process_clarity
+      - risk_transfer_point
+
+  # ── v2.16 LEDGAR expansion: text_triggers for low-frequency universal nodes ──
+  弃权保留信号:
+    any_of: [权利保留, 不构成弃权, 未行使权利, 不视为放弃, 没有行使]
+    nodes:
+      - cuad_no_waiver
+
+  解释规则信号:
+    any_of: [格式条款, 不利解释, 加重对方责任, 限制主要权利, 格式合同]
+    nodes:
+      - cuad_contra_proferentem
+      - cuad_interpretation_rules
+
+  制裁信号:
+    any_of: [制裁, 出口管制, 贸易管制, 禁运, 制裁名单]
+    nodes:
+      - cuad_sanctions
+
+  第三方同意信号:
+    any_of: [第三方同意, 业主同意, 债权人同意, 须经同意, 不得无理拒绝]
+    nodes:
+      - cuad_third_party_consents
+
+fallback:
+  low_confidence_threshold: 0.25
+  sparse_type_hit_threshold: 3
+  mode: expanded_then_full

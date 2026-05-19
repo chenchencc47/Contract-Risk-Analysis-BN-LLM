@@ -1,0 +1,125 @@
+# Party-aware adjudication rules
+# Certain clause types that look like "risks" from a neutral perspective
+# are actually ADVANTAGES for a specific party. This config tells the
+# adjudication layer how to reclassify them based on review_party.
+#
+# Actions:
+#   reclassify_favorable — downgrade to "positive", this is NOT a risk for this party
+#   mark_favorable       — note it as favorable but keep original severity
+#   maintain_high        — confirm high risk, add note explaining why
+
+buyer:
+  # 1. 责任上限缺失 → 买方核心优势
+  liability_cap:
+    action: reclassify_favorable
+    new_severity: "positive"
+    note: "无责任上限对买方是核心优势。乙方违约时（如交付不合格产品），甲方可追索全部损失，无上限封顶。这是谈判中的超级筹码——对方必然恐惧于此——绝不主动提出修改。如对方要求增加责任上限，只能作为换取对方同步降低核心付款风险、补强担保措施或后移风险节点的交换条件。"
+    chip_type: "响应筹码"
+
+  # 2. 间接损失未排除 → 买方中性偏有利（买方违约概率低、损失量级小）
+  damages_exposure:
+    action: mark_favorable
+    note: "未排除间接损失对买方影响有限。买方主要义务是付款，逾期付款的间接损失（如对方商誉损失）在司法实践中极难被支持。但本条款可作为响应筹码——当对方要求排除间接损失时，以此换取核心利益。"
+    chip_type: "响应筹码"
+
+  # 3. 违约金以合同总价为基数 → 买方有利（威慑力大，但注意法院调减）
+  liquidated_damages:
+    action: mark_favorable
+    note: "违约金以合同总价为基数对买方有利（但需注意法院可能依据民法典第585条予以调减）。对方必然要求修改基数，同意修改即是对价——可用于换取预付款降低或质保金提高。"
+    chip_type: "交换筹码"
+
+  # 4. 买方单方解除权 → 买方核心优势（履约保障）
+  termination_for_cause:
+    action: mark_favorable
+    note: "甲方享有广泛的单方解除权（乙方逾期15天、产品不合格等多种情形），是保障履约的核心武器。不得主动削弱，对方要求对等解除权时应换取核心利益让步。"
+    chip_type: "底线筹码"
+
+  # 5. 管辖地在买方住所地 → 买方核心优势（诉讼成本最低）
+  jurisdiction:
+    action: mark_favorable
+    note: "管辖地在甲方住所地，大幅降低甲方诉讼成本与执行难度，是最高级别底线条款。任何要求修改管辖地的提案都必须以对方在预付款等核心问题上做出实质性让步为对价。"
+    chip_type: "底线筹码"
+
+  # 6. 质保期过长 → 买方有利（但在合理范围内，不太可能被对方接受削减）
+  warranty_scope:
+    action: mark_favorable
+    note: "较长的质保期对买方有利，保障了设备长期使用的可靠性。对方可能要求缩短质保期以控制成本，我方应坚守。可将质保期作为次要交换筹码。"
+
+  # 7. 高额预付款 / 付款早于交付验收 → 买方高风险
+  payment_structure:
+    action: maintain_high
+    counterparty_impact: buyer_unfavorable
+    note: "高额预付款或付款早于实质交付/最终验收，对买方是不利的资金敞口。不得将其写成买方让步筹码本身；应优先要求降低预付款比例、绑定里程碑交付，或要求预付款保函/履约保函。"
+    chip_type: "底线筹码"
+
+  # 8. 风险在最终验收前转移 → 买方高风险
+  risk_transfer:
+    action: maintain_high
+    counterparty_impact: buyer_unfavorable
+    note: "初验、到货、交付承运人等节点即视为风险转移，若早于最终验收合格，对买方是不利的履约风险。应争取将风险转移推迟至最终验收合格或至少保留内在质量责任。"
+    chip_type: "底线筹码"
+
+  # 9. 付款担保结构倒挂 → 买方致命风险（v2.14新增）
+  payment_security_structure:
+    action: maintain_high
+    counterparty_impact: buyer_unfavorable
+    note: "买方大额预付款先付、小额保证金后收构成「付款担保结构倒挂」——买方资金敞口与持有的担保金额严重不匹配。这是结构性缺陷，必须优先处理：降低预付款、等额保函覆盖、或质保金/保证金前置。"
+    chip_type: "底线筹码"
+
+seller:
+  # 1. 责任上限缺失 → 卖方致命风险
+  liability_cap:
+    action: maintain_high
+    note: "无责任上限意味着因产品缺陷可能引发远超合同金额的赔偿责任，是卖方的致命风险。必须争取增加责任上限条款，建议不低于合同总价的100%，同时排除间接损失。"
+    chip_type: null
+
+  # 2. 间接损失未排除 → 卖方高风险（产品缺陷可引发巨大间接损失）
+  damages_exposure:
+    action: maintain_high
+    note: "未排除间接损失对卖方是重大风险。产品缺陷可能导致客户停产、商誉受损、第三方索赔等，赔偿金额可能远超合同金额。必须争取双向排除间接损失。"
+    chip_type: null
+
+  # 3. 违约金以合同总价为基数 → 卖方不利（威慑过大，争取改为迟交部分价值）
+  liquidated_damages:
+    action: mark_favorable
+    counterparty_impact: seller_unfavorable
+    note: "违约金以合同总价为基数对卖方极为不利——即使仅迟交少量配件也可能触发巨额违约金。应争取将基数改为迟交部分价值，并设定违约金上限。"
+
+  # 4. 买方单方解除权 → 卖方不利（应争取对等解除权或限缩触发条件）
+  termination_for_cause:
+    action: mark_favorable
+    counterparty_impact: seller_unfavorable
+    note: "合同赋予买方广泛的单方解除权，卖方缺乏对等权利。应争取：①增加卖方解除权（如买方逾期付款超过60天）；②限缩买方解除权触发条件（如将'逾期交货15天'延长至30天）。"
+
+  # 5. 管辖地在买方住所地 → 卖方不利（增加诉讼成本）
+  jurisdiction:
+    action: maintain_high
+    note: "管辖地在对方住所地对卖方不利，增加诉讼成本和执行难度。应争取改为己方所在地或中立仲裁机构（如CIETAC）。"
+
+  # 6. 高预付款比例 → 卖方核心优势（现金流保障）
+  payment_structure:
+    action: mark_favorable
+    note: "高预付款比例对卖方是核心优势，保障了现金流和生产资金安全。对方要求降低预付款时，可用同意设置责任上限或延长质保期作为交换。"
+
+  # 7. 质保期过长 → 卖方成本风险
+  warranty_scope:
+    action: mark_favorable
+    counterparty_impact: seller_unfavorable
+    note: "质保期过长增加卖方的售后维护成本和服务资源占用。对方要求延长质保期时，应要求相应提高合同价格或降低预付款比例作为交换。"
+
+  # 8. 付款与交付/验收脱钩 → 卖方有利（先收款后履约）
+  payment_delivery_linkage:
+    action: mark_favorable
+    note: "付款节点与交付/验收脱钩对卖方有利——先收款后履约，掌握资金主动权。对方要求将付款与验收挂钩时，应要求对方提供履约保函等保障。"
+
+  # 9. 风险提前转移给买方 → 卖方有利
+  risk_transfer:
+    action: mark_favorable
+    note: "风险在交付承运人、到货或初验节点即转移给买方，对卖方有利，可降低运输、保管和验收前损毁责任。买方要求推迟风险转移时，应换取付款、验收时限或责任上限方面的对价。"
+    chip_type: "底线筹码"
+
+  # 10. 付款担保结构倒挂 → 卖方有利（买方先付大额预付款，后收小额保证金）
+  payment_security_structure:
+    action: mark_favorable
+    note: "买方大额预付款先付、小额保证金后收的担保结构倒挂对卖方有利——先拿钱、后提供担保，掌控资金主动权。买方要求调整时，应换取付款比例、验收标准或责任上限方面的对价。"
+    chip_type: "底线筹码"
