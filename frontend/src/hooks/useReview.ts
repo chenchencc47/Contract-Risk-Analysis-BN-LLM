@@ -97,10 +97,27 @@ export function useReview() {
     []
   );
 
+  const loadDemo = useCallback(async () => {
+    setState({ status: "loading", data: null, error: null });
+    setDualData(null);
+    try {
+      const res = await fetch("/api/demo");
+      if (!res.ok) throw new Error("Demo 加载失败");
+      const data: ReviewResponse = await res.json();
+      setState({ status: "success", data, error: null });
+    } catch (err) {
+      setState({
+        status: "error",
+        data: null,
+        error: err instanceof Error ? err.message : "Demo 加载失败",
+      });
+    }
+  }, []);
+
   const reset = useCallback(() => {
     setState({ status: "idle", data: null, error: null });
     setDualData(null);
   }, []);
 
-  return { ...state, dualData, submitReview, submitDualReview, reset };
+  return { ...state, dualData, submitReview, submitDualReview, loadDemo, reset };
 }

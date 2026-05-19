@@ -164,3 +164,167 @@
     - id: early_termination_compensation_symmetry
       label: 提前解约补偿应对等
       description: 出租方提前解约的补偿（如退还剩余租金+押金）应与承租方提前解约的后果（如没收押金）基本对等，不得一方零成本解约、另一方没收全部押金
+
+劳动/聘用合同:
+  hard_rules:
+    - id: probation_period_statutory_cap
+      label: 试用期不得超过法定期限
+      description: >
+        劳动合同期限3个月以上不满1年的，试用期不超过1个月；1年以上不满3年的，不超过2个月；
+        3年以上或无固定期限的，不超过6个月（劳动合同法第19条）。超期试用部分无效，
+        且超期期间视为已过试用期、应按转正后工资支付。
+      severity: 企业红线
+
+    - id: non_compete_must_have_compensation
+      label: 竞业限制必须有经济补偿
+      description: >
+        竞业限制条款必须约定经济补偿金，补偿标准不低于劳动合同终止前12个月平均工资的30%
+        且不低于当地最低工资标准（劳动合同法第23条、最高法司法解释）。
+        未约定补偿金的竞业限制条款对劳动者无约束力。
+      severity: 企业红线
+
+    - id: liquidated_damages_restriction_labor
+      label: 劳动合同违约金严格限制
+      description: >
+        劳动合同法第22条和第25条明确规定：除专项培训服务期和竞业限制两种情形外，
+        不得约定由劳动者承担的违约金。任何其他名目的违约金（如"提前离职赔偿"、
+        "工作不满X年罚款"）均为违法无效条款。
+      severity: 企业红线
+
+    - id: unilateral_termination_restriction
+      label: 雇主单方解除权不得任意扩大
+      description: >
+        雇主单方解除劳动合同的法定情形限于劳动合同法第39-41条（严重违纪、不胜任工作经培训仍不胜任、
+        经济性裁员等）。合同中不得约定超出法定范围的单方解雇条件。如约定"业绩不达标即可解除"
+        的，应对业绩指标设定客观、可量化的标准，并配套改进计划（PIP）。
+      severity: 企业红线
+
+    - id: social_insurance_not_waivable
+      label: 社保缴纳义务不可约定免除
+      description: >
+        用人单位依法缴纳社会保险是强制性义务（社会保险法第58条），不得以任何约定形式免除或转嫁。
+        "员工自愿放弃社保"、"社保折现发放"等条款均为无效条款，且用人单位将面临补缴+滞纳金+罚款风险。
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: probation_salary_floor
+      label: 试用期工资不低于转正工资80%
+      description: 试用期工资不得低于正式工资的80%且不低于当地最低工资。低于此标准的约定违法
+
+    - id: overtime_structure_legal
+      label: 加班工资计算基数须合法
+      description: 加班工资基数不得低于劳动合同约定的工资标准，不得以"包干工资已含加班费"为由规避加班费支付义务
+
+    - id: severance_calculation_clarity
+      label: 经济补偿金计算须符合法定标准
+      description: 经济补偿金按工作年限×月工资计算（劳动合同法第47条），不得在合同中约定低于法定标准的赔偿方案
+
+工程承包/施工合同:
+  hard_rules:
+    - id: no_uncollateralized_contractor_financing
+      label: 禁止要求施工方无担保垫资
+      description: >
+        发包方要求施工方垫资施工的，必须提供等额支付担保（银行保函或不动产抵押）。
+        无担保垫资实质是发包方将资金风险单方转移至施工方，在工程款拖欠高发的行业背景下
+        属于结构性致命风险。依据：建设工程司法解释一第25条。
+      severity: 企业红线
+
+    - id: acceptance_criteria_must_be_objective
+      label: 验收标准必须客观、可验证
+      description: >
+        竣工验收标准不得使用"发包方满意"、"符合发包方预期"等主观表述。验收标准须引用
+        具体的国家/行业规范编号、技术指标数值或双方确认的设计文件版本号。
+        主观验收条款赋予发包方单方否决权，构成显失公平。
+      severity: 企业红线
+
+    - id: variation_order_process_required
+      label: 工程变更签证流程必须明确
+      description: >
+        合同须明确变更签证的发起流程、确认时限、计价方式和逾期未确认的默认规则。
+        不得接受"发包方可随时要求变更、施工方不得拒绝且价格另行协商"的单方变更权条款。
+        无流程约定的变更是工程结算争议的首要来源。
+      severity: 企业红线
+
+    - id: retention_money_release_schedule
+      label: 质保金返还须有明确时限和条件
+      description: >
+        质量保证金返还期限须明确（如竣工验收合格后2年），返还条件须客观
+        （如无未修复质量缺陷），不得以"双方协商一致"等主观条件为由无限期扣留。
+        依据：建质[2017]138号规定质保金比例不得超过工程价款结算总额的3%。
+      severity: 高
+
+    - id: completion_settlement_timeline
+      label: 竣工结算须有明确时限
+      description: >
+        发包方须在收到竣工结算文件后28日内完成审核并提出意见（建设工程司法解释一第20条）。
+        合同中不得以"审计完成后支付"等无明确截止日期的条件作为结算前提。
+        逾期未答复的视为认可结算文件。
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: extension_of_time_grounds
+      label: 工期顺延条件须合理并对等
+      description: 工期顺延条件应包括发包方原因（变更、付款延迟、甲供材延误）、不可抗力、异常恶劣天气等。违约金仅针对施工方原因造成的延误
+
+    - id: force_majeure_scope_construction
+      label: 不可抗力范围须结合工程所在地
+      description: 不可抗力条款应结合工程所在地的气候条件（台风、暴雨、严寒）和地质条件具体列举，不能简单写"双方协商认定"
+
+    - id: subcontractor_liability_chain
+      label: 分包商责任传导机制须明确
+      description: 如允许分包，合同须明确总包对分包商的质量、安全、工期承担连带责任，并约定分包商违约时总包的追偿机制
+
+借款/抵押/担保合同:
+  hard_rules:
+    - id: interest_rate_statutory_cap
+      label: 利率不得超过LPR四倍上限
+      description: >
+        借贷利率不得超过合同成立时一年期贷款市场报价利率（LPR）的四倍
+        （民法典第680条、民间借贷司法解释第25条）。超出部分的利息约定无效，
+        债务人已支付的超限利息可主张返还。即使是商业借贷亦受此上限约束。
+      severity: 企业红线
+
+    - id: guarantee_type_must_be_explicit
+      label: 保证方式必须明确约定
+      description: >
+        保证条款必须明确约定为"一般保证"或"连带责任保证"（民法典第686条）。
+        约定不明的，推定为一般保证——这意味着债权人须先起诉债务人、执行无果后
+        才能向保证人主张。如希望直接向保证人追偿，须明确写明"连带责任保证"。
+      severity: 企业红线
+
+    - id: no_foreclosure_clause
+      label: 禁止流押/流质条款
+      description: >
+        抵押合同中不得约定"债务到期未清偿则抵押财产归债权人所有"（民法典第401条）。
+        此类流押/流质条款自始无效。抵押权实现必须通过折价、拍卖或变卖方式，
+        抵押物价款超过债权部分须返还抵押人。
+      severity: 企业红线
+
+    - id: acceleration_clause_requires_notice
+      label: 提前到期/加速清偿条款须含通知和宽限期
+      description: >
+        合同中约定债权人在特定情形下可宣布贷款提前到期的（加速清偿条款），
+        必须包含书面通知义务和合理宽限期（通常不低于15个工作日）。
+        无通知、无宽限期的立即到期条款可能被视为加重对方责任的格式条款而无效。
+      severity: 企业红线
+
+    - id: mortgage_registration_obligation_clear
+      label: 抵押登记义务和时间节点必须明确
+      description: >
+        合同须明确约定抵押人完成抵押登记的期限（如合同生效后30个工作日内）、
+        登记费用承担方和未按期登记的违约责任。未登记的抵押权不具有对抗善意
+        第三人的效力（民法典第403条），等于无担保。
+      severity: 企业红线
+
+  reasoning_hints:
+    - id: guarantee_scope_certainty
+      label: 担保范围须明确且不过度扩张
+      description: 保证担保范围须明确列明（本金、利息、违约金、损害赔偿金、实现债权的费用），避免模糊的"一切债务"式兜底表述
+
+    - id: guarantee_period_reasonability
+      label: 保证期间须合理且明确起算点
+      description: 保证期间约定须明确起算点（主债务履行期届满之日）和长度。未约定的推定6个月（民法典第692条），过短的期间可能导致担保落空
+
+    - id: joint_debtor_liability_chain
+      label: 共同债务人之间的追偿机制
+      description: 多人共同借款或共同担保的，合同须明确各方的债务份额/担保份额以及一方向债权人清偿超过自己份额后的追偿权

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 
 interface Props {
   onSubmit: (text: string, id: string, reviewParty: "buyer" | "seller", dual: boolean, partyRoleLabel?: string) => void;
+  onDemo: () => void;
   isLoading: boolean;
 }
 
@@ -33,7 +34,7 @@ interface FileInfo {
   content: string;
 }
 
-export function ContractInput({ onSubmit, isLoading }: Props) {
+export function ContractInput({ onSubmit, onDemo, isLoading }: Props) {
   const [text, setText] = useState("");
   const [id, setId] = useState("contract-001");
   const [reviewParty, setReviewParty] = useState<"buyer" | "seller">("buyer");
@@ -339,6 +340,17 @@ export function ContractInput({ onSubmit, isLoading }: Props) {
           ) : (
             "开始审查"
           )}
+        </button>
+        <button
+          onClick={(e) => { e.preventDefault(); onDemo(); }}
+          disabled={isLoading || uploading}
+          className="px-6 py-2.5 text-sm font-medium rounded-lg tracking-wide
+                     border-2 border-[#E0D8CE] text-[#8B6F5C]
+                     hover:border-[#D4A574] hover:bg-[#FDFCFA]
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-all duration-200 ease-out"
+        >
+          体验 Demo
         </button>
       </div>
     </section>

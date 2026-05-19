@@ -798,33 +798,22 @@ def _parse_negotiation_chip(value: object) -> NegotiationChip | None:
     if value is None:
         return None
     if isinstance(value, dict):
-        required_keys = {
-            "chip_type",
-            "location",
-            "reason",
-            "counterparty_attack",
-            "strategy",
-        }
-        actual_keys = set(value)
-        if actual_keys != required_keys:
-            missing_keys = sorted(required_keys - actual_keys)
-            extra_keys = sorted(actual_keys - required_keys)
-            details: list[str] = []
-            if missing_keys:
-                details.append(f"缺少字段: {', '.join(missing_keys)}")
-            if extra_keys:
-                details.append(f"存在额外字段: {', '.join(extra_keys)}")
-            raise ValueError(f"negotiation_chip 对象字段不合法（{'；'.join(details)}）。")
-        for key in required_keys:
+        allowed_keys = {"chip_type", "location", "reason", "counterparty_attack", "strategy"}
+        extra_keys = sorted(set(value) - allowed_keys)
+        if extra_keys:
+            raise ValueError(f"negotiation_chip 存在额外字段: {', '.join(extra_keys)}。")
+        for key in value:
+            if key not in allowed_keys:
+                continue
             field_value = value[key]
             if field_value is not None and not isinstance(field_value, str):
                 raise ValueError(f"negotiation_chip.{key} 必须是字符串或 null。")
         return NegotiationChip(
-            chip_type=value["chip_type"],
-            location=value["location"],
-            reason=value["reason"],
-            counterparty_attack=value["counterparty_attack"],
-            strategy=value["strategy"],
+            chip_type=value.get("chip_type"),
+            location=value.get("location"),
+            reason=value.get("reason"),
+            counterparty_attack=value.get("counterparty_attack"),
+            strategy=value.get("strategy"),
         )
     if isinstance(value, str):
         chip_type = value if value in {"底线筹码", "交换筹码", "响应筹码"} else None

@@ -61,5 +61,14 @@
     "contract_id": "",
     "last_seen": "2026-05-18T17:07:38.844548",
     "occurrence_count": 1
+  },
+  "water_electricity_charges": {
+    "clause_type": "water_electricity_charges",
+    "risk_title": "水电费单价固定且偏高，缺乏调整机制",
+    "severity": "medium",
+    "confidence": 0.85,
+    "contract_id": "",
+    "last_seen": "2026-05-19T10:13:51.750746",
+    "occurrence_count": 1
   }
 }

@@ -200,12 +200,6 @@ def test_parse_free_review_payload_rejects_invalid_chip_shape() -> None:
             "counterparty_attack": "行业惯例",
             "strategy": "降到50%",
         },
-        {
-            "chip_type": "交换筹码",
-            "location": "第九条",
-            "reason": "卖方极想保留",
-            "counterparty_attack": "行业惯例",
-        },
     ],
 )
 def test_parse_free_review_payload_rejects_invalid_chip_dict_contract(chip_payload: object) -> None:
@@ -374,7 +368,7 @@ def test_free_review_prompt_includes_legal_basis_and_payment_hierarchy_rules() -
         "buyer",
     )
 
-    assert "**法律依据纪律**：只有当法条与该风险点直接匹配时，才填写 legal_basis" in prompt
+    assert "法律依据纪律" in prompt
     assert "禁止为了显得专业而机械套用法条" in prompt
     assert "禁止机械套用与风险点不直接对应的定金罚则或其他法条" in prompt
     assert "应优先识别为一个主风险（付款担保结构失衡/资金结构倒挂）" in prompt

@@ -92,7 +92,7 @@
 - 原因：本项目前后端都直接运行在项目路径下，worktree 中的修改不会自动同步到实际运行环境，导致"改了但没生效"。
 - 如果系统自动进入了 worktree 目录，立即 `exit` 退出并在项目根目录重新开始。
 - `.claude/worktrees/` 目录已删除，不可重新创建。
-- **后端入口：`backend/main.py`（端口 9527）**——不是 `src/contract_risk_analysis/web/server.py`
+- **后端入口：`backend/main.py`（端口 9527）**
 - 前端配置：`frontend/vite.config.ts`（API 代理到 localhost:9527）
 - 启动命令：`.venv/Scripts/python.exe -m uvicorn backend.main:app --port 9527 --reload`
 

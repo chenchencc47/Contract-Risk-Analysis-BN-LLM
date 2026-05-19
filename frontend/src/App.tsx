@@ -19,7 +19,7 @@ type Page =
   | { name: "redlines" };
 
 function App() {
-  const { status, data, error, submitReview, submitDualReview, dualData, reset } = useReview();
+  const { status, data, error, submitReview, submitDualReview, dualData, loadDemo, reset } = useReview();
   const [page, setPage] = useState<Page>({ name: "input" });
 
   const handleSubmit = (text: string, id: string, party: "buyer" | "seller", dual: boolean, partyRoleLabel?: string) => {
@@ -42,7 +42,10 @@ function App() {
     }
   };
 
-  // ── Pages ──
+  const handleDemo = () => {
+    loadDemo();
+    setPage({ name: "report" });
+  };
 
   if (page.name === "history") {
     return (
@@ -222,6 +225,7 @@ function App() {
       ) : (
         <ContractInput
           onSubmit={(text, id, party, dual) => handleSubmit(text, id, party, dual)}
+          onDemo={handleDemo}
           isLoading={status === "loading"}
         />
       )}

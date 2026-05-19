@@ -2,7 +2,7 @@ import type { ReviewResponse, ReviewReport, RiskItem } from "../../types";
 
 interface Props {
   data: ReviewResponse;
-  report: ReviewReport;
+  report: ReviewReport | null;
   isV2: boolean;
   signingAdvice: string;
   actionPlan: string[];
@@ -57,8 +57,8 @@ function TopRiskCard({ risk, index }: { risk: RiskItem; index: number }) {
 }
 
 export function DecisionSummary({ data, report, isV2, signingAdvice, actionPlan }: Props) {
-  const recommendation = report.signing_recommendation || signingAdvice || "有条件签署";
-  const topRisks = (report.top_risks || []).slice(0, 3);
+  const recommendation = report?.signing_recommendation || signingAdvice || "有条件签署";
+  const topRisks = (report?.top_risks || []).slice(0, 3);
   const immediateActions = actionPlan.slice(0, 3);
   const confidenceFacts = [
     data.findings_count ? `${data.findings_count} 项发现` : null,
@@ -83,9 +83,9 @@ export function DecisionSummary({ data, report, isV2, signingAdvice, actionPlan 
             <div className="mt-4 flex flex-wrap gap-2">
               <RiskLevelBadge recommendation={recommendation} />
               <span className="inline-flex items-center rounded-full bg-[#F5F0EB] px-3 py-1 text-xs font-semibold text-[#8B6F5C]">
-                总体风险：{report.overall_risk_label}
+                总体风险：{report?.overall_risk_label ?? "—"}
               </span>
-              <ManualReviewBadge required={report.requires_manual_review} />
+              <ManualReviewBadge required={report?.requires_manual_review ?? false} />
             </div>
           </div>
           <div className="rounded-xl border border-[#E8E2DB] bg-[#FCFAF8] p-4">
