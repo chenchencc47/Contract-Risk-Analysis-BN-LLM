@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .[test]
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -q --tb=short \
+            --ignore=tests/stability \
+            --ignore=tests/regression \
+            --ignore=tests/review/test_ai_review.py \
+            --ignore=tests/cli/test_benchmark_runner.py \
+            --ignore=tests/evaluation
