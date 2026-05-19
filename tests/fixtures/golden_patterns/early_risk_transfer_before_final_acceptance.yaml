@@ -1,0 +1,80 @@
+pattern_id: early_risk_transfer_before_final_acceptance
+pattern_name: 最终验收前风险过早转移
+version: 1
+status: candidate
+applies_to:
+  contract_types:
+    - 买卖合同
+    - 采购合同
+    - 销售合同
+    - 设备采购合同
+  review_stances:
+    - buyer
+    - seller
+purpose: >
+  识别货物或设备在最终验收、安装调试或实质质量确认前即发生交付/风险转移的情形。该结构通常对卖方有利、对买方不利，但在运输、自提、代办运输等场景下需结合实际控制权判断。
+
+fact_conditions:
+  any:
+    - risk_transfers_on_initial_acceptance: true
+    - risk_transfers_on_delivery_to_carrier: true
+    - risk_transfers_before_final_acceptance: true
+  context:
+    - acceptance_stages
+    - delivery_method
+    - who_controls_transport
+    - who_controls_goods_before_final_acceptance
+
+stance_expectations:
+  buyer:
+    expected_direction: unfavorable
+    expected_classification:
+      - high_risk
+      - must_fix
+      - negotiation_item
+    expected_reasoning: 买方尚未完成内在质量确认、安装调试或最终验收即承担毁损灭失风险，可能削弱质量索赔和拒付权。
+    expected_recommendations:
+      - 将风险转移推迟至最终验收合格
+      - 明确初验仅限数量和外观
+      - 保留内在质量异议权
+  seller:
+    expected_direction: favorable_but_context_dependent
+    expected_classification:
+      - advantage
+      - bottom_line_chip
+      - needs_review
+    expected_reasoning: 风险前移可减少卖方运输和保管风险，但代办运输或质量缺陷场景下需避免表述不清导致反向争议。
+    expected_recommendations:
+      - 保留合理风险转移节点
+      - 明确承运人选择、保险、破损举证和质量缺陷责任边界
+      - 避免风险转移与质量责任条款冲突
+
+must_not:
+  - 不得把初验、外观验收、数量确认直接等同于最终质量验收。
+  - 买方视角下，不得忽略“视为交付”可能带来的风险转移后果。
+  - 卖方视角下，不得忽略代办运输导致的责任边界不清。
+
+evidence_signals:
+  keywords:
+    - 视为交付
+    - 初验
+    - 外观验收
+    - 最终验收
+    - 交付承运人
+    - 风险转移
+    - 运输途中风险
+  structured_fields:
+    - delivery_method
+    - risk_transfer_time
+    - acceptance_type
+    - final_acceptance_required
+
+source_cases:
+  - sales_purchase_contract_001
+  - sales_contract_001
+
+promotion_requirements:
+  to_production_rule:
+    - 能区分外观/数量验收与最终验收
+    - 能识别风险转移节点
+    - 能结合买方/卖方视角输出相反方向裁决

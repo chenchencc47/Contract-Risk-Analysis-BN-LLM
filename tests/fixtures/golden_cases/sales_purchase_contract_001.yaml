@@ -1,0 +1,144 @@
+case_id: sales_purchase_contract_001
+case_name: 买卖合同真实样本
+contract_type: 买卖合同
+source_type: real_world_online_contract
+review_stance: buyer
+source_files:
+  contract: 合同检测报告/买卖合同/买卖合同.pdf
+  project_reports_dir: 合同检测报告/买卖合同
+  external_reviews:
+    - 合同检测报告/买卖合同/deepseek网页评价.md
+    - 合同检测报告/买卖合同/deepseek网页评价-1.md
+notes: >
+  合同原件为用户从网上找到的真实合同。PDF 当前可能为扫描件或不可直接抽取文本，
+  本 golden case 依据多份项目报告、AI网页端报告、DeepSeek 评价与人工复核沉淀。
+  评测重点是买方视角下的结构性付款风险、风险转移陷阱、优势条款与筹码方向。
+
+must_find:
+  - id: prepayment_80_no_guarantee
+    expected: 必须识别合同约定80%预付款，金额约1228万元，且预付款阶段缺少有效担保。
+    severity_min: high
+    evidence_keywords:
+      - 80%
+      - 预付款
+      - 12280000
+      - 1228万元
+    acceptable_labels:
+      - 致命风险
+      - 高风险
+      - P1
+      - must_fix
+
+  - id: warranty_deposit_inversion
+    expected: 必须识别质量保证金/质保金提交时间晚于预付款或尾款节点，无法覆盖高额预付款敞口，构成付款担保结构倒挂。
+    severity_min: high
+    evidence_keywords:
+      - 质量保证金
+      - 质保金
+      - 支付剩余款项前
+      - 预付款
+      - 倒挂
+    acceptable_labels:
+      - 结构性风险
+      - 高风险
+      - P1
+      - P2
+
+  - id: deemed_delivery_risk_transfer
+    expected: 必须识别初验签字即视为交付可能导致风险转移过早，与内在质量验收保留条款存在张力。
+    severity_min: high
+    evidence_keywords:
+      - 初验收
+      - 签字确认
+      - 视为乙方已交付
+      - 风险转移
+      - 内在质量
+    acceptable_labels:
+      - 高风险
+      - 致命风险
+      - P1
+      - P2
+
+  - id: delivery_place_imprecise
+    expected: 应识别交付地点仅约定为甲方指定的北京市辖区范围内，地点不够精确，可能引发履约争议。
+    severity_min: medium
+    evidence_keywords:
+      - 北京市辖区范围内
+      - 交付地点
+      - 收货地点
+
+  - id: warranty_start_too_early
+    expected: 应识别保修期从到货或初验节点起算可能早于最终验收，实际压缩甲方质保权益。
+    severity_min: medium
+    evidence_keywords:
+      - 保修期
+      - 到货验收
+      - 最终验收
+      - 起算
+
+must_not:
+  - id: buyer_liability_cap_wrong_direction
+    forbidden: 买方视角下，不得将乙方无责任上限直接定性为甲方风险并建议甲方主动新增或降低乙方责任上限。
+    wrong_patterns:
+      - 缺少责任上限是甲方致命风险
+      - 甲方应主动增加责任上限
+      - 必须为乙方设置责任上限
+    expected_direction: 无乙方责任上限应被识别为甲方优势、底线筹码或响应筹码。
+
+  - id: indirect_loss_wrong_direction
+    forbidden: 买方视角下，不得将未排除间接损失直接定性为甲方风险并建议主动排除间接损失。
+    expected_direction: 未排除间接损失通常增强甲方索赔空间，应作为优势或响应筹码处理。
+
+  - id: bn_liability_cap_overrides_legal_judgment
+    forbidden: 不得把 BN 关于责任上限改善的反事实降幅直接解释成买方应主动增加责任上限。
+    expected_direction: BN 数据只能说明该变量影响大；在买方视角下应解释为防守筹码价值。
+
+  - id: fabricated_probability_numbers
+    forbidden: 不得出现无来源、无 Dossier 或 BN 支撑的概率数字、降幅或乘数效应。
+    expected_direction: 概率数字必须可追溯到 CUAD、ContractNLI、expert_estimated 或系统 BN 输出。
+
+should_find_advantages:
+  - id: buyer_forum_advantage
+    expected: 应识别甲方住所地法院管辖对买方维权有利。
+    evidence_keywords:
+      - 甲方住所地
+      - 管辖
+      - 人民法院
+
+  - id: no_seller_liability_cap_advantage
+    expected: 应识别未设乙方责任上限对甲方有利，可作为底线筹码或响应筹码。
+    evidence_keywords:
+      - 无责任上限
+      - 责任上限
+      - 赔偿责任
+
+  - id: indirect_loss_not_excluded_advantage
+    expected: 应识别未排除间接损失扩大甲方索赔空间。
+    evidence_keywords:
+      - 间接损失
+      - 未排除
+      - 损失
+
+  - id: invoice_before_payment_advantage
+    expected: 应识别发票前置付款条件对甲方财务合规和付款控制有利。
+    evidence_keywords:
+      - 发票
+      - 付款前
+      - 暂停付款
+
+  - id: appearance_acceptance_not_internal_quality
+    expected: 应识别外观/数量验收不免除乙方内在质量责任是甲方优势条款。
+    evidence_keywords:
+      - 外观验收
+      - 内在质量
+      - 不免除
+
+needs_review:
+  - id: prepayment_acceptable_bottom_line
+    question: 预付款谈判底线应设为30%、40%还是50%，需要结合供应商议价能力和商业背景判断。
+
+  - id: liability_cap_fallback_number
+    question: 如果乙方强烈要求责任上限，买方可接受的回退数字是100%、200%还是其他，需要人工决策。
+
+  - id: scanned_pdf_extraction
+    question: 该真实合同 PDF 可能无法直接抽取文本，后续需要 OCR 或人工校验原文证据。

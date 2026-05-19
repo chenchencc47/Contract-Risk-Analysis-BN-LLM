@@ -1,0 +1,131 @@
+case_id: service_contract_001
+case_name: UNDP项目专家服务合同真实样本
+contract_type: 服务合同
+source_type: real_world_online_contract
+review_stance: buyer
+source_files:
+  contract: 合同检测报告/服务合同/服务合同.docx
+  project_reports_dir: 合同检测报告/服务合同
+  external_reviews:
+    - 合同检测报告/服务合同/deepseek网页评价.md
+notes: >
+  合同原件为用户从网上找到的真实专家服务合同。该样本适合作为甲方/委托方视角 golden case，
+  评测重点是争议解决条款无效风险、任意终止通知期、知识产权与学术发表边界、尾款验收条件和任务书交付标准。
+
+must_find:
+  - id: defective_arbitration_clause
+    expected: 必须识别争议解决条款未指定具体仲裁机构，且仲裁委员会由乙方指定政府官员、甲方代表和双方认可主席组成，存在中立性、可操作性和仲裁协议效力风险。
+    severity_min: high
+    evidence_keywords:
+      - 仲裁委员会
+      - 乙方指定的一位政府官员
+      - 甲方的一位代表
+      - 双方认可的一位主席
+    acceptable_labels:
+      - 致命风险
+      - 高风险
+      - P1
+      - 必须修改
+      - 人工复核
+
+  - id: short_termination_notice_period
+    expected: 必须识别任何一方仅提前10天即可终止合同，专家服务项目中可能导致项目连续性、交接和替代专家安排风险。
+    severity_min: medium
+    evidence_keywords:
+      - 提前10天
+      - 书面通知
+      - 终止合同
+      - 合同期每缩短一个月
+    acceptable_labels:
+      - 中风险
+      - P2
+      - 通知期
+
+  - id: ip_background_foreground_boundary
+    expected: 必须识别知识产权条款虽将任务书范围内材料归甲方和UNDP，但需要区分背景知识产权、前景成果、乙方学术发表权及保密限制。
+    severity_min: medium
+    evidence_keywords:
+      - 产权
+      - 版权
+      - 联合国开发计划署
+      - 甲方
+      - 出版论文
+      - 原有的资料
+    acceptable_labels:
+      - 中风险
+      - P2
+      - 知识产权
+
+  - id: subjective_acceptance_for_final_payment
+    expected: 应识别尾款支付以项目主任证明对工作表示满意或甲方认同为条件，验收标准主观，需要客观化验收时限、异议和整改流程。
+    severity_min: medium
+    evidence_keywords:
+      - 表示满意
+      - 报酬
+      - 尾款
+      - 认同
+      - 验收
+
+  - id: terms_of_reference_incomplete
+    expected: 应识别任务书缺少具体交付时间表、成果格式、报告语言、页数、验收标准、沟通机制或甲方配合义务，可能影响成果交付和尾款争议。
+    severity_min: medium
+    evidence_keywords:
+      - 任务书
+      - 25个工作日
+      - 实地考察
+      - 报告
+      - 验收标准
+
+  - id: governing_law_missing
+    expected: 应识别合同未明确适用法律，虽然国内履行场景下可能风险较低，但建议作为完善性条款补充中华人民共和国法律适用。
+    severity_min: low
+    evidence_keywords:
+      - 适用法律
+      - 中华人民共和国法律
+      - 法律
+
+must_not:
+  - id: ignore_arbitration_validity_risk
+    forbidden: 不得仅把仲裁条款当作对甲方有利的响应筹码，而忽略其可能因未选定仲裁委员会或组成机制不规范导致无效。
+    expected_direction: 可说明其有筹码价值，但必须列为签署前修正或人工复核重点。
+
+  - id: overstate_government_official_bias_direction
+    forbidden: 不得武断断言乙方指定政府官员一定偏袒甲方，而忽略其对甲方也可能构成程序不可控、声誉或利益冲突风险。
+    expected_direction: 应从中立性不足、程序不可控、未指定机构和主席僵局角度论证。
+
+  - id: treat_missing_governing_law_as_fatal
+    forbidden: 不得在无涉外因素、国内履行背景下把未约定适用法律夸大为致命风险。
+    expected_direction: 应作为低风险或完善性建议处理，除非合同背景显示涉外或跨法域因素。
+
+should_find_advantages:
+  - id: buyer_payment_control_advantage
+    expected: 甲方在项目主任认可成果后支付报酬，付款节奏和尾款控制对甲方有利，但应客观化以减少争议。
+    evidence_keywords:
+      - 表示满意
+      - 支付
+      - 报酬
+
+  - id: no_liability_cap_for_expert_advantage
+    expected: 合同未设乙方责任上限，对甲方追责空间有利，可作为响应筹码，但需兼顾公平性和专家个人承受能力。
+    evidence_keywords:
+      - 责任上限
+      - 赔偿
+      - 合同总价
+
+  - id: project_ip_owned_by_buyer_and_undp
+    expected: 任务书范围内材料产权、版权和其他所有权归甲方与UNDP，对甲方有利。
+    evidence_keywords:
+      - 产权
+      - 版权
+      - 均属联合国开发计划署
+      - 甲方
+
+needs_review:
+  - id: dispute_resolution_strategy
+    question: 仲裁条款应改为甲方所在地法院诉讼、北京仲裁委员会，还是其他机构，需要结合UNDP项目模板和对方接受度判断。
+
+  - id: expert_liability_cap_bottom_line
+    question: 若乙方要求责任上限，甲方可接受的底线是合同总价100%、80%还是其他，需要结合专家不可替代性和项目损失规模判断。
+
+  - id: academic_publication_scope
+    question: 乙方学术发表权应如何与甲方和UNDP未公开信息保护兼容，需要人工设定匿名化、审批和引用规则。

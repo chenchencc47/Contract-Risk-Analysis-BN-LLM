@@ -1,0 +1,120 @@
+case_id: technology_development_contract_001
+case_name: 技术开发合同真实样本
+contract_type: 技术开发合同
+source_type: real_world_online_contract
+review_stance: buyer
+source_files:
+  contract: 合同检测报告/技术开发_软件合同/技术开发合同.pdf
+  project_reports_dir: 合同检测报告/技术开发_软件合同
+  external_reviews:
+    - 合同检测报告/技术开发_软件合同/deepseek网页评价.md
+notes: >
+  合同原件为用户从网上找到的真实技术开发/软件开发合同。该样本适合作为甲方买方视角 golden case，
+  评测重点是高比例预付款、免费维护期起算矛盾、验收流程不清、维护范围不清，以及甲方既有优势条款的识别。
+
+must_find:
+  - id: fifty_percent_prepayment_before_delivery
+    expected: 必须识别合同签订生效后甲方即支付合同总额50%首付款919000元，在乙方交付成果前形成高额预付款和履约杠杆缺失风险。
+    severity_min: high
+    evidence_keywords:
+      - 50%
+      - 首付款
+      - 919,000
+      - 玖拾壹万玖仟
+      - 合同签订生效后
+    acceptable_labels:
+      - 致命风险
+      - 高风险
+      - P1
+      - 里程碑付款
+
+  - id: maintenance_period_start_conflict
+    expected: 必须识别免费维护期起算点前后矛盾：先写验收后进入免费维护期，又写自双方合同到期后开始起算，可能导致合同有效期内维护服务落空。
+    severity_min: high
+    evidence_keywords:
+      - 验收后进入免费维护期
+      - 免费维护期二年
+      - 自双方合同到期后开始起算
+      - 起算
+    acceptable_labels:
+      - 致命风险
+      - 条款矛盾
+      - P1
+      - 必须修改
+
+  - id: acceptance_process_unclear
+    expected: 必须识别验收条款仅称按采购文件相关要求进行，缺少具体验收标准、验收时限、不合格整改和再次验收流程。
+    severity_min: high
+    evidence_keywords:
+      - 验收
+      - 采购文件相关要求
+      - 第三方验收
+      - 整改
+    acceptable_labels:
+      - 高风险
+      - P2
+      - 验收流程
+
+  - id: maintenance_scope_unclear
+    expected: 应识别免费维护期服务范围、响应时间、版本更新、缺陷修复和升级边界不明确，可能导致后续服务争议。
+    severity_min: medium
+    evidence_keywords:
+      - 免费维护期
+      - 维护
+      - 服务范围
+      - 响应
+
+  - id: confidentiality_commitment_required
+    expected: 应识别项目实施方须提供保密承诺，且保密期限和泄密违约责任需要具体化，不能仅停留在原则性要求。
+    severity_min: medium
+    evidence_keywords:
+      - 保密措施
+      - 保密承诺
+      - 保密期限
+      - 泄露秘密的违约责任
+
+must_not:
+  - id: suggest_buyer_accepts_fifty_percent_without_security
+    forbidden: 买方视角下，不得建议无条件接受50%预付款且无履约保函、无里程碑交付绑定的付款结构。
+    expected_direction: 应建议降低首付款比例、采用里程碑付款，或要求履约保函/担保。
+
+  - id: ignore_maintenance_start_conflict
+    forbidden: 不得忽略免费维护期“验收后进入”与“合同到期后起算”的直接矛盾。
+    expected_direction: 应列为签约前必须修正的底线条款。
+
+  - id: invent_deemed_acceptance_as_existing_clause
+    forbidden: 不得把合同中不存在的“逾期未验收视为通过”直接描述为原合同已有条款。
+    expected_direction: 如提出视为验收机制，只能作为修改建议或对等风险提示，不能当作既有事实。
+
+should_find_advantages:
+  - id: invoice_before_payment_advantage
+    expected: 乙方未提供合法等额发票时，甲方有权拒绝支付当期款项且延期责任由乙方承担，对甲方有利。
+    evidence_keywords:
+      - 合法、等额发票
+      - 甲方有权拒绝支付
+      - 延期付款的责任由乙方承担
+
+  - id: buyer_favorable_jurisdiction
+    expected: 如合同约定甲方所在地或对甲方有利的争议解决安排，应识别为甲方优势或底线筹码。
+    evidence_keywords:
+      - 甲方所在地
+      - 管辖
+      - 人民法院
+
+  - id: ip_use_restriction_advantage
+    expected: 应识别数据建设成果归采购方所有、乙方软件需合法永久可用，以及乙方在特定区域外使用受限等知识产权控制安排对甲方有利。
+    evidence_keywords:
+      - 数据建设成果归采购方所有
+      - 永久、合法可用
+      - 知识产权
+      - 使用或销售
+
+needs_review:
+  - id: acceptable_prepayment_ratio
+    question: 首付款降至20%、30%还是保留部分50%但加履约保函，需要结合供应商议价能力、项目启动成本和预算要求判断。
+
+  - id: software_acceptance_standard_attachment
+    question: 验收标准是否已有采购文件、投标文件或技术附件支撑，需要人工补充核验。
+
+  - id: confidentiality_liability_cap
+    question: 保密承诺中的违约责任是否应设上限或区分故意、重大过失和一般过失，需要结合数据敏感性判断。

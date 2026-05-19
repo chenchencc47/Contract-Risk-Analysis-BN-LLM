@@ -1,0 +1,86 @@
+pattern_id: liability_cap_by_party_stance
+pattern_name: 责任上限按审查立场判断
+version: 1
+status: candidate
+applies_to:
+  contract_types:
+    - 买卖合同
+    - 采购合同
+    - 销售合同
+    - 服务合同
+    - 技术合同
+  review_stances:
+    - buyer
+    - seller
+    - service_provider
+    - customer
+purpose: >
+  同一责任上限事实在不同审查立场下方向相反。评测系统必须检查报告是否根据责任主体和审查立场进行反向判断，避免机械地把“缺少责任上限”一律当作风险。
+
+fact_conditions:
+  any:
+    - liable_party_cap_missing: true
+    - liability_cap_too_low: true
+    - liability_cap_too_high_or_unlimited: true
+  required_context:
+    - review_stance
+    - liable_party
+    - beneficiary_party
+
+stance_expectations:
+  buyer_when_seller_liability_uncapped:
+    expected_direction: favorable
+    expected_classification:
+      - advantage
+      - bottom_line_chip
+      - response_chip
+    expected_reasoning: 卖方责任不设上限扩大买方索赔空间，应作为防守筹码或响应筹码，不应主动替卖方限责。
+  seller_when_seller_liability_uncapped:
+    expected_direction: unfavorable
+    expected_classification:
+      - high_risk
+      - must_fix
+      - response_chip
+    expected_reasoning: 卖方自身责任不设上限可能导致超合同额赔偿暴露，应争取合理责任上限并明确例外。
+  buyer_when_buyer_liability_uncapped:
+    expected_direction: unfavorable
+    expected_classification:
+      - risk
+      - must_fix
+    expected_reasoning: 买方自身付款、接收或配合义务相关责任如无上限，可能产生不必要暴露。
+  seller_when_buyer_liability_uncapped:
+    expected_direction: favorable
+    expected_classification:
+      - advantage
+      - negotiation_chip
+    expected_reasoning: 买方责任不设上限有利于卖方追索，应谨慎让渡。
+
+must_not:
+  - 不得将“缺少责任上限”不区分责任主体和审查立场地一律定性为风险。
+  - 买方视角下，不得主动建议为卖方增加低责任上限。
+  - 卖方视角下，不得忽略自身无责任上限的赔偿暴露。
+  - BN 责任上限反事实不得自动覆盖法务立场裁决。
+
+evidence_signals:
+  keywords:
+    - 责任上限
+    - 赔偿责任
+    - 合同总价
+    - 间接损失
+    - 直接损失
+    - 不超过
+  structured_fields:
+    - review_stance
+    - liable_party
+    - liability_cap_value
+    - liability_cap_exceptions
+
+source_cases:
+  - sales_purchase_contract_001
+  - sales_contract_001
+
+promotion_requirements:
+  to_production_rule:
+    - Dossier 能明确 liable_party 与 review_stance
+    - party_aware_rules 能表达不同立场下的反向裁决
+    - 回归测试覆盖买方和卖方两个方向

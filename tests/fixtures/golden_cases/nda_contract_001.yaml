@@ -1,0 +1,137 @@
+case_id: nda_contract_001
+case_name: 保密协议真实样本
+contract_type: 保密协议
+source_type: real_world_online_contract
+review_stance: recipient
+source_files:
+  contract: 合同检测报告/保密协议/保密协议.pdf
+  project_reports_dir: 合同检测报告/保密协议
+  external_reviews:
+    - 合同检测报告/保密协议/deepseek网页评价.md
+notes: >
+  合同原件为用户从网上找到的真实中英双语保密协议。报告以甲方/接收方立场审查。
+  该样本适合验证系统对保密协议中无限赔偿、间接损失、单方终止、仲裁地和语言版本、
+  保密例外举证责任等风险的识别，以及对保密期限和缺失条款的策略化处理。
+
+must_find:
+  - id: uncapped_indemnity_and_indirect_loss
+    expected: 必须识别违约责任条款要求违约方赔偿并使披露方免受损害，但未设责任上限、未排除间接损失，对接收方构成重大赔偿暴露。
+    severity_min: high
+    evidence_keywords:
+      - indemnify
+      - hold harmless
+      - damages
+      - 责任上限
+      - 间接损失
+    acceptable_labels:
+      - 致命风险
+      - 高风险
+      - P1
+      - 必须修改
+
+  - id: disclosing_party_sole_discretion_termination
+    expected: 必须识别披露方可自行决定立即终止任何合同、停止合作或寻求禁令救济，权利过宽，可能被用作商业压迫工具。
+    severity_min: high
+    evidence_keywords:
+      - sole discretion
+      - terminate any contract
+      - immediate effect
+      - injunctive relief
+      - restraining order
+    acceptable_labels:
+      - 高风险
+      - P1
+      - 单方终止
+
+  - id: beijing_arbitration_and_english_prevails
+    expected: 必须识别争议提交CIETAC北京仲裁且中英文解释不一致时英文版本优先，对非北京或中文语境下的接收方存在程序成本和解释权风险。
+    severity_min: high
+    evidence_keywords:
+      - CIETAC
+      - Beijing
+      - English version shall prevail
+      - 英文版本
+      - 北京
+    acceptable_labels:
+      - 高风险
+      - P1
+      - 争议解决
+
+  - id: burden_of_proof_for_confidentiality_exceptions
+    expected: 必须识别援引保密例外的一方承担适用性的举证责任，可能使接收方在主张公开信息、已知信息或自主研发时负担过重。
+    severity_min: medium
+    evidence_keywords:
+      - burden of proof
+      - derogation rule
+      - applicability
+      - 举证责任
+      - 保密义务并不适用
+    acceptable_labels:
+      - 高风险
+      - P2
+      - 举证责任
+
+  - id: confidentiality_term_too_long
+    expected: 应识别保密期限较长，可能影响接收方运营灵活性，应结合信息性质区分普通信息和核心商业秘密期限。
+    severity_min: medium
+    evidence_keywords:
+      - 10年
+      - 保密期限
+      - confidentiality
+      - 年
+
+  - id: no_termination_or_force_majeure
+    expected: 应识别协议缺少任意终止权、不可抗力或履约例外安排，可能导致合作退出和不可控事件下责任不清。
+    severity_min: medium
+    evidence_keywords:
+      - 终止
+      - termination
+      - force majeure
+      - 不可抗力
+
+must_not:
+  - id: ignore_uncapped_liability_for_recipient
+    forbidden: 接收方视角下，不得忽略未设责任上限和未排除间接损失带来的赔偿暴露。
+    expected_direction: 应作为签署前必须修改的核心底线处理。
+
+  - id: treat_burden_clause_as_only_legal_technicality
+    forbidden: 不得把保密例外举证责任仅视为法学术语问题而忽略其商业后果。
+    expected_direction: 可避免使用不精确的“举证责任倒置”定性，但必须说明接收方自证公开信息/自主研发的实务困难。
+
+  - id: ignore_language_version_risk
+    forbidden: 不得只识别北京仲裁地，而忽略英文版本优先带来的解释权和文本控制风险。
+    expected_direction: 应同时建议中英文同等效力或中文优先，并明确冲突处理规则。
+
+should_find_advantages:
+  - id: confidentiality_exceptions_exist
+    expected: 协议列明已知信息、合法持有信息、公开信息、第三方合法提供信息等保密例外，对接收方有利，但需降低举证负担。
+    evidence_keywords:
+      - was known
+      - legal possession
+      - publicly accessible
+      - third party
+
+  - id: use_for_project_purpose_allowed
+    expected: 接收方可以为协议目的采用和利用保密信息，这为正常项目执行保留必要使用空间。
+    evidence_keywords:
+      - agreement purpose
+      - adopt and use
+      - 协议目的
+
+  - id: assignment_restriction_or_no_partnership
+    expected: 如协议含禁止转让、排除合伙关系、排除CISG等中性或有利条款，应识别为响应筹码或稳定性条款。
+    evidence_keywords:
+      - assignment
+      - partnership
+      - CISG
+      - 转让
+
+needs_review:
+  - id: appropriate_liability_cap
+    question: 保密违约责任上限应设为项目合同总价100%、固定金额还是区分故意/重大过失，需要结合信息敏感度和项目价值判断。
+
+  - id: confidentiality_period_by_information_type
+    question: 普通商业信息、技术秘密和依法构成商业秘密的信息是否应设置不同保密期限，需要人工判断。
+
+  - id: dispute_venue_fallback
+    question: 仲裁地应改为接收方所在地、中立地还是保留CIETAC但改地点，需要结合双方谈判地位判断。
