@@ -1,0 +1,3589 @@
+{
+  "annotatable": {
+    "parts": [
+      "s1p1",
+      "s1p2",
+      "s1p3",
+      "s1p4",
+      "s1p5",
+      "s1p6",
+      "s1p7",
+      "s1p8",
+      "s1p9",
+      "s1p10",
+      "s1p11",
+      "s1p12",
+      "s1p13",
+      "s1p14",
+      "s1p15",
+      "s1p16",
+      "s1p17",
+      "s1p18",
+      "s1p19",
+      "s1p20",
+      "s1p21",
+      "s1p22",
+      "s1p23",
+      "s1p24",
+      "s1p25",
+      "s1p26",
+      "s1p27",
+      "s1p28",
+      "s1p29",
+      "s1p30",
+      "s1p31",
+      "s1p32",
+      "s1p33",
+      "s1p34",
+      "s1p35",
+      "s1p36",
+      "s1p37",
+      "s1p38",
+      "s1p39",
+      "s1p40",
+      "s1p41",
+      "s1p42",
+      "s1p43",
+      "s1p44",
+      "s1p45",
+      "s1p46",
+      "s1p47",
+      "s1p48",
+      "s1p49",
+      "s1p50",
+      "s1p51",
+      "s1p52",
+      "s1p53",
+      "s1p54",
+      "s1p55",
+      "s1p56",
+      "s1p57",
+      "s1p58",
+      "s1p59",
+      "s1p60",
+      "s1p61",
+      "s1p62",
+      "s1p63",
+      "s1p64",
+      "s1p65",
+      "s1p66",
+      "s1p67",
+      "s1p68",
+      "s1p69",
+      "s1p70",
+      "s1p71",
+      "s1p72",
+      "s1p73",
+      "s1p74",
+      "s1p75",
+      "s1p76",
+      "s1p77",
+      "s1p78",
+      "s1p79",
+      "s1p80",
+      "s1p81",
+      "s1p82",
+      "s1p83",
+      "s1p84",
+      "s1p85",
+      "s1p86",
+      "s1p87",
+      "s1p88",
+      "s1p89",
+      "s1p90",
+      "s1p91",
+      "s1p92",
+      "s1p93",
+      "s1p94",
+      "s1p95",
+      "s1p96",
+      "s1p97",
+      "s1p98",
+      "s1p99",
+      "s1p100",
+      "s1p101",
+      "s1p102",
+      "s1p103",
+      "s1p104",
+      "s1p105",
+      "s1p106",
+      "s1p107",
+      "s1p108",
+      "s1p109",
+      "s1p110",
+      "s1p111",
+      "s1p112",
+      "s1p113",
+      "s1p114",
+      "s1p115",
+      "s1p116",
+      "s1p117",
+      "s1p118",
+      "s1p119",
+      "s1p120",
+      "s1p121",
+      "s1p122",
+      "s1p123",
+      "s1p124",
+      "s1p125",
+      "s1p126",
+      "s1p127",
+      "s1p128",
+      "s1p129",
+      "s1p130",
+      "s1p131",
+      "s1p132",
+      "s1p133",
+      "s1p134",
+      "s1p135",
+      "s1p136",
+      "s1p137",
+      "s1p138",
+      "s1p139",
+      "s1p140",
+      "s1p141",
+      "s1p142",
+      "s1p143",
+      "s1p144",
+      "s1p145",
+      "s1p146",
+      "s1p147",
+      "s1p148",
+      "s1p149",
+      "s1p150",
+      "s1p151",
+      "s1p152",
+      "s1p153",
+      "s1p154",
+      "s1p155",
+      "s1p156",
+      "s1p157",
+      "s1p158",
+      "s1p159",
+      "s1p160",
+      "s1p161",
+      "s1p162",
+      "s1p163",
+      "s1p164",
+      "s1p165",
+      "s1p166",
+      "s1p167",
+      "s1p168",
+      "s1p169",
+      "s1p170",
+      "s1p171",
+      "s1p172",
+      "s1p173",
+      "s1p174",
+      "s1p175",
+      "s1p176",
+      "s1p177",
+      "s1p178",
+      "s1p179",
+      "s1p180",
+      "s1p181",
+      "s1p182",
+      "s1p183",
+      "s1p184",
+      "s1p185",
+      "s1p186",
+      "s1p187",
+      "s1p188",
+      "s1p189",
+      "s1p190",
+      "s1p191",
+      "s1p192"
+    ]
+  },
+  "anncomplete": true,
+  "sources": [],
+  "metas": {
+    "m_22": {
+      "value": "lease agreement",
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      }
+    }
+  },
+  "entities": [
+    {
+      "classId": "e_6",
+      "part": "s1p3",
+      "offsets": [
+        {
+          "start": 6,
+          "text": "June 25, 2013"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_1",
+      "part": "s1p4",
+      "offsets": [
+        {
+          "start": 10,
+          "text": "Tech Building I, LLC"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_1",
+      "part": "s1p5",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "c/o The Alexander Company"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_1",
+      "part": "s1p6",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "145 E. Badger Road, Suite 200"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_1",
+      "part": "s1p7",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Madison, WI 53713"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p8",
+      "offsets": [
+        {
+          "start": 8,
+          "text": "Exact Sciences Laboratories, Inc."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p9",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "411 Charmany Dr."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p10",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Madison, WI 53719"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p11",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p11",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "BASIC TERMS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p12",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.1"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p13",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.2"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p14",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.3"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_3",
+      "part": "s1p14",
+      "offsets": [
+        {
+          "start": 14,
+          "text": "The space consisting of 28,994 rentable and 28,257 usable square feet as identified and described on attached Exhibit B located on the first (1st) floor of the Building. Per BOMA standards, Usable area shall mean the measured area where a tenant normally houses personnel and/or furniture. Rentable area shall mean the usable area of a tenant space with its associated share of floor common area and building common area."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p15",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.4"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p16",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.5"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p17",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.6"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_25",
+      "part": "s1p17",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Commencement Date: Substantial completion of Tenant’s Work in accordance with Section 5 and Exhibit C of this Lease, which is anticipated to occur on November 1st, 2013, subject to adjustment as set forth in Section 2 below."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p18",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.7"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_26",
+      "part": "s1p18",
+      "offsets": [
+        {
+          "start": 22,
+          "text": "October 31st, 2018, subject to adjustment as set forth in Section 2 below."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p19",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.8"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p20",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.9"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p22",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.10"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p23",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.11"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_4",
+      "part": "s1p23",
+      "offsets": [
+        {
+          "start": 5,
+          "text": "Permitted Use: general office, research, and development with commercial CLIA lab, warehouse, and distribution, and subject to the use restrictions identified in Sections 6 and 6.1, any lawful use related or incidental thereto."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p24",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.12"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p24",
+      "offsets": [
+        {
+          "start": 5,
+          "text": "Security Deposit: none"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "guarantee_transferable",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p25",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.13"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p26",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "1.14"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p36",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "2."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p36",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "DEMISE AND TERM."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p38",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "2.1"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p38",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Extension Option."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_13",
+      "part": "s1p38",
+      "offsets": [
+        {
+          "start": 22,
+          "text": "Tenant shall have two (2), five (5) year options to extend the Term of this Lease (the “Extension Option”) at the then escalated rate specified in Exhibit I attached hereto. Each such option to extend the Term of this Lease (each, an “Extension Term”) shall be exercised by Tenant providing Landlord written notice that Tenant is extending the Term of this Lease. To be effective said notice must be delivered to Landlord at least one hundred eighty (180) days prior to the expiration of the then current Term of the Lease."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p39",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "3."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p39",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "RENT."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_9",
+      "part": "s1p39",
+      "offsets": [
+        {
+          "start": 9,
+          "text": "Beginning on the Commencement Date (but not earlier than November 1, 2013), Tenant agrees to pay to Landlord at Landlord’s address set forth on Page 1 of this Lease or such other place designated by Landlord, without prior demand or notice, the rent for the Premises consisting of Base Rent set forth in Section 3.1 and Operating Charges set forth in Section 3.2 and any other additional payments due under this Lease. Upon execution of this Lease, Tenant shall pay to Landlord the sum of the amounts stated in Sections 1.8 and 1.9 for the first full month of the Term. The obligation of Tenant to pay rent is hereby declared to be an independent covenant"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p40",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "3.1"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p40",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Base Rent."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_9",
+      "part": "s1p40",
+      "offsets": [
+        {
+          "start": 15,
+          "text": "The amount specified in Exhibit I shall be payable in advance on the first day of each month during the Term (and any applicable Extension Term) beginning on the Commencement Date (but not earlier than November 1, 2013). In the event the Term commences on other than the first day of a calendar month, the rent for such partial month shall be prorated based upon the actual number of days of the Term during such month. The parties hereto agree that the Base Rent payable under the terms of this Lease shall be an absolute net return to Landlord for the Lease Term free from any expense, charge, deduction, offset or counterclaim by reason of any obligation of Landlord or any other reason and all of the provisions of this Lease shall be construed and interpreted to such end."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p41",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "3.2"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p41",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Operating Charges."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_9",
+      "part": "s1p41",
+      "offsets": [
+        {
+          "start": 23,
+          "text": "Tenant shall pay to Landlord, as additional rent, Tenant’s Proportionate Share of Operating Charges as defined below. Estimated amounts of such additional rent shall be paid in monthly installments in advance on the first day of each month during the Term. The initial estimated payment of Tenant’s Proportionate Share of Operating Charges is set forth in Section 1.9. From time to time during the Term, Landlord may notify Tenant in writing of any adjustment to the monthly installments to be paid by Tenant hereunder and thereafter Tenant shall make payments accordingly. Within sixty (60) days after the expiration of each calendar year or as soon thereafter as is reasonably practicable (but not later than 90 days after the expiration of each calendar year), Landlord shall notify Tenant of the actual Operating Charges for such calendar year and provide Tenant a written statement thereof in reasonable detail. Within thirty (30) days after such notice, Tenant shall pay to Landlord or Landlord shall credit against the obligations of Tenant, as the case may be, the difference between the estimated payments made by Tenant"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_9",
+      "part": "s1p43",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "during the prior calendar year and the actual amount of Tenant’s Proportionate Share of Operating Charges as shown on such statement. Tenant’s Proportionate Share of Operating Charges for the years in which the Term commences and ends shall be prorated based upon the number of days of the Term during such years. Tenant’s obligation for Tenant’s Proportionate Share of Operating Charges through the Termination Date shall survive termination."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p49",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "3.3"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p49",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Personal Property Taxes."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_14",
+      "part": "s1p49",
+      "offsets": [
+        {
+          "start": 29,
+          "text": "Tenant agrees to timely pay when due all personal property taxes, whether assessed against Landlord or Tenant, on Tenant’s furniture, equipment and other items of personal property owned by Tenant and located in or about the Premises."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p50",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "3.4"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p50",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Late Charge."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p51",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "4."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p51",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "ACCESS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p52",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "5."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p52",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "CONDITION OF PREMISES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p57",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "6."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p57",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "USE."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p60",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "6.1"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_17",
+      "part": "s1p60",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "Use Restrictions."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p79",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "7."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p79",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "COMPLIANCE WITH LAWS AND BUILDING RULES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p80",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "7.1"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p81",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "7.2"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_18",
+      "part": "s1p82",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "7.3"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p84",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "8."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p84",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "ENVIRONMENTAL REQUIREMENTS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p87",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "9."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p87",
+      "offsets": [
+        {
+          "start": 3,
+          "text": "COMMON AREAS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p90",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "10."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p90",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "PARKING."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p91",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "11."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p91",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "REPAIRS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p91",
+      "offsets": [
+        {
+          "start": 13,
+          "text": "Landlord shall maintain the Common Areas and the exterior walls, roof, foundation, common HVAC and other systems (including but not limited to electrical, plumbing, sprinkler, and mechanical) of the building(s) in the Project, and the cost thereof shall be included in Operating Charges subject to the terms and conditions of Section 3.2; provided, however, that if any such repairs shall be occasioned by the negligence or willful misconduct of Tenant, its agents, employees, customers or invitees, or the particular nature of Tenant’s use of the Premises, Tenant shall be responsible for the entire cost of such repairs. Except for the repairs Landlord is specifically obligated to make as set forth above or other terms of this Lease, Tenant shall, at its expense, during the Lease Term, make all other necessary repairs and replacements to the Premises, and keep and maintain the same in good condition and repair so that at the expiration of the Term, the Premises shall be surrendered to Landlord in good condition, ordinary wear and tear, casualty, and damage caused by Landlord, its agents, employees, or contractors excepted. Tenant shall be responsible for repairing any damage to the Building caused by the installation or moving of Tenant’s furniture, equipment and personal property. Tenant shall, at its expense, also repair or replace with glass of equal quality any broken or cracked plate or other glass in doors, windows and elsewhere in or adjacent to the Premises, except for any damage caused by Landlord, its agents, employees, or contractors. Tenant shall not defer any repairs or replacements to the Premises by reason of the anticipation of the expiration of the Term. The surrender of the Premises upon the expiration or early termination of this Lease shall not relieve Tenant of the obligation to pay for all repairs or replacements to the Premises which Tenant was obligated to perform during the Lease Term, which obligation shall survive the expiration or early termination of this Lease. Landlord, at Landlord’s option after at least thirty (30) days’ written notice to Tenant (except no prior notice shall be required in the event of emergency), may elect to perform all or part of the maintenance, repairs and servicing which is the obligation of the Tenant hereunder with respect to the Premises, in which event the cost thereof shall be at Landlord’s option either billed directly to and paid by Tenant as additional rent or included in Operating Charges. Except as aforesaid, in the event that, at the request of Tenant, Landlord performs any maintenance, repairs or servicing of the Premises which is the obligation of Tenant hereunder, then Tenant shall pay Landlord directly therefor."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "landlord_repairs",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p92",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "12."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p92",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "JANITORIAL SERVICES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p93",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "13."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p93",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "UTILITIES; CABLING."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p93",
+      "offsets": [
+        {
+          "start": 24,
+          "text": "Tenant shall be responsible for obtaining all utility services in Tenant’s name for the Premises and shall pay for such services as and when payments are due. No discontinuance of any utility service shall relieve Tenant from performing any of its obligations under this Lease, and Landlord shall not be liable for any discontinuation in or failure of any utility service, and no such failure or discontinuation shall be deemed a constructive eviction, unless such discontinuance is caused by Landlord, its agents, employees, or contractors. Tenant shall install separate utility meters for the Premises as part of Tenant’s Improvement Allowance and Tenant shall have its own control for the HVAC system."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "services_charges",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p95",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "During the entire Term of the Lease, Tenant shall have the exclusive right to use the existing 50 kw natural gas generator serving the Building (the “Existing Generator”). Tenant shall be responsible for connecting the Existing Generator to the electrical system serving the Premises and Landlord shall cooperate with Tenant to complete and maintain such connection. In addition, Tenant shall have the right to install an additional generator in a location near the Existing Generator, such exact location to be approved by Landlord and Tenant, and Tenant shall have the right to bring in additional electrical service to Premises if necessary for Tenant’s business operations."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "services_charges",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p98",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "14."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p98",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "ALTERATIONS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p99",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "15."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p99",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "SIGNS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p100",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "16."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p100",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "LIENS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p101",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "17."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p101",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "RIGHT OF ENTRY."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p104",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "18."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p104",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "INSURANCE."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p106",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "19."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p106",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "WAIVER OF SUBROGATION."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p107",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "20."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p107",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "NON-LIABILITY OF LANDLORD."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p110",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "21."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p110",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "CASUALTY."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p112",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "22."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p112",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "CONDEMNATION."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p116",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "23."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p116",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "ASSIGNMENT AND SUBLETTING."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p116",
+      "offsets": [
+        {
+          "start": 31,
+          "text": "Tenant shall not assign, pledge, mortgage or otherwise transfer or encumber this Lease or sublet any part or all of the Premises and shall not permit any use of any part of the Premises by any other party, or any transfer of as interest in the Premises by operation of law without Landlord’s consent, such consent not to be unreasonably withheld, delayed, or denied; provided, however, and notwithstanding anything to the contrary contained herein, Tenant shall be permitted to assign this Lease or sublet all or any portion of the Premises, without the consent of Landlord, (i) to an entity into which Tenant may merge, which Tenant may acquire, or which Tenant may consolidate with, (ii) to any parent or subsidiary of Tenant, or (iii) to a purchaser of substantially all of Tenant’s assets or a controlling interest in the outstanding voting stock of Tenant (iv) to any entity which is affiliated with Tenant or any entity controlling, controlled by, or under common control with Tenant.. The following shall be deemed to be an assignment of this Lease within the meaning of this Paragraph: (a) the sale, issuance or transfer of any voting stock of Tenant (if Tenant be a nonpublic corporation or if Tenant is a public corporation and such sale, issuance or transfer results in Tenant becoming a nonpublic corporation) which results in a change in voting control of Tenant; (b) the sale, issuance or transfer of any partnership interest in Tenant if Tenant be a partnership; (c) the change or conversion of a general or limited partnership to a limited liability company, limited liability partnership or any other entity which possesses the characteristics of limited liability; (d) the sale, issuance or transfer of any beneficial interest in Tenant if Tenant be a trust; and (e) the death or incapacity of Tenant if Tenant be a natural person. Without waiving Landlord’s right hereunder to declare a default in the event of an assignment of this Lease or a subletting of the Premises or any part thereof or occupancy of the Premises by anyone other than Tenant, Landlord may collect from the assignee, sublessee or occupant, any rental and other charges herein required, but such collection by Landlord shall not be deemed an acceptance of the assignee, sublessee or occupancy, nor a release of Tenant from the performance by Tenant of this Lease. Further, Tenant at all times and under all circumstances shall remain liable to Landlord for the payment of rent due and to become due and the performance of all other obligations of Tenant hereunder for the term hereof. Tenant shall pay to Landlord, as additional rent, any costs and expenses including reasonable attorney fees incurred by Landlord in connection with any proposed or purported assignment, sublease or other transfer requiring Landlord’s consent, such total amount not to exceed $1,500."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "change_of_control",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p118",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "24."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p118",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "DEFAULT."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p125",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "25."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p125",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "COSTS AND ATTORNEY FEES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p126",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "26."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p126",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "INTEREST."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p129",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "27."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p129",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "SURRENDER."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p129",
+      "offsets": [
+        {
+          "start": 15,
+          "text": "Upon the termination of this Lease, by expiration or otherwise, Tenant shall peaceably surrender the Premises to Landlord broom-clean and in good condition and repair consistent with Tenant’s duty to make repairs as provided herein. All Alterations and decorations made to the Premises by Tenant shall remain and be the property of the Landlord unless Landlord shall require Tenant, at Tenant’s expense, to remove any or all thereof and repair the damage caused by such removal, such notice of removal of Alterations to be given to Tenant at the time such Alterations are approved by Landlord. All furniture, equipment and unattached movable personal property owned by Tenant may (and upon Landlord’s request shall) be removed from the Premises by Tenant no later than the termination date, and Tenant shall repair any and all damage caused by such removal. If the Premises are not surrendered upon the termination of this Lease as set forth herein, Tenant shall indemnify Landlord against all loss or liability actually incurred by Landlord resulting solely from delay by Tenant in so surrendering the Premises including, without limitation, any prevailing claim made by any succeeding tenant founded on such delay. Tenant shall also surrender all keys to the Premises and shall inform Landlord of combinations in any locks, safes and vaults, if any, in the Premises."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "reinstatement_clause",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p130",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "28."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p130",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "HOLDOVER."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p131",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "29."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p131",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "TRANSFER BY LANDLORD."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p132",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "30."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p132",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "SUBORDINATION."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p135",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "31."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p135",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "MODIFICATIONS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p136",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "32."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p136",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "ESTOPPEL CERTIFICATES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p137",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "33."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p137",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "NOTICES."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_12",
+      "part": "s1p137",
+      "offsets": [
+        {
+          "start": 13,
+          "text": "All notices and demands which may or are required to be given by either party to the other hereunder shall be in writing, and delivered in person or sent by either United States certified mail, return receipt requested, postage prepaid or by Federal Express or other nationally recognized overnight delivery service. Notices and demands to Tenant shall be addressed to it at the address indicated on Page 1 of this Lease or to such other place as the Tenant may from time to time designate in a written notice to the Landlord. Notices and demands to the Landlord shall be addressed to it at the address indicated on Page 1 of this Lease, or to such other place as Landlord may from time to time designate in a written notice to the Tenant."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p138",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "34."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p138",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "EXECUTION."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p139",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "35."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p139",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "BINDING EFFECT."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p140",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "36."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p140",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "INTENTIONALLY OMITTED."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p141",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "37."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p141",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "INTERPRETATION."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p144",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "38."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p144",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "FORCE MAJEURE."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p145",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "39."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p145",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "AUTHORITY."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p146",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "40."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p146",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "JOINT AND SEVERAL LIABILITY."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p147",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "41."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p147",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "ADDENDA."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p148",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "42."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p148",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "OPTION TO EXPAND."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p148",
+      "offsets": [
+        {
+          "start": 22,
+          "text": "Provided that Tenant is not then in default beyond any applicable cure period under Section 24, Tenant shall have the right to expand the Premises by up to 7,853 square feet on the first floor, 103 E Badger Road (the “First Floor Expansion Space”), at the same terms and conditions under this Lease (except for Base Rent as provided below) commencing any time after 12/31/2013 with one hundred eighty (180) day prior notice. If Tenant exercises its right to expand (gives notice) within the first eighteen (18) months of the Lease Term, Landlord shall provide a tenant improvement allowance of twenty-four and 77/100 dollars ($24.77) per square foot for the upfit of the First Floor Expansion Space and any additional upfit will be at Tenant’s expense. Base Rent for the First Floor Expansion Space shall be equal to $7.65 per rentable square foot escalated at two percent (2%) per annum with the escalation being calculated from the original Commencement Date of the Lease."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p149",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Tenant’s option to expand into the First Floor Expansion Space is subject to Landlord’s right to terminate as outlined in the existing Tenant’s current lease (AquaMost, Inc.) (the “AquaMost Lease”), which reads as follows: “Landlord reserves the right, provided the effective date of such termination is not before December 31, 2013, to relocate Tenant to substitute premises of comparable size within the Project Landlord shall provide Tenant with written notice by either: 1) 180 day notice, in which case Landlord will pay Tenant’s out of pocket costs incurred with moving its furniture and equipment, or 2) 120 day notice, in which case Landlord will pay Tenant $25,000 in addition to moving expenses described above (such additional fee shall not be paid if Landlord provides replacement property on terms acceptable to Tenant). If Landlord does not offer a suitable substitute location or if Tenant does not agree on the substitute location within thirty (30) days after receipt of Landlord’s notice, this Lease shall terminate at the end of either the one hundred eighty (180) or one hundred twenty (120) day period following Landlord’s notice."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p150",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Should Tenant elect to expand into the First Floor Expansion Space and Landlord is obligated under the AquaMost Lease to pay the $25,000 and/or moving expense, Exact Sciences (Tenant) shall pay the actual, reasonable out of pocket expense to relocate AquaMost, Inc. Notwithstanding the foregoing, Tenant recognizes Landlord’s desire to accommodate its other tenants in the building to the extent possible. To that end, Tenant agrees to work in good faith with Landlord to minimize negative impacts to such other"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p152",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "tenants as a result of exercising its expansion rights. This may include, to the extent practical, Tenant first exercising expansion rights in other areas of the building such as vacant space or the second floor space now occupied by Alexander Co. Further, Tenant agrees in good faith to provide notice whether formal or informal as early as possible giving Landlord as much time as possible to accommodate its other tenants."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p153",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "In addition, provided that Landlord has not leased (subject to Tenant’s right of first refusal) the space to a 3rd party other than the Alexander Company, Tenant shall have the right to expand into 5,810 square feet (145 E Badger Road, Suite 200) on the second floor (the “Second Floor Expansion Space”) “as is” by giving written notice to Landlord within the first eighteen (18) months of the Lease. Base rent for the Second Floor Expansion Space shall be $13 / rsf NNN escalated at two percent (2%) per annum with the escalation being calculated from the original Commencement Date of the Lease. Landlord shall provide new paint and carpet as part of this expansion into the Second Floor Expansion Space. Tenant shall provide a one hundred twenty (120) day prior notice prior to the effective date of such expansion into the Second Floor Expansion Space."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p154",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "If Tenant expands into either the First Floor Expansion Space or the Second Floor Expansion Space, Tenant shall extend the term of this Lease for a period of five (5) years from the effective date of the expansion, and such extension shall not be deemed an exercise of the Extension Option by Tenant"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "expansion",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p157",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "43."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p157",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "RIGHT OF FIRST REFUSAL."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p157",
+      "offsets": [
+        {
+          "start": 28,
+          "text": "Provided that Tenant is not then in default beyond any applicable cure period under Section 24, Tenant will also have an ongoing Right of First Refusal on all remaining space within the Building (the “ROFR”). If, during the term of the ROFR, Landlord receives a bona fide offer or letter of intent to lease any space within the Building (the “Additional Space”)(the “Offer”), and Landlord desires to accept the Offer, then Landlord shall deliver to Tenant written notice of Landlord’s intention to accept the Offer (the “Notice”), together with a copy of the Offer certified by Landlord to be a true and complete copy (such copy may have the identity of the offeror or omitted). Tenant shall then have ten (10)"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "right_of_first_refusal_to_lease",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_23",
+      "part": "s1p159",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "days, beginning with the date of delivery of the Notice, in which to notify Landlord in writing of Tenant’s election to amend this Lease to incorporate the Additional Space into this Lease on terms identical to those set forth in the Offer. If Tenant exercises the ROFR by written notice given to Landlord within such ten (10)-day period, then Landlord and Tenant shall enter into an amendment to this Lease to incorporate into his Lease the Additional Space in accordance with the provisions of said Offer. If, within ten (10) days of delivery by Landlord to Tenant of the Notice, Tenant has failed to exercise the ROFR pursuant to the terms of this Section, then the ROFR shall be null, void and of no further force and effect whatsoever as it applies to the Additional Space, provided that Landlord and the tenant that submitted the Offer enter into a binding lease in accordance with the Offer terms within 120 days after the date of the Notice. The ROFR shall not apply to any options to extend that are currently contained in any existing leases."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {
+        "f_24": {
+          "value": "right_of_first_refusal_to_lease",
+          "confidence": {
+            "state": "pre-added",
+            "who": [
+              "user:terezalat"
+            ],
+            "prob": 1
+          }
+        }
+      },
+      "normalizations": {}
+    },
+    {
+      "classId": "e_16",
+      "part": "s1p160",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "44."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_15",
+      "part": "s1p160",
+      "offsets": [
+        {
+          "start": 4,
+          "text": "BROKERS."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p165",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Tech Building I, LLC"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p166",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Exact Sciences Laboratories, Inc."
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p167",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "By: Mid-Town Center, LLC, Manager"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p168",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "By:"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p169",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "/s/ Matthew D. Meier"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p170",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "By"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p171",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "/s/ Maneesh Arora"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p172",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Name: Matthew D. Meier"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p173",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Name: Maneesh Arora"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p174",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Title: Manager"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    },
+    {
+      "classId": "e_2",
+      "part": "s1p175",
+      "offsets": [
+        {
+          "start": 0,
+          "text": "Title: CFO"
+        }
+      ],
+      "coordinates": [],
+      "confidence": {
+        "state": "pre-added",
+        "who": [
+          "user:terezalat"
+        ],
+        "prob": 1
+      },
+      "fields": {},
+      "normalizations": {}
+    }
+  ],
+  "relations": []
+}

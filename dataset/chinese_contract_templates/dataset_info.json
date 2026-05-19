@@ -1,0 +1,68 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "copywriting",
+  "dataset_size": 83577287,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/suolyer/copywriting@6cc24ccff4391be7e09fb9c447773844cd61912e/validation.json": {
+      "num_bytes": 42281082,
+      "checksum": null
+    },
+    "hf://datasets/suolyer/copywriting@6cc24ccff4391be7e09fb9c447773844cd61912e/test.json": {
+      "num_bytes": 42444622,
+      "checksum": null
+    }
+  },
+  "download_size": 84725704,
+  "features": {
+    "title": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "content": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "titleUkey": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "url": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "uniqueKey": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "id": {
+      "dtype": "int64",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 168302991,
+  "splits": {
+    "validation": {
+      "name": "validation",
+      "num_bytes": 41706920,
+      "num_examples": 10000,
+      "dataset_name": "copywriting"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 41870367,
+      "num_examples": 10000,
+      "dataset_name": "copywriting"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
