@@ -256,20 +256,9 @@ async def _run_v2_pipeline(body: dict[str, Any]) -> JSONResponse:
             ov = consistency.bn_posteriors.get("overall_contract_risk")
             if ov:
                 overall_ph = round(ov.get("high", 0.0) * 100, 1)
-                ph = ov.get("high", 0.0)
-                if ph >= 0.7:
-                    risk_level = "high"
-                elif ph >= 0.35:
-                    risk_level = "medium"
-                else:
-                    risk_level = "low"
-            else:
-                risk_level = None
-        else:
-            risk_level = None
         report_id = save_report(
             contract_id=cid, report_content_md=polished.narrative_report if polished else "",
-            review_party=review_party, overall_risk_level=risk_level, overall_p_high=overall_ph,
+            review_party=review_party, overall_p_high=overall_ph,
             summary_text=polished.executive_summary if polished else None,
             bn_counterfactual_count=cf_count,
             review_duration_ms=int((_time.time() - _v2_t0) * 1000))

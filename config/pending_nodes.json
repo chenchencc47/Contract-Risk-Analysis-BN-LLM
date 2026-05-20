@@ -50,8 +50,8 @@
     "severity": "medium",
     "confidence": 0.8,
     "contract_id": "",
-    "last_seen": "2026-05-19T17:13:25.727523",
-    "occurrence_count": 2
+    "last_seen": "2026-05-18T17:07:38.842549",
+    "occurrence_count": 1
   },
   "sublease": {
     "clause_type": "sublease",
@@ -69,15 +69,6 @@
     "confidence": 0.85,
     "contract_id": "",
     "last_seen": "2026-05-19T10:13:51.750746",
-    "occurrence_count": 1
-  },
-  "breach_of_contract": {
-    "clause_type": "breach_of_contract",
-    "risk_title": "配合融资义务的立即解约权及惩罚性后果",
-    "severity": "critical",
-    "confidence": 0.98,
-    "contract_id": "",
-    "last_seen": "2026-05-19T17:13:25.722746",
     "occurrence_count": 1
   }
 }

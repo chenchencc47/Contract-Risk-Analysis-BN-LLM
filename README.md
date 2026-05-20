@@ -24,6 +24,8 @@
 | 反事实推理 | 不支持 | 不支持 | **支持（修 X 条款 → 风险降 Y%）** |
 | 不确定性量化 | 无 | 无 | **支持（pgmpy 变量消元）** |
 | 跨维度一致性 | 弱 | 中 | **强（BN 图结构约束）** |
+| 中文合同 | 取决于模型 | 弱 | **10 种中国合同类型 + 民法典条文** |
+| 数据自主可控 | 依赖云服务 | 本地部署 | **开源本地部署，数据不出境** |
 
 **核心差异化：** 不只列出风险——还告诉你改哪个条款效果最大，每个概率数字都有可追溯来源（`cuad_empirical` / `contractnli_empirical` / `expert_estimated`）。
 
@@ -31,7 +33,7 @@
 
 ## 快速开始
 
-### 1. 体验 Demo（无需 API Key、无需数据库）
+### 体验 Demo（无需 API Key、无需数据库）
 
 ```bash
 git clone https://github.com/chenchencc47/Contract-Risk-Analysis-BN-LLM.git
@@ -49,7 +51,7 @@ cd frontend && npm install && npm run dev
 
 Demo 展示了一份买卖合同预计算审查报告，包含完整的 BN 反事实分析数据。
 
-### 2. 完整部署（需要 API Key + MySQL）
+### 完整部署（需要 API Key + MySQL）
 
 ```bash
 cp .env.example .env
@@ -59,9 +61,9 @@ python -m uvicorn backend.main:app --port 9527 --reload
 cd frontend && npm run dev
 ```
 
-**注意：** 完整审查需要 MySQL 8.0+ 存储报告历史。MySQL 不可用时审查仍然正常返回结果，只是不保存历史记录。Demo 模式完全不需要数据库。
+MySQL 不可用时审查仍然正常返回结果，只是不保存历史记录。Demo 模式完全不需要数据库。
 
-### 3. Docker
+### Docker
 
 ```bash
 docker compose up
@@ -73,43 +75,43 @@ API 文档：http://localhost:9527/docs
 
 ## 架构
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│  合同文本输入                                              │
-│         │                                                 │
-│         ▼                                                 │
-│  ┌─────────────────────────────┐                         │
-│  │ LLM₁：自由审查               │  OpenAI 兼容 API          │
-│  │ · 合同类型自动识别（10种）    │  · 立场锚定（甲方/乙方）  │
-│  │ · 风险段提取 + 法条速查      │  · 角色自动检测          │
-│  └─────────────┬───────────────┘                         │
-│                │                                          │
-│                ▼                                          │
-│  ┌─────────────────────────────┐                         │
-│  │ BN：一致性校验               │  pgmpy 推理引擎          │
-│  │ · 条款 → BN 节点映射         │  · 变量消元精确推理      │
-│  │ · 后验概率计算               │  · 110 节点，83 条边     │
-│  │ · 反事实模拟                 │  · Noisy-MAX 聚合模型    │
-│  └─────────────┬───────────────┘                         │
-│                │                                          │
-│                ▼                                          │
-│  ┌─────────────────────────────┐                         │
-│  │ LLM₂：综合报告               │  结构化 Dossier 驱动     │
-│  │ · 立场锚定 + BN 数据注入     │  · 公司红线自动执行      │
-│  │ · 民法典条文引用             │  · 谈判策略生成          │
-│  │ · 多格式输出（报告/清单/附录）│                         │
-│  └─────────────────────────────┘                         │
-└──────────────────────────────────────────────────────────┘
+```
+┌──────────────────────────────────────────────────────┐
+│  合同文本输入                                          │
+│         │                                             │
+│         ▼                                             │
+│  ┌─────────────────────────────┐                     │
+│  │ LLM₁：自由审查               │  OpenAI 兼容 API    │
+│  │ · 合同类型自动识别（10种）    │  角色自动检测        │
+│  │ · 风险段提取 + 法条速查      │  立场锚定（甲方/乙方）│
+│  └─────────────┬───────────────┘                     │
+│                │                                      │
+│                ▼                                      │
+│  ┌─────────────────────────────┐                     │
+│  │ BN：一致性校验               │  pgmpy 推理引擎      │
+│  │ · 条款 → BN 节点映射         │  变量消元精确推理    │
+│  │ · 后验概率计算               │  116 节点，126 条边  │
+│  │ · 反事实模拟                 │  67% CPT 数据驱动   │
+│  └─────────────┬───────────────┘                     │
+│                │                                      │
+│                ▼                                      │
+│  ┌─────────────────────────────┐                     │
+│  │ LLM₂：综合报告               │  结构化 Dossier 驱动 │
+│  │ · 立场锚定 + BN 数据注入     │  公司红线自动执行    │
+│  │ · 民法典条文引用             │  谈判策略生成        │
+│  │ · 多格式输出（报告/清单/附录）│                     │
+│  └─────────────────────────────┘                     │
+└──────────────────────────────────────────────────────┘
 ```
 
-BN 图结构：
+BN 三层结构：
 
 ```
-contract_fact（71 节点）→ legal_semantics（33 节点）→ risk_dimensions（5）
-                                    │                           │
-                                    └─── 直连边 ────────────────┘
-                                                          │
-                                              overall_contract_risk（H/M/L）
+contract_fact（71 节点）→ legal_semantics（39 节点）→ risk_dimensions（5）
+        │                          │                          │
+        └── 合同事实层 ────────────┴── 法律语义层 ───────────┘
+         CUAD/LEDGAR 校准           aggregate 聚合          overall_risk
+                                                         （高/中/低）
 ```
 
 ---
@@ -129,6 +131,38 @@ contract_fact（71 节点）→ legal_semantics（33 节点）→ risk_dimension
 
 ---
 
+## 评测数据
+
+### 条款识别准确率（CUAD，50 份合同）
+
+| 条款类型 | Precision | Recall | F1 |
+|---------|:---------:|:------:|:--:|
+| 适用法律 | 0.96 | 0.96 | **0.96** |
+| 终止条款 | 0.93 | 0.91 | **0.92** |
+| 责任限制 | 0.74 | 0.89 | **0.81** |
+| 交付条款 | 0.71 | 0.77 | **0.74** |
+| 付款条款 | 0.39 | 0.75 | **0.51** |
+
+注：CUAD 为英文数据集，三类（保密/争议解决/验收）不覆盖，中文合同评测数据待构建。
+
+### 消融实验（LLM-only vs LLM+BN）
+
+| 配置 | 风险准确率 | 说明 |
+|------|:---------:|------|
+| LLM only | 25.0% | LLM 直接判风险，≈随机 |
+| **LLM + BN** | **65.0%** | 完整管线，BN 纠偏 +40pp |
+
+### BN 结构验证
+
+| 指标 | 值 |
+|------|:--:|
+| 参与推理节点 | 114/116 |
+| flip 方向正确率 | 98.1% |
+| 自动推测 favorable state 错误 | 0 |
+| CPT 数据驱动比例 | 67%（74/110） |
+
+---
+
 ## 项目结构
 
 ```
@@ -136,28 +170,25 @@ contract_fact（71 节点）→ legal_semantics（33 节点）→ risk_dimension
 │   ├── main.py           应用创建、CORS、路由注册
 │   └── routers/          review, dual, sandbox, export, history, redlines, feedback
 ├── frontend/             React 19 + TypeScript + Tailwind CSS 4
-│   └── src/components/   ContractInput, RiskReport, SandboxPanel, ReportHistory 等
 ├── src/contract_risk_analysis/
 │   ├── bn/               BN 核心（pgmpy 适配、推理、Noisy-OR、节点映射）
 │   ├── review/           LLM 审查（自由审查、报告生成、量化提取、裁决）
 │   ├── pipeline/         证据构建管线
-│   ├── evaluation/       CPT 校准器（CUAD/ContractNLI 驱动）、回归评分
+│   ├── evaluation/       评测管线（CPT 校准、CUAD/ContractNLI 基准、反事实消融、ECE）
 │   ├── evidence/         证据模型、冲突检测、归一化
 │   ├── export/           PDF/Markdown 导出
 │   ├── db/               MySQL 数据层
 │   └── domain/           领域模型与 Schema
 ├── config/
-│   ├── bayesian_network_v2.json       BN 图结构 + CPT 参数（110 节点）
-│   ├── contract_type_routing.yaml     合同类型路由规则（10 种）
-│   ├── company_redlines.yaml          公司红线规则（6 种合同类型）
-│   ├── contract_type_parameters.yaml  BN 可信度分层配置
-│   ├── clause_type_mapping.yaml       LLM 条款类型 → BN 节点映射
-│   └── evidence_mapping.json          证据映射规则
-├── scripts/             数据集处理脚本（LEDGAR 映射、BN 覆盖验证、法条提取）
-├── tests/               184 个测试
-├── docs/                使用文档
-├── sample_data/         样本合同和基准数据
-└── docker/              Docker 部署配置
+│   ├── bayesian_network_v2.json        BN 图结构 + CPT 参数（116 节点 / 126 边）
+│   ├── contract_type_routing.yaml      合同类型路由规则（10 种）
+│   ├── company_redlines.yaml           公司红线规则
+│   ├── clause_type_mapping.yaml        LLM 条款类型 → BN 节点映射
+│   └── evidence_mapping.json           证据映射规则
+├── scripts/             数据处理（LEDGAR 映射、CPT 校准、边关系补全）
+├── tests/               测试套件
+├── sample_data/         样本合同 + 评测结果
+└── docker/              Docker 部署
 ```
 
 ---
@@ -169,40 +200,20 @@ contract_fact（71 节点）→ legal_semantics（33 节点）→ risk_dimension
 | 后端 | Python 3.11+ · FastAPI · pgmpy（贝叶斯推理引擎） |
 | 前端 | React 19 · TypeScript · Vite · Tailwind CSS 4 |
 | 数据库 | MySQL 8.0+（报告历史、红线 CRUD、反馈收集） |
-| LLM | OpenAI 兼容 API（deepseek、openai 等均可） |
-| BN 校准 | CUAD 数据集（510 份合同）· ContractNLI 数据集 |
+| LLM | OpenAI 兼容 API（DeepSeek、OpenAI、Moonshot 等均可） |
+| BN 校准 | CUAD（510 份）· ContractNLI（607 份）· LEDGAR（80,000 条） |
 
 ---
 
 ## 数据集
 
-本项目使用以下公开数据集进行 BN 参数校准和覆盖验证：
-
-| 数据集 | 规模 | 用途 | 下载 |
-|--------|------|------|------|
-| CUAD | 510 份合同 | contract_fact 层 CPT 校准 | [HuggingFace](https://huggingface.co/datasets/cuad) |
-| ContractNLI | 607 份合同 | legal_semantics 层 CPT 校准 | [GitHub](https://github.com/stanfordnlp/contract-nli) |
-| LEDGAR | 80,000 条 | 条款分类标签体系 | [HuggingFace](https://huggingface.co/datasets/ledgar) |
-| DISC-Law-SFT | 103,000 条 | 法条引用提取 | [GitHub](https://github.com/FudanDISC/DISC-Law-SFT) |
-
-下载后放入 `dataset/` 目录即可。`scripts/` 目录包含数据处理脚本。
-
----
-
-## 项目状态
-
-**v2.17** — 积极开发中，欢迎社区贡献。
-
-- [x] 10 种合同类型
-- [x] 110 节点贝叶斯网络（83 条边）
-- [x] 双视角审查（买方/卖方）
-- [x] BN 交互沙盒
-- [x] 报告历史 + diff 对比
-- [x] 公司红线配置化
-- [x] 反事实模拟
-- [x] Demo 模式（无需 API Key）
-- [ ] 中文合同 CPT 校准（需要标注数据）
-- [ ] BN 边关系进一步补全
+| 数据集 | 规模 | 用途 |
+|--------|------|------|
+| CUAD | 510 份 | contract_fact 层 CPT 校准 |
+| ContractNLI | 607 份 | legal_semantics 层 CPT 校准 |
+| LEDGAR | 80,000 条 | 条款分类标签体系 |
+| DISC-Law-SFT | 103,000 条 | 中国民法条文引用 |
+| Chinese Contract Templates | 10,000 份 | 中文合同条款分布验证 |
 
 ---
 
@@ -223,11 +234,3 @@ contract_fact（71 节点）→ legal_semantics（33 节点）→ risk_dimension
 MIT
 
 Built by [@chenchencc47](https://github.com/chenchencc47).
-
----
-
-## English
-
-ContractLens is an AI contract risk review system combining **LLM + Bayesian Network** dual engines with counterfactual simulation ("if we fix clause X, risk drops Y%"). See [Quick Start](#1-体验-demo无需-api-key无需数据库) above — demo mode works without API key or database.
-
-For detailed English documentation, see [README_EN.md](README_EN.md).

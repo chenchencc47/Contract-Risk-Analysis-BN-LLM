@@ -312,18 +312,13 @@ class BnValidator:
         return annotations
 
     def run_counterfactual_analysis(
-        self, node_states: dict[str, str], top_n: int = 20
+        self, node_states: dict[str, str], top_n: int = 8
     ) -> list[CounterfactualResult]:
         """Run counterfactual simulations and return as CounterfactualResult list.
 
-        Uses a tiered threshold strategy instead of a hard cap:
-          delta >= 0.01  → significant, always included
-          0.003 <= delta < 0.01 → marginal, included if room
-          delta < 0.003  → noise, fallback pool only
-
-        Floor guarantee: always returns at least 3 results.
-        No hard cap — all significant results are included.
-        Low-confidence results carry a supplementary flag for LLM₂.
+        Includes dimension-level deltas and a floor guarantee: if fewer than 3
+        counterfactuals pass the overall-delta threshold, dimension-level deltas
+        are used to supplement the results (P0 fix for output stability).
         """
         try:
             model = build_model(self.v2_config)
@@ -333,34 +328,26 @@ class BnValidator:
                 config=self.v2_config,
                 dimension_targets=DIMENSION_NODES,
             )
-        except Exception as exc:
-            import logging
-            logging.getLogger(__name__).warning(
-                "Counterfactual analysis failed: %s", exc
-            )
+        except Exception:
             return []
 
         results: list[CounterfactualResult] = []
-        marginal: list[dict] = []
+        # Track items filtered out for potential fallback inclusion
         fallback_pool: list[dict] = []
 
         for sr in sensitivity[:top_n]:
-            d = sr["delta_high_risk"]
-            if d >= 0.01:
-                node_label = NODE_LABELS.get(sr["node_name"], sr["node_name"])
-                results.append(self._build_counterfactual_result(sr, node_label))
-            elif d >= 0.003:
-                marginal.append(sr)
-            else:
-                fallback_pool.append(sr)
-
-        # Append marginal items (sorted by delta)
-        marginal.sort(key=lambda r: r["delta_high_risk"], reverse=True)
-        for sr in marginal:
+            if sr["delta_high_risk"] < 0.003:
+                # P0: keep in fallback pool if has significant dimension-level delta
+                has_significant_dim_delta = any(
+                    dd.get("delta", 0) >= 0.03 for dd in sr.get("dimension_deltas", [])
+                )
+                if has_significant_dim_delta:
+                    fallback_pool.append(sr)
+                continue
             node_label = NODE_LABELS.get(sr["node_name"], sr["node_name"])
             results.append(self._build_counterfactual_result(sr, node_label))
 
-        # Floor guarantee: at least 3 from fallback if needed
+        # P0: floor guarantee — if < 3 results, supplement from fallback pool
         if len(results) < 3 and fallback_pool:
             fallback_pool.sort(key=lambda r: r["delta_high_risk"], reverse=True)
             needed = 3 - len(results)

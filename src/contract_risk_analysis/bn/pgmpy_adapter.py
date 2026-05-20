@@ -156,7 +156,7 @@ def _generate_aggregate_cpt(
             if state == "unknown":
                 continue
             total_non_unknown += 1
-            if state in ("missing", "unfavorable", "severe", "counterparty_favorable"):
+            if state in ("missing", "unfavorable", "severe", "counterparty_favorable", "contradiction"):
                 bad_count += 1
 
         if total_non_unknown == 0:
@@ -412,6 +412,32 @@ def run_inference(
     )
 
 
+def _node_precision_floor(node_name: str, config: dict) -> float:
+    """Minimum meaningful delta for *node_name* given its CPT source.
+
+    Sampling resolution:
+      - cuad_empirical / cuad_aggregate_counting:  1 / 510 contracts → 0.002
+      - contractnli_empirical:                      1 / 607 contracts → 0.003
+      - expert_estimated:           human-judgment granularity → 0.01
+      - noisy_max / missing source: conservative fallback → 0.01
+    """
+    node_cfg = config.get("nodes", {}).get(node_name, {})
+    source = node_cfg.get("cpt_source", "")
+
+    if "cuad_empirical" in source or "cuad_aggregate" in source:
+        return 0.002
+    if "contractnli_empirical" in source:
+        return 0.003
+    if "expert_estimated" in source:
+        return 0.01
+    # noisy_max_* nodes, missing cpt_source, and genuinely unknown
+    return 0.01
+
+
+_RELATIVE_DELTA_THRESHOLD = 0.05
+_MIN_COUNTERFACTUALS = 3
+
+
 def run_sensitivity_analysis(
     model: BayesianNetwork | None = None,
     evidence: dict[str, str] | None = None,
@@ -545,7 +571,7 @@ def run_sensitivity_analysis(
         cf_high = cf_dist.get("high", 0.0)
         delta = round(base_high - cf_high, 6)
 
-        if delta > 0.0001:
+        if delta > 0:
             # Compute dimension-level deltas
             dim_deltas: list[dict] = []
             affected_dims = node_to_dims.get(node_name, [])
@@ -584,7 +610,25 @@ def run_sensitivity_analysis(
             })
 
     results.sort(key=lambda r: r["delta_high_risk"], reverse=True)
-    return results
+
+    # ── threshold filtering with minimum guarantee ──
+    significant: list[dict] = []
+    for r in results:
+        node_name = r["node_name"]
+        floor = _node_precision_floor(node_name, config)
+        if r["delta_high_risk"] < floor:
+            continue
+        # Relative threshold: delta must be at least 5 % of baseline
+        # (avoids flagging 3%→2.8% as "significant")
+        base = r["base_high_risk"]
+        if base > 0.01 and (r["delta_high_risk"] / base) < _RELATIVE_DELTA_THRESHOLD:
+            continue
+        significant.append(r)
+
+    if len(significant) >= _MIN_COUNTERFACTUALS:
+        return significant
+    # Fallback: fewer than 3 items passed thresholds — return top 3 by raw delta
+    return results[:_MIN_COUNTERFACTUALS]
 
 
 # Re-exported from constants for backward compatibility

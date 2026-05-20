@@ -27,7 +27,7 @@ function App() {
       submitDualReview(text, id);
       setPage({ name: "report" });
     } else {
-      submitReview(text, id, party, partyRoleLabel);
+      submitReview(text, id, party, dual, partyRoleLabel);
       setPage({ name: "report" });
     }
   };

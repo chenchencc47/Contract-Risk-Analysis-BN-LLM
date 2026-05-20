@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,4 @@ jobs:
           pip install .[test]
 
       - name: Run tests
-        run: |
-          python -m pytest tests/ -q --tb=short \
-            --ignore=tests/stability \
-            --ignore=tests/regression \
-            --ignore=tests/review/test_ai_review.py \
-            --ignore=tests/cli/test_benchmark_runner.py \
-            --ignore=tests/evaluation
+        run: python -m pytest tests/ -q

@@ -44,7 +44,7 @@ function removeEmptyLeadingColumns(doc: Document): void {
 }
 
 export function enhanceReportHtml(markdown: string): string {
-  const rawHtml = marked.parse(markdown, { async: false }) as string;
+  const rawHtml = marked.parse(markdown) as string;
   if (typeof window === "undefined") return rawHtml;
 
   const parser = new DOMParser();

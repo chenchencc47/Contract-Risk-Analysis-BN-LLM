@@ -277,10 +277,7 @@ class BnMappingService:
         if node_name is None or mapped_state is None:
             return node_name, mapped_state
         try:
-            node_config = self.v2_config["nodes"].get(node_name)
-            if node_config is None:
-                return None, None  # node not in graph — skip
-            allowed = set(node_config.get("states", []))
+            allowed = set(self.v2_config["nodes"].get(node_name, {}).get("states", []))
         except Exception:
             return node_name, mapped_state
         if not allowed or mapped_state in allowed:

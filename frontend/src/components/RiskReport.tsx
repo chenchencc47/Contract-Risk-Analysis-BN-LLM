@@ -8,6 +8,7 @@ import { IssueReportList } from "./IssueReport";
 import { ActionPlan } from "./ActionPlan";
 import { ExportButtons } from "./ExportButtons";
 import { ReportDocument } from "./report/ReportDocument";
+import { DecisionSummary } from "./report/DecisionSummary";
 
 interface Props {
   data: ReviewResponse;
@@ -38,6 +39,7 @@ export function RiskReport({ data }: Props) {
 
   // v2 has flat fields, v1 has nested polished
   const narrativeReport = polished?.narrative_report || data.narrative_report || "";
+  const signingAdvice = polished?.signing_advice || data.signing_advice || "";
   const actionPlan = polished?.action_plan || data.action_plan || [];
   const crossNotes = polished?.cross_dimension_notes || data.cross_dimension_notes || [];
   const issueReports = polished?.issue_reports || [];
@@ -119,6 +121,7 @@ export function RiskReport({ data }: Props) {
                   <span className="text-[#9B8E83]">
                     {data.free_review?.segments_count ?? "?"} 项风险 · {data.consistency?.counterfactuals_count ?? "?"} 项反事实 · BN v2
                   </span>
+                  {signingAdvice && (<><span className="text-[#C4B8AC] mx-1">|</span><span className="text-[#7B8B6F] font-medium">{signingAdvice.slice(0, 40)}{signingAdvice.length > 40 ? "…" : ""}</span></>)}
                 </>
               )}
               {data.golden_score && (
@@ -164,6 +167,13 @@ export function RiskReport({ data }: Props) {
       {/* Document View */}
       {viewMode === "document" && hasReport && (
         <div className="animate-fade-in">
+          <DecisionSummary
+            data={data}
+            report={report}
+            isV2={isV2}
+            signingAdvice={signingAdvice}
+            actionPlan={actionPlan}
+          />
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             {hasMultiFormat && (
               <div className="flex gap-1 bg-[#F5F0EB] rounded-lg p-0.5">
