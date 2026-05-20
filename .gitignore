@@ -45,10 +45,7 @@ scrape_jd.js
 # Internal planning docs (not for release)
 方向/
 docs/
-
-# Old worklists
-worklist/worklist-v1/
-worklist/worklist-v2/
+worklist/
 
 # Test contracts and prompts
 sample_data/*.txt
