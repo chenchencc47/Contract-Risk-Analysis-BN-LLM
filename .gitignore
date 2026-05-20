@@ -23,6 +23,23 @@ Thumbs.db
 # Test artifacts
 .pytest_cache/
 
-# Claude
-.claude/
+# Git worktrees
 .worktrees/
+
+# uv lock (project uses setuptools)
+uv.lock
+
+# Claude internal
+.claude/
+
+# Unrelated root files
+package.json
+package-lock.json
+jd_debug.png
+scrape_jd.js
+
+# Generated reports (not part of source)
+合同检测报告/
+
+# Internal planning docs (not for release)
+方向/
