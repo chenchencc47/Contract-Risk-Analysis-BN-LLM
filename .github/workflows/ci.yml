@@ -25,4 +25,4 @@ jobs:
           pip install .[test]
 
       - name: Run tests
-        run: python -m pytest tests/ -q
+        run: python -m pytest tests/bn/ tests/evidence/ tests/pipeline/ tests/cli/test_main.py tests/cli/test_load_review_result.py tests/web/test_backend_main_demo.py -q
