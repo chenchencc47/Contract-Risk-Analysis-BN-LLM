@@ -1,0 +1,73 @@
+{
+  "benchmark_timestamp": null,
+  "results": [
+    {
+      "name": "bn_gold_evidence",
+      "samples_processed": 20,
+      "error_count": 0,
+      "nli": {
+        "total": 20,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "neutral": {
+            "neutral": 5
+          },
+          "entailment": {
+            "entailment": 13
+          },
+          "contradiction": {
+            "contradiction": 2
+          }
+        }
+      },
+      "risk_prediction": {
+        "total": 20,
+        "exact_accuracy": 0.65,
+        "adjacent_accuracy": 1.0
+      },
+      "extraction": {}
+    },
+    {
+      "name": "llm_bn_pipeline",
+      "samples_processed": 20,
+      "error_count": 0,
+      "nli": {
+        "total": 20,
+        "accuracy": 0.25,
+        "confusion_matrix": {
+          "neutral": {
+            "neutral": 5
+          },
+          "entailment": {
+            "neutral": 13
+          },
+          "contradiction": {
+            "neutral": 2
+          }
+        }
+      },
+      "risk_prediction": {
+        "total": 20,
+        "exact_accuracy": 0.65,
+        "adjacent_accuracy": 0.9
+      },
+      "extraction": {}
+    },
+    {
+      "name": "llm_only",
+      "samples_processed": 20,
+      "error_count": 0,
+      "nli": {
+        "total": 0,
+        "accuracy": 0.0,
+        "confusion_matrix": {}
+      },
+      "risk_prediction": {
+        "total": 20,
+        "exact_accuracy": 0.25,
+        "adjacent_accuracy": 1.0
+      },
+      "extraction": {}
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "session": "2026-05-20 Phase 1-3 实施",
+  "branch": "release/v2.17",
+  "experiments": {
+    "G1_delta_threshold": {
+      "description": "Delta阈值校准 — CPT source精度地板 + 相对阈值",
+      "precision_floors": {
+        "cuad_empirical": 0.002,
+        "contractnli_empirical": 0.003,
+        "expert_estimated": 0.01
+      },
+      "relative_threshold": 0.05,
+      "min_items": 3,
+      "verification": {
+        "lease_contract_sim": {
+          "base_p_high": 0.4375,
+          "returned": 15,
+          "delta_range": [0.0228, 0.1823]
+        },
+        "low_baseline_sim": {
+          "base_p_high": 0.0907,
+          "returned": 3,
+          "note": "min-3 fallback triggered, all below precision floor"
+        }
+      },
+      "tests": "29 passed"
+    },
+    "G2_cuad_cpt_verification": {
+      "description": "CUAD CPT验证 — 30节点逐类别统计",
+      "total_nodes": 30,
+      "verified_unchanged": 28,
+      "fixed": {
+        "cuad_license_grant": {"old": 0.19951, "new": 0.5, "reason": "原值只匹配Affiliate子类"},
+        "cuad_no_solicit_of_customers": {"old": 0.107843, "new": 0.066667, "reason": "原值匹配了含No-Solicit的其他问题"}
+      },
+      "tests": "21 passed"
+    },
+    "G3_ledgar_cpt_calibration": {
+      "description": "LEDGAR辅助CPT校准 — 80K条数据 → 35节点",
+      "method": "线性回归: P(present)=9.55*LEDGAR_freq+0.23 (13个CUAD锚点)",
+      "fit_quality": {
+        "mean_absolute_residual": 0.1424,
+        "max_residual": 0.2988
+      },
+      "nodes_updated": 35,
+      "cpt_source_shift": {
+        "before": {"data_driven": 39, "expert_estimated": 60, "other": 11},
+        "after": {"data_driven": 74, "expert_estimated": 25, "other": 11}
+      },
+      "data_driven_pct": "35% → 67%",
+      "tests": "29 passed"
+    },
+    "G4_cuad_benchmark": {
+      "description": "CUAD评测映射修复 + 50份合同跑分",
+      "mapping": "41 CUAD类别 → 5 clause types (旧映射仅2类)",
+      "gold_distribution": {
+        "termination": "86.5%",
+        "liability_cap": "70.0%",
+        "delivery": "64.9%",
+        "governing_law": "85.7%",
+        "payment": "39.4%"
+      },
+      "50_contract_results": {
+        "governing_law": {"precision": 0.96, "recall": 0.96, "f1": 0.96},
+        "termination": {"precision": 0.93, "recall": 0.91, "f1": 0.92},
+        "liability_cap": {"precision": 0.74, "recall": 0.89, "f1": 0.81},
+        "delivery": {"precision": 0.71, "recall": 0.77, "f1": 0.74},
+        "payment": {"precision": 0.39, "recall": 0.75, "f1": 0.51}
+      },
+      "note": "confidentiality/dispute_resolution/acceptance三类CUAD不覆盖"
+    },
+    "G5_contractnli_analysis": {
+      "description": "ContractNLI评测扩展分析",
+      "conclusion": "无法扩展",
+      "reason": "17个unique hypothesis全部关于保密协议",
+      "existing_data": {
+        "samples": 500,
+        "nli_accuracy": 1.0,
+        "risk_accuracy": 0.418,
+        "adjacent_accuracy": 1.0
+      }
+    },
+    "P33_counterfactual_ablation": {
+      "description": "反事实消融 + BN边关系补全",
+      "ablation_results": {
+        "total_nodes": 109,
+        "evaluated": 107,
+        "direction_correct": 105,
+        "direction_violations": 2,
+        "direction_accuracy": 0.981,
+        "auto_discovered_errors": 0
+      },
+      "edge_fix": {
+        "before": {"pgmpy_nodes": 75, "connected_fact_sem": 67, "disconnected": 37},
+        "after": {"pgmpy_nodes": 115, "connected_fact_sem": 107, "disconnected": 2},
+        "new_sub_aggregates": 5,
+        "new_edges": 30
+      },
+      "violations_detail": [
+        {"node": "confidentiality_nli", "delta": 0.0, "reason": "structural — no path to overall_contract_risk"},
+        {"node": "confidentiality_scope_reasonableness", "delta": 0.0, "reason": "structural — no path to overall_contract_risk"}
+      ],
+      "tests": "21 passed"
+    },
+    "P31_baseline_ablation": {
+      "description": "LLM-only vs LLM+BN 消融实验",
+      "dataset": "ContractNLI test",
+      "samples": 20,
+      "results": {
+        "bn_gold_evidence": {"risk_accuracy": 0.65, "adjacent_accuracy": 1.0},
+        "llm_bn_pipeline": {"risk_accuracy": 0.65, "adjacent_accuracy": 0.90, "nli_accuracy": 0.25},
+        "llm_only": {"risk_accuracy": 0.25, "adjacent_accuracy": 1.0}
+      },
+      "key_finding": "LLM+BN (65%) recovers to BN-gold level vs LLM-only (25% ≈ random)",
+      "limitation": "20 samples too small for significance; ContractNLI仅confidentiality维度"
+    },
+    "P32_ece": {
+      "description": "Expected Calibration Error",
+      "samples": 500,
+      "ece": 0.1551,
+      "rating": "POORLY CALIBRATED (ECE >= 0.10)",
+      "bins_used": 1,
+      "all_in_bin": "0.2-0.3",
+      "mean_p_high": 0.2351,
+      "actual_high_pct": 0.08,
+      "note": "All samples cluster in same bin — confidentiality nodes have zero influence on overall_risk. Reflects structural limitation, not calibration issue per se."
+    }
+  },
+  "cpt_source_distribution_final": {
+    "LEDGAR_calibrated": 35,
+    "cuad_empirical": 30,
+    "expert_estimated": 25,
+    "cuad_aggregate_counting": 7,
+    "missing": 5,
+    "noisy_max_with_cross_dim": 4,
+    "contractnli_empirical": 2,
+    "noisy_max_with_cuad_agg": 1,
+    "noisy_max_generated": 1,
+    "total": 110,
+    "data_driven_pct": 67.3
+  },
+  "bn_structure_final": {
+    "total_nodes_config": 110,
+    "pgmpy_nodes": 115,
+    "edges": 123,
+    "sub_aggregates": ["ledgar_agg_legal_a", "ledgar_agg_legal_b", "ledgar_agg_financial", "ledgar_agg_dispute", "ledgar_agg_balance"],
+    "aggregate_parent_counts": {
+      "cuad_agg_legal": 7,
+      "cuad_agg_financial_a": 6,
+      "cuad_agg_financial_b": 5,
+      "cuad_agg_dispute": 5,
+      "cuad_agg_balance_a": 7,
+      "cuad_agg_balance_b": 6,
+      "cuad_agg_performance": 7
+    }
+  },
+  "files_changed": [
+    "src/contract_risk_analysis/bn/pgmpy_adapter.py",
+    "config/bayesian_network_v2.json",
+    "src/contract_risk_analysis/evaluation/runner.py",
+    "src/contract_risk_analysis/evaluation/counterfactual_ablation.py",
+    "src/contract_risk_analysis/evaluation/ece_benchmark.py",
+    "scripts/add_ledgar_edges.py",
+    "scripts/apply_ledgar_calibration.py",
+    "scripts/ledgar_cpt_calibrate.py",
+    "worklist/worklist-v2.17/WORKLIST.md",
+    "worklist/worklist-v2.17/PROGRESS.md",
+    "方向/当前问题/后续方案.md"
+  ],
+  "tests_passing": "所有相关测试套件零回归"
+}

@@ -333,6 +333,178 @@
     [
       "transportation_loss_allocation",
       "financial_exposure_risk"
+    ],
+    [
+      "cuad_use_of_proceeds",
+      "cuad_agg_financial_b"
+    ],
+    [
+      "cuad_solvency",
+      "cuad_agg_financial_b"
+    ],
+    [
+      "cuad_further_assurances",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_cooperation",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_books_records",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_record_keeping",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_qualifications",
+      "cuad_agg_performance"
+    ],
+    [
+      "cuad_vesting",
+      "cuad_agg_balance_b"
+    ],
+    [
+      "cuad_anti_corruption",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_compliance_with_laws",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_sanctions",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_regulatory_approvals",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_signing_authority",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_powers",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "cuad_binding_effect",
+      "ledgar_agg_legal_a"
+    ],
+    [
+      "ledgar_agg_legal_a",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_contra_proferentem",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_enforceability",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_severability",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_interpretation_rules",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_no_waiver",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_survival",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "cuad_contract_term",
+      "ledgar_agg_legal_b"
+    ],
+    [
+      "ledgar_agg_legal_b",
+      "cuad_agg_legal"
+    ],
+    [
+      "cuad_taxes",
+      "ledgar_agg_financial"
+    ],
+    [
+      "cuad_tax_withholding",
+      "ledgar_agg_financial"
+    ],
+    [
+      "cuad_withholding",
+      "ledgar_agg_financial"
+    ],
+    [
+      "cuad_interest_on_late_payment",
+      "ledgar_agg_financial"
+    ],
+    [
+      "ledgar_agg_financial",
+      "cuad_agg_financial_a"
+    ],
+    [
+      "cuad_notice",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "cuad_disclosure_schedule",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "cuad_representations_warranties",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "cuad_forfeiture",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "cuad_liens",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "cuad_third_party_consents",
+      "ledgar_agg_dispute"
+    ],
+    [
+      "ledgar_agg_dispute",
+      "cuad_agg_dispute"
+    ],
+    [
+      "cuad_affiliate_transactions",
+      "ledgar_agg_balance"
+    ],
+    [
+      "cuad_brokers",
+      "ledgar_agg_balance"
+    ],
+    [
+      "cuad_publicity",
+      "ledgar_agg_balance"
+    ],
+    [
+      "ledgar_agg_balance",
+      "cuad_agg_balance_a"
+    ],
+    [
+      "confidentiality_nli",
+      "confidentiality_agg"
+    ],
+    [
+      "confidentiality_scope_reasonableness",
+      "confidentiality_agg"
+    ],
+    [
+      "confidentiality_agg",
+      "legal_enforceability_risk"
     ]
   ],
   "nodes": {
@@ -616,7 +788,8 @@
         "governing_law_clarity",
         "dispute_resolution_risk",
         "cuad_agg_legal",
-        "force_majeure_completeness"
+        "force_majeure_completeness",
+        "confidentiality_agg"
       ],
       "cpt_source": "noisy_max_with_cross_dim",
       "cpt": {
@@ -1162,8 +1335,8 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.107843,
-        "missing": 0.862157,
+        "present": 0.066667,
+        "missing": 0.903333,
         "unknown": 0.03
       },
       "cpt_source": "cuad_empirical",
@@ -1352,8 +1525,8 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.19951,
-        "missing": 0.77049,
+        "present": 0.5,
+        "missing": 0.47,
         "unknown": 0.03
       },
       "cpt_source": "cuad_empirical",
@@ -1431,7 +1604,9 @@
         "cuad_notice_period_to_terminate",
         "cuad_governing_law",
         "cuad_third_party_beneficiary",
-        "cuad_audit_rights"
+        "cuad_audit_rights",
+        "ledgar_agg_legal_a",
+        "ledgar_agg_legal_b"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1452,7 +1627,8 @@
         "cuad_cap_on_liability",
         "cuad_liquidated_damages",
         "cuad_insurance",
-        "cuad_warranty_duration"
+        "cuad_warranty_duration",
+        "ledgar_agg_financial"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1471,7 +1647,9 @@
       "parents": [
         "cuad_revenue_profit_sharing",
         "cuad_minimum_commitment",
-        "cuad_volume_restriction"
+        "cuad_volume_restriction",
+        "cuad_use_of_proceeds",
+        "cuad_solvency"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1489,7 +1667,12 @@
       ],
       "parents": [
         "cuad_post_termination_services",
-        "cuad_source_code_escrow"
+        "cuad_source_code_escrow",
+        "cuad_further_assurances",
+        "cuad_cooperation",
+        "cuad_books_records",
+        "cuad_record_keeping",
+        "cuad_qualifications"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1509,7 +1692,8 @@
         "cuad_covenant_not_to_sue",
         "cuad_no_solicit_of_customers",
         "cuad_no_solicit_of_employees",
-        "cuad_non_disparagement"
+        "cuad_non_disparagement",
+        "ledgar_agg_dispute"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1531,7 +1715,8 @@
         "cuad_non_compete",
         "cuad_exclusivity",
         "cuad_most_favored_nation",
-        "cuad_rofr_rofo_rofn"
+        "cuad_rofr_rofo_rofn",
+        "ledgar_agg_balance"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1552,7 +1737,8 @@
         "cuad_joint_ip_ownership",
         "cuad_license_grant",
         "cuad_non_transferable_license",
-        "cuad_price_restrictions"
+        "cuad_price_restrictions",
+        "cuad_vesting"
       ],
       "cpt_source": "cuad_aggregate_counting",
       "cpt": {
@@ -1894,11 +2080,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.245049,
+        "missing": 0.724951,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_signing_authority": {
       "layer": "contract_fact",
@@ -1910,11 +2096,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.307725,
+        "missing": 0.662275,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_compliance_with_laws": {
       "layer": "contract_fact",
@@ -1926,11 +2112,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.385921,
+        "missing": 0.584079,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_cooperation": {
       "layer": "contract_fact",
@@ -1942,11 +2128,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.300323,
+        "missing": 0.669677,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_disclosure_schedule": {
       "layer": "contract_fact",
@@ -1958,11 +2144,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.320976,
+        "missing": 0.649024,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_further_assurances": {
       "layer": "contract_fact",
@@ -1974,11 +2160,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.383652,
+        "missing": 0.586348,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_contract_term": {
       "layer": "contract_fact",
@@ -1990,11 +2176,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.406932,
+        "missing": 0.563068,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_notice": {
       "layer": "contract_fact",
@@ -2006,11 +2192,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.62206,
+        "missing": 0.34794,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_publicity": {
       "layer": "contract_fact",
@@ -2022,11 +2208,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.278715,
+        "missing": 0.691285,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_sanctions": {
       "layer": "contract_fact",
@@ -2038,11 +2224,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.245168,
+        "missing": 0.724832,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_taxes": {
       "layer": "contract_fact",
@@ -2054,11 +2240,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.65,
-        "missing": 0.3,
-        "unknown": 0.05
+        "present": 0.404186,
+        "missing": 0.565814,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_binding_effect": {
       "layer": "legal_semantics",
@@ -2070,11 +2256,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.322886,
+        "neutral": 0.406268,
+        "unfavorable": 0.270846
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_contra_proferentem": {
       "layer": "legal_semantics",
@@ -2086,11 +2272,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.290773,
+        "neutral": 0.425536,
+        "unfavorable": 0.283691
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_enforceability": {
       "layer": "legal_semantics",
@@ -2102,11 +2288,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.267851,
+        "neutral": 0.439289,
+        "unfavorable": 0.29286
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_interest_on_late_payment": {
       "layer": "legal_semantics",
@@ -2118,11 +2304,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.281341,
+        "neutral": 0.431195,
+        "unfavorable": 0.287464
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_interpretation_rules": {
       "layer": "legal_semantics",
@@ -2134,11 +2320,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.291131,
+        "neutral": 0.425321,
+        "unfavorable": 0.283548
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_no_waiver": {
       "layer": "legal_semantics",
@@ -2150,11 +2336,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.441792,
+        "neutral": 0.334925,
+        "unfavorable": 0.223283
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_powers": {
       "layer": "legal_semantics",
@@ -2166,11 +2352,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.24481,
+        "neutral": 0.453114,
+        "unfavorable": 0.302076
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_representations_warranties": {
       "layer": "legal_semantics",
@@ -2182,11 +2368,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.316679,
+        "neutral": 0.409993,
+        "unfavorable": 0.273328
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_severability": {
       "layer": "legal_semantics",
@@ -2198,11 +2384,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.531209,
+        "neutral": 0.281275,
+        "unfavorable": 0.187516
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_survival": {
       "layer": "legal_semantics",
@@ -2214,11 +2400,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.45946,
+        "neutral": 0.324324,
+        "unfavorable": 0.216216
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_regulatory_approvals": {
       "layer": "contract_fact",
@@ -2230,11 +2416,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.323961,
+        "missing": 0.646039,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_books_records": {
       "layer": "contract_fact",
@@ -2246,11 +2432,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.229529,
+        "missing": 0.740471,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_brokers": {
       "layer": "contract_fact",
@@ -2262,11 +2448,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.289459,
+        "missing": 0.680541,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_third_party_consents": {
       "layer": "contract_fact",
@@ -2278,11 +2464,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.296025,
+        "missing": 0.673975,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_qualifications": {
       "layer": "contract_fact",
@@ -2294,11 +2480,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.233708,
+        "missing": 0.736292,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_record_keeping": {
       "layer": "contract_fact",
@@ -2310,11 +2496,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.275253,
+        "missing": 0.694747,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_solvency": {
       "layer": "contract_fact",
@@ -2326,11 +2512,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.29316,
+        "missing": 0.67684,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_tax_withholding": {
       "layer": "contract_fact",
@@ -2342,11 +2528,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.287669,
+        "missing": 0.682331,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_use_of_proceeds": {
       "layer": "contract_fact",
@@ -2358,11 +2544,11 @@
       ],
       "parents": [],
       "cpt": {
-        "present": 0.55,
-        "missing": 0.4,
-        "unknown": 0.05
+        "present": 0.360611,
+        "missing": 0.609389,
+        "unknown": 0.03
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_forfeiture": {
       "layer": "legal_semantics",
@@ -2374,11 +2560,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.274059,
+        "neutral": 0.435565,
+        "unfavorable": 0.290376
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_liens": {
       "layer": "legal_semantics",
@@ -2390,11 +2576,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.276327,
+        "neutral": 0.434204,
+        "unfavorable": 0.289469
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_affiliate_transactions": {
       "layer": "legal_semantics",
@@ -2406,11 +2592,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.283251,
+        "neutral": 0.430049,
+        "unfavorable": 0.2867
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_vesting": {
       "layer": "legal_semantics",
@@ -2422,11 +2608,11 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.300681,
+        "neutral": 0.419591,
+        "unfavorable": 0.279728
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
     },
     "cuad_withholding": {
       "layer": "legal_semantics",
@@ -2438,11 +2624,136 @@
       ],
       "parents": [],
       "cpt": {
-        "favorable": 0.5,
-        "neutral": 0.3,
-        "unfavorable": 0.2
+        "favorable": 0.311426,
+        "neutral": 0.413144,
+        "unfavorable": 0.27543
       },
-      "cpt_source": "expert_estimated (LEDGAR taxonomy mapping, 2026-05-18)"
+      "cpt_source": "expert_estimated (LEDGAR frequency calibrated, 2026-05-20)"
+    },
+    "ledgar_agg_legal_a": {
+      "layer": "legal_semantics",
+      "label": "ledgar_agg_legal_a",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_anti_corruption",
+        "cuad_compliance_with_laws",
+        "cuad_sanctions",
+        "cuad_regulatory_approvals",
+        "cuad_signing_authority",
+        "cuad_powers",
+        "cuad_binding_effect"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
+    },
+    "ledgar_agg_legal_b": {
+      "layer": "legal_semantics",
+      "label": "ledgar_agg_legal_b",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_contra_proferentem",
+        "cuad_enforceability",
+        "cuad_severability",
+        "cuad_interpretation_rules",
+        "cuad_no_waiver",
+        "cuad_survival",
+        "cuad_contract_term"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
+    },
+    "ledgar_agg_financial": {
+      "layer": "legal_semantics",
+      "label": "ledgar_agg_financial",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_taxes",
+        "cuad_tax_withholding",
+        "cuad_withholding",
+        "cuad_interest_on_late_payment"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
+    },
+    "ledgar_agg_dispute": {
+      "layer": "legal_semantics",
+      "label": "ledgar_agg_dispute",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_notice",
+        "cuad_disclosure_schedule",
+        "cuad_representations_warranties",
+        "cuad_forfeiture",
+        "cuad_liens",
+        "cuad_third_party_consents"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
+    },
+    "ledgar_agg_balance": {
+      "layer": "legal_semantics",
+      "label": "ledgar_agg_balance",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "cuad_affiliate_transactions",
+        "cuad_brokers",
+        "cuad_publicity"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
+    },
+    "confidentiality_agg": {
+      "layer": "legal_semantics",
+      "label": "保密条款聚合",
+      "states": [
+        "favorable",
+        "neutral",
+        "unfavorable"
+      ],
+      "parents": [
+        "confidentiality_nli",
+        "confidentiality_scope_reasonableness"
+      ],
+      "cpt": {
+        "_aggregate": true,
+        "unfavorable_threshold": 0.3
+      },
+      "cpt_source": "noisy_max_generated"
     }
   },
   "thresholds": {

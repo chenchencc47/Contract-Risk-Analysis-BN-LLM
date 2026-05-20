@@ -1,0 +1,42 @@
+{
+  "benchmark_timestamp": "2026-05-20",
+  "results": [
+    {
+      "name": "cuad_extraction",
+      "samples_processed": 50,
+      "error_count": 0,
+      "extraction": {
+        "governing_law": {
+          "clause_type": "governing_law",
+          "precision": 0.956,
+          "recall": 0.956,
+          "f1": 0.956
+        },
+        "termination": {
+          "clause_type": "termination",
+          "precision": 0.933,
+          "recall": 0.913,
+          "f1": 0.923
+        },
+        "liability_cap": {
+          "clause_type": "liability_cap",
+          "precision": 0.744,
+          "recall": 0.889,
+          "f1": 0.81
+        },
+        "delivery": {
+          "clause_type": "delivery",
+          "precision": 0.706,
+          "recall": 0.774,
+          "f1": 0.738
+        },
+        "payment": {
+          "clause_type": "payment",
+          "precision": 0.385,
+          "recall": 0.75,
+          "f1": 0.508
+        }
+      }
+    }
+  ]
+}
