@@ -1,0 +1,7 @@
+# ALeaseBert dataset — HTML lease contracts, not project source
+dataset/ALeaseBert/** linguist-vendored
+dataset/ALeaseBert/** linguist-detectable=false
+
+# Binary/dataset files
+*.bin linguist-detectable=false
+*.arrow linguist-detectable=false
