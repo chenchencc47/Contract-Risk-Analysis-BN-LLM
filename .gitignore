@@ -37,9 +37,19 @@ package.json
 package-lock.json
 jd_debug.png
 scrape_jd.js
+启动.txt
 
 # Generated reports (not part of source)
 合同检测报告/
 
 # Internal planning docs (not for release)
 方向/
+docs/
+
+# Old worklists
+worklist/worklist-v1/
+worklist/worklist-v2/
+
+# Test contracts and prompts
+sample_data/*.txt
+sample_data/review_result_examples/
