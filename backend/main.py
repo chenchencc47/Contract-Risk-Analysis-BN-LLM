@@ -1,7 +1,7 @@
 """BN Contract Risk Analysis — FastAPI Backend.
 
 Clean REST API wrapping the contract risk analysis pipeline.
-Start: uvicorn backend.main:app --port 9527 --reload
+Start: uvicorn backend.main:app --port 9527 --reload --reload-dir backend --reload-dir src
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ app = FastAPI(title="合同风险审查系统", docs_url="/docs")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5174", "http://127.0.0.1:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

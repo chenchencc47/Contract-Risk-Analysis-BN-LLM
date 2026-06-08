@@ -33,42 +33,63 @@
 
 ## 快速开始
 
-### 体验 Demo（无需 API Key、无需数据库）
+后端使用 `pyproject.toml + pip` 管理依赖；前端使用 `npm + package-lock.json`。
+
+### Docker Demo（无需 API Key、无需数据库）
 
 ```bash
 git clone https://github.com/chenchencc47/Contract-Risk-Analysis-BN-LLM.git
 cd Contract-Risk-Analysis-BN-LLM
-pip install -e .
-
-# 启动后端
-python -m uvicorn backend.main:app --port 9527
-
-# 新终端，启动前端
-cd frontend && npm install && npm run dev
-
-# 浏览器打开 http://localhost:5173，点击「体验 Demo」
+docker compose -f docker-compose.demo.yml up --build
 ```
 
-Demo 展示了一份买卖合同预计算审查报告，包含完整的 BN 反事实分析数据。
+浏览器打开 http://localhost ，点击「体验 Demo」。Demo 展示一份买卖合同预计算审查报告，包含完整的 BN 反事实分析数据。
 
-### 完整部署（需要 API Key + MySQL）
+### 本地 Demo（无需 API Key、无需数据库）
+
+```bash
+git clone https://github.com/chenchencc47/Contract-Risk-Analysis-BN-LLM.git
+cd Contract-Risk-Analysis-BN-LLM
+
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+
+# 终端 1：启动后端
+python -m uvicorn backend.main:app --port 9527
+
+# 终端 2：启动前端
+cd frontend
+npm ci
+npm run dev
+```
+
+浏览器打开 http://localhost:5174 ，点击「体验 Demo」。
+
+### 本地完整审查（需要 API Key，可选 MySQL）
 
 ```bash
 cp .env.example .env
-# 编辑 .env，填入 OPENAI_API_KEY 和数据库连接信息
+# 编辑 .env，填入 OPENAI_API_KEY / DEEPSEEK_API_KEY 等配置
 
-python -m uvicorn backend.main:app --port 9527 --reload
+python -m uvicorn backend.main:app --port 9527 --reload --reload-dir backend --reload-dir src
 cd frontend && npm run dev
 ```
 
-MySQL 不可用时审查仍然正常返回结果，只是不保存历史记录。Demo 模式完全不需要数据库。
+MySQL 不可用时审查仍然正常返回结果，只是不保存历史记录；报告历史、反馈和红线管理需要 MySQL。
 
-### Docker
+### Docker 完整部署（需要 API Key + MySQL）
 
 ```bash
-docker compose up
+cp .env.example .env
+# 编辑 .env，填入 OPENAI_API_KEY / DEEPSEEK_API_KEY 等配置
+
+docker compose up --build
 ```
 
+前端：http://localhost  
 API 文档：http://localhost:9527/docs
 
 ---
@@ -113,6 +134,8 @@ contract_fact（71 节点）→ legal_semantics（39 节点）→ risk_dimension
          CUAD/LEDGAR 校准           aggregate 聚合          overall_risk
                                                          （高/中/低）
 ```
+
+BN 的图结构、节点状态和 CPT 参数保存在 `config/bayesian_network_v2.json`。系统启动时由 pgmpy 动态构建贝叶斯网络并执行变量消元推理。若用户希望使用自己的数据集，可以在保持节点体系不变的前提下重新校准 CPT 并生成新的 BN JSON 配置；若要更换风险维度或条款节点，则需要重新定义 BN schema、条款映射和 CPT。普通启动和 Demo 体验不需要重新校准。
 
 ---
 

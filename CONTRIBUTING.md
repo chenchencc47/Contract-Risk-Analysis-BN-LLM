@@ -6,8 +6,8 @@ Thanks for contributing.
 
 1. Copy `.env.example` to `.env`
 2. Configure API/database credentials or set `DEMO_MODE=true`
-3. Start backend: `python -m uvicorn backend.main:app --port 9527 --reload`
-4. Start frontend: `cd frontend && npm install && npm run dev`
+3. Start backend: `python -m uvicorn backend.main:app --port 9527 --reload --reload-dir backend --reload-dir src`
+4. Start frontend: `cd frontend && npm ci && npm run dev`
 5. Run tests: `.venv/Scripts/python.exe -m pytest tests/ -q`
 
 ## Project rules

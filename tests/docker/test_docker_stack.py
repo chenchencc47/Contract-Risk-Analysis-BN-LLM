@@ -31,6 +31,14 @@ def test_frontend_dockerfile_builds_vite_and_serves_with_nginx() -> None:
     assert "COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf" in content
 
 
+def test_backend_dependencies_include_upload_runtime_dependency() -> None:
+    pyproject_path = ROOT / "pyproject.toml"
+
+    content = pyproject_path.read_text(encoding="utf-8")
+
+    assert "python-multipart" in content
+
+
 def test_docker_compose_configures_frontend_backend_mysql() -> None:
     compose_path = ROOT / "docker-compose.yml"
 
@@ -44,8 +52,28 @@ def test_docker_compose_configures_frontend_backend_mysql() -> None:
     assert "9527:9527" in content
     assert "80:80" in content
     assert "3306:3306" in content
+    assert "env_file:" not in content
+    assert "MYSQL_USER:" not in content.split("backend:", 1)[0]
+    assert "MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-your-mysql-password}" in content
+    assert "-p${MYSQL_PASSWORD:-your-mysql-password}" in content
     assert "./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro" in content
     assert "./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" in content
+
+
+def test_demo_compose_runs_frontend_backend_without_mysql_or_env_file() -> None:
+    compose_path = ROOT / "docker-compose.demo.yml"
+
+    assert compose_path.exists()
+
+    content = compose_path.read_text(encoding="utf-8")
+
+    assert "frontend:" in content
+    assert "backend:" in content
+    assert "mysql:" not in content
+    assert "env_file:" not in content
+    assert "DEMO_MODE: \"true\"" in content
+    assert "9527:9527" in content
+    assert "80:80" in content
 
 
 def test_frontend_nginx_proxies_api_to_backend() -> None:
